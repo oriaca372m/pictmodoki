@@ -1,0 +1,12 @@
+{
+  "name": "pictmodoki",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "Zlib",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "client"
+    ]
+  }
+}

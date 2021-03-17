@@ -1,0 +1,25 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack",
+    "build": "webpack",
+    "watch": "webpack --watch",
+    "lint": "eslint src/**.{ts,js} && prettier --check src/**.{ts,js}",
+    "fix": "eslint --fix src/**.{ts,js} && prettier --write src/**.{ts,js}"
+  },
+  "license": "Zlib",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.18.0",
+    "@typescript-eslint/parser": "^4.18.0",
+    "eslint": "^7.22.0",
+    "eslint-config-prettier": "^8.1.0",
+    "html-webpack-plugin": "^5.3.1",
+    "prettier": "^2.2.1",
+    "ts-loader": "^8.0.18",
+    "typescript": "^4.2.3",
+    "webpack": "^5.26.2",
+    "webpack-cli": "^4.5.0"
+  }
+}
