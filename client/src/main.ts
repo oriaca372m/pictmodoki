@@ -7,7 +7,7 @@ import {
 	Size,
 	Position,
 	Color,
-	Event,
+	ImageCanvasEvent,
 	ImageCanvasEventManager,
 	ImageCanvasEventManagerPlugin,
 	ImageCanvasEventPlayer,
@@ -193,7 +193,7 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 		this._player = new ImageCanvasEventPlayer(_app.imageCanvas)
 	}
 
-	onEvent(event: Event): void {
+	onEvent(event: ImageCanvasEvent): void {
 		if (event.eventType.kind === 'eventRevoked') {
 			return
 		}

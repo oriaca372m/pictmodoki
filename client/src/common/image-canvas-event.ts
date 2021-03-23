@@ -14,7 +14,7 @@ export type ImageCanvasEventType =
 
 export type ImageCanvasEventId = string
 
-export interface Event {
+export interface ImageCanvasEvent {
 	id: ImageCanvasEventId
 	userId: UserId
 	isRevoked: boolean
@@ -23,7 +23,7 @@ export interface Event {
 }
 
 // virtual eventとreal eventの等価性を確認する
-function isEqualVirtualRealEvent(real: Event, virtual: Event): boolean {
+function isEqualVirtualRealEvent(real: ImageCanvasEvent, virtual: ImageCanvasEvent): boolean {
 	if (real.userId !== virtual.userId) {
 		return false
 	}
@@ -35,13 +35,13 @@ export class ImageCanvasEventPlayer {
 	constructor(private readonly _drawer: ImageCanvasDrawer) {
 	}
 
-	play(events: readonly Event[]): void {
+	play(events: readonly ImageCanvasEvent[]): void {
 		for (const event of events) {
 			this.playSingleEvent(event)
 		}
 	}
 
-	playSingleEvent(event: Event): void {
+	playSingleEvent(event: ImageCanvasEvent): void {
 		if (event.isRevoked) {
 			return
 		}
@@ -56,13 +56,13 @@ export class ImageCanvasEventPlayer {
 }
 
 export interface ImageCanvasEventManagerPlugin {
-	onEvent(event: Event): void
+	onEvent(event: ImageCanvasEvent): void
 	onHistoryChanged(): void
-	onHistoryWiped(wipedEvents: Event[]): void
+	onHistoryWiped(wipedEvents: ImageCanvasEvent[]): void
 }
 
 export class ImageCanvasEventManager {
-	private _history: Event[] = []
+	private _history: ImageCanvasEvent[] = []
 	private _plugins: ImageCanvasEventManagerPlugin[] = []
 	private _lastRealEvent = -1
 	private _isClean = true
@@ -103,7 +103,7 @@ export class ImageCanvasEventManager {
 	}
 
 	// 戻り値: 処理を終了するべきか
-	private _pushRealEvent(event: Event): boolean {
+	private _pushRealEvent(event: ImageCanvasEvent): boolean {
 		if (this._lastRealEvent === this._lastIndex) {
 			this._history.push(event)
 			this._lastRealEvent++
@@ -127,7 +127,7 @@ export class ImageCanvasEventManager {
 		}
 	}
 
-	event(event: Event): void {
+	event(event: ImageCanvasEvent): void {
 		if (event.isVirtual) {
 			this._history.push(event)
 			this._isClean = false
@@ -153,11 +153,11 @@ export class ImageCanvasEventManager {
 		}
 	}
 
-	get history(): readonly Event[] {
+	get history(): readonly ImageCanvasEvent[] {
 		return this._history
 	}
 
-	getReversedHistory(): Event[] {
+	getReversedHistory(): ImageCanvasEvent[] {
 		return Array.from(this._history).reverse()
 	}
 }
@@ -186,7 +186,7 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 		// pass
 	}
 
-	onHistoryWiped(events: Event[]): void {
+	onHistoryWiped(events: ImageCanvasEvent[]): void {
 		this._lastRenderedEventPlayer.play(events)
 	}
 
