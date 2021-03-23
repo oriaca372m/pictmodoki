@@ -6,6 +6,7 @@
     "start": "webpack",
     "build": "webpack",
     "watch": "webpack --watch",
+    "serve": "webpack serve",
     "lint": "eslint src/**.{ts,js} && prettier --check src/**.{ts,js}",
     "fix": "eslint --fix src/**.{ts,js} && prettier --write src/**.{ts,js}"
   },
@@ -22,7 +23,8 @@
     "vue-loader": "^15.9.6",
     "vue-template-compiler": "^2.6.12",
     "webpack": "^5.26.2",
-    "webpack-cli": "^4.5.0"
+    "webpack-cli": "^4.5.0",
+    "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
     "vue": "^2.6.12"
