@@ -1,13 +1,13 @@
-import { ImageCanvasCommand, EventType, EventManager } from './common'
+import { ImageCanvasCommand, ImageCanvasEventType, ImageCanvasEventManager } from './common'
 
 export interface EventSender {
 	command(cmd: ImageCanvasCommand): void
-	event(event: EventType): void
+	event(event: ImageCanvasEventType): void
 }
 
 export class DebugEventSender implements EventSender {
 	private _eventId = 0
-	constructor(private _manager: EventManager) { }
+	constructor(private _manager: ImageCanvasEventManager) { }
 
 	command(cmd: ImageCanvasCommand): void {
 		if (cmd.kind === 'drawLayer') {
@@ -17,11 +17,11 @@ export class DebugEventSender implements EventSender {
 		}
 	}
 
-	event(eventType: EventType): void {
+	event(eventType: ImageCanvasEventType): void {
 		this._pushEvent(eventType)
 	}
 
-	private _pushEvent(eventType: EventType) {
+	private _pushEvent(eventType: ImageCanvasEventType) {
 		this._manager.event({
 			id: 'virtual',
 			userId: 'debugUser',

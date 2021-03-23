@@ -8,10 +8,10 @@ import {
 	Position,
 	Color,
 	Event,
-	EventManager,
-	EventManagerPlugin,
-	EventPlayer,
-	UndoManager,
+	ImageCanvasEventManager,
+	ImageCanvasEventManagerPlugin,
+	ImageCanvasEventPlayer,
+	ImageCanvasUndoManager,
 } from './common'
 
 import { EventSender, DebugEventSender } from './event-sender'
@@ -187,10 +187,10 @@ class PenTool implements Tool {
 	}
 }
 
-class EventRenderer implements EventManagerPlugin {
-	private readonly _player: EventPlayer
+class EventRenderer implements ImageCanvasEventManagerPlugin {
+	private readonly _player: ImageCanvasEventPlayer
 	constructor(private readonly _app: App) {
-		this._player = new EventPlayer(_app.imageCanvas)
+		this._player = new ImageCanvasEventPlayer(_app.imageCanvas)
 	}
 
 	onEvent(event: Event): void {
@@ -219,8 +219,8 @@ class App {
 	penTool: PenTool
 	selectedLayerId = 'default'
 	eventSender: EventSender
-	eventManager: EventManager
-	undoManager: UndoManager
+	eventManager: ImageCanvasEventManager
+	undoManager: ImageCanvasUndoManager
 
 	constructor(public canvasElm: HTMLCanvasElement) {
 		const factory = new OffscreenCanvasProxyFactory()
@@ -228,7 +228,7 @@ class App {
 		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
 		this.imageCanvas = new ImageCanvasDrawer(canvasModel, factory)
 
-		this.eventManager = new EventManager()
+		this.eventManager = new ImageCanvasEventManager()
 		this.eventManager.event(
 			{
 				id: '-1',
@@ -247,7 +247,7 @@ class App {
 
 		this.eventManager.registerPlugin(new EventRenderer(this))
 
-		this.undoManager = new UndoManager('debugUser', this.eventManager, factory, canvasModel)
+		this.undoManager = new ImageCanvasUndoManager('debugUser', this.eventManager, factory, canvasModel)
 		this.eventManager.registerPlugin(this.undoManager)
 
 		this.penTool = new PenTool(this)

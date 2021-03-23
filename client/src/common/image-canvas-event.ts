@@ -4,26 +4,26 @@ import { UserId } from './user'
 import { ImageCanvasModel, ImageCanvasDrawer } from './image-canvas'
 import { CanvasProxyFactory } from './canvas-proxy'
 
-export type EventType =
+export type ImageCanvasEventType =
 	| { kind: 'canvasInitialized'; size: Size }
 	| { kind: 'layerCreated'; layerId: LayerId }
 	| { kind: 'layerRemoved'; layerId: LayerId }
-	| { kind: 'eventRevoked'; eventId: EventId }
-	| { kind: 'eventRestored'; eventId: EventId }
+	| { kind: 'eventRevoked'; eventId: ImageCanvasEventId }
+	| { kind: 'eventRestored'; eventId: ImageCanvasEventId }
 	| { kind: 'layerDrawn'; layerId: LayerId; drawCommand: LayerDrawCommand }
 
-export type EventId = string
+export type ImageCanvasEventId = string
 
 export interface Event {
-	id: EventId
+	id: ImageCanvasEventId
 	userId: UserId
 	isRevoked: boolean
 	isVirtual: boolean
-	eventType: EventType
+	eventType: ImageCanvasEventType
 }
 
 // virtual eventとreal eventの等価性を確認する
-export function isEqualVirtualRealEvent(real: Event, virtual: Event): boolean {
+function isEqualVirtualRealEvent(real: Event, virtual: Event): boolean {
 	if (real.userId !== virtual.userId) {
 		return false
 	}
@@ -31,7 +31,7 @@ export function isEqualVirtualRealEvent(real: Event, virtual: Event): boolean {
 	return JSON.stringify(real.eventType) === JSON.stringify(virtual.eventType)
 }
 
-export class EventPlayer {
+export class ImageCanvasEventPlayer {
 	constructor(private readonly _drawer: ImageCanvasDrawer) {
 	}
 
@@ -55,20 +55,20 @@ export class EventPlayer {
 	}
 }
 
-export interface EventManagerPlugin {
+export interface ImageCanvasEventManagerPlugin {
 	onEvent(event: Event): void
 	onHistoryChanged(): void
 	onHistoryWiped(wipedEvents: Event[]): void
 }
 
-export class EventManager {
+export class ImageCanvasEventManager {
 	private _history: Event[] = []
-	private _plugins: EventManagerPlugin[] = []
+	private _plugins: ImageCanvasEventManagerPlugin[] = []
 	private _lastRealEvent = -1
 	private _isClean = true
 	private _numRealEventToPreserve = 50
 
-	registerPlugin(plugin: EventManagerPlugin): void {
+	registerPlugin(plugin: ImageCanvasEventManagerPlugin): void {
 		this._plugins.push(plugin)
 	}
 
@@ -162,20 +162,20 @@ export class EventManager {
 	}
 }
 
-export class UndoManager implements EventManagerPlugin {
+export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 	private readonly _lastRendered: ImageCanvasModel
 	private readonly _lastRenderedDrawer: ImageCanvasDrawer
-	private readonly _lastRenderedEventPlayer: EventPlayer
+	private readonly _lastRenderedEventPlayer: ImageCanvasEventPlayer
 
 	constructor(
 		private readonly _userId: UserId,
-		private readonly _eventManager: EventManager,
+		private readonly _eventManager: ImageCanvasEventManager,
 		private readonly _canvasProxyFactory: CanvasProxyFactory,
 		currentImageCanvasModel: ImageCanvasModel
 	) {
 		this._lastRendered = currentImageCanvasModel.clone(this._canvasProxyFactory)
 		this._lastRenderedDrawer = new ImageCanvasDrawer(this._lastRendered, _canvasProxyFactory)
-		this._lastRenderedEventPlayer = new EventPlayer(this._lastRenderedDrawer)
+		this._lastRenderedEventPlayer = new ImageCanvasEventPlayer(this._lastRenderedDrawer)
 	}
 
 	onEvent(): void {
@@ -193,7 +193,7 @@ export class UndoManager implements EventManagerPlugin {
 	createUndoedImageCanvasModel(): ImageCanvasModel {
 		const model = this._lastRendered.clone(this._canvasProxyFactory)
 		const drawer = new ImageCanvasDrawer(model, this._canvasProxyFactory)
-		const player = new EventPlayer(drawer)
+		const player = new ImageCanvasEventPlayer(drawer)
 		player.play(this._eventManager.history)
 		return model
 	}
@@ -216,7 +216,7 @@ export class UndoManager implements EventManagerPlugin {
 		return true
 	}
 
-	createUndoEvent(): EventType | undefined {
+	createUndoEvent(): ImageCanvasEventType | undefined {
 		if (!this._canCreateUndoEvent()) {
 			return
 		}
