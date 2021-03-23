@@ -1,5 +1,13 @@
-import { CanvasProxy, CanvasProxyFactory, ImageCanvasModel, ImageCanvasDrawer, LayerDrawCommand } from './common'
-import { Size, Position, Color } from './primitives'
+import {
+	CanvasProxy,
+	CanvasProxyFactory,
+	ImageCanvasModel,
+	ImageCanvasDrawer,
+	LayerDrawCommand,
+	Size,
+	Position,
+	Color,
+} from './common'
 
 import Vue from 'vue'
 import VueIndex from './views/index.vue'
@@ -37,7 +45,7 @@ class OffscreenCanvasProxyFactory implements CanvasProxyFactory {
 }
 
 class WebCanvasProxy implements CanvasProxy {
-	constructor(private readonly _canvas: HTMLCanvasElement) { }
+	constructor(private readonly _canvas: HTMLCanvasElement) {}
 
 	getContext(): CanvasRenderingContext2D {
 		const ctx = this._canvas.getContext('2d')
@@ -78,14 +86,14 @@ class PenTool implements Tool {
 		this._imageCanvas = _app.imageCanvas
 		this._canvasElm = _app.canvasElm
 
-		this._canvasElm.addEventListener('mousedown', e => {
+		this._canvasElm.addEventListener('mousedown', (e) => {
 			if (!this._isEnabled) {
 				return
 			}
 			this._startStroke(this._getPosFromEvent(e))
 		})
 
-		this._canvasElm.addEventListener('mousemove', e => {
+		this._canvasElm.addEventListener('mousemove', (e) => {
 			if (!this._isEnabled) {
 				return
 			}
@@ -216,5 +224,5 @@ export function main(elm: HTMLCanvasElement): App {
 Vue.config.productionTip = false
 
 new Vue({
-	render: h => h(VueIndex),
+	render: (h) => h(VueIndex),
 }).$mount('#app')
