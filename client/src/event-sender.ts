@@ -7,11 +7,15 @@ export interface EventSender {
 
 export class DebugEventSender implements EventSender {
 	private _eventId = 0
-	constructor(private _manager: ImageCanvasEventManager) { }
+	constructor(private _manager: ImageCanvasEventManager) {}
 
 	command(cmd: ImageCanvasCommand): void {
 		if (cmd.kind === 'drawLayer') {
-			this._pushEvent({ kind: 'layerDrawn', layerId: cmd.layer, drawCommand: cmd.drawCommand })
+			this._pushEvent({
+				kind: 'layerDrawn',
+				layerId: cmd.layer,
+				drawCommand: cmd.drawCommand,
+			})
 		} else if (cmd.kind === 'createLayer') {
 			this._pushEvent({ kind: 'layerCreated', layerId: cmd.id })
 		}
@@ -27,7 +31,7 @@ export class DebugEventSender implements EventSender {
 			userId: 'debugUser',
 			isRevoked: false,
 			isVirtual: true,
-			eventType
+			eventType,
 		})
 
 		setTimeout(() => {
@@ -36,7 +40,7 @@ export class DebugEventSender implements EventSender {
 				userId: 'debugUser',
 				isRevoked: false,
 				isVirtual: false,
-				eventType
+				eventType,
 			})
 
 			this._eventId++

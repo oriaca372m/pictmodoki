@@ -52,7 +52,7 @@ class OffscreenCanvasProxyFactory implements CanvasProxyFactory {
 }
 
 class WebCanvasProxy implements CanvasProxy {
-	constructor(private readonly _canvas: HTMLCanvasElement) { }
+	constructor(private readonly _canvas: HTMLCanvasElement) {}
 
 	getContext(): CanvasRenderingContext2D {
 		const ctx = this._canvas.getContext('2d')
@@ -229,17 +229,16 @@ class App {
 		this.imageCanvas = new ImageCanvasDrawer(canvasModel, factory)
 
 		this.eventManager = new ImageCanvasEventManager()
-		this.eventManager.event(
-			{
-				id: '-1',
-				userId: 'system',
-				isRevoked: false,
-				isVirtual: false,
-				eventType: {
-					kind: 'canvasInitialized',
-					size: this.canvasProxy.size,
-				}
-			})
+		this.eventManager.event({
+			id: '-1',
+			userId: 'system',
+			isRevoked: false,
+			isVirtual: false,
+			eventType: {
+				kind: 'canvasInitialized',
+				size: this.canvasProxy.size,
+			},
+		})
 
 		this.eventSender = new DebugEventSender(this.eventManager)
 
@@ -247,7 +246,12 @@ class App {
 
 		this.eventManager.registerPlugin(new EventRenderer(this))
 
-		this.undoManager = new ImageCanvasUndoManager('debugUser', this.eventManager, factory, canvasModel)
+		this.undoManager = new ImageCanvasUndoManager(
+			'debugUser',
+			this.eventManager,
+			factory,
+			canvasModel
+		)
 		this.eventManager.registerPlugin(this.undoManager)
 
 		this.penTool = new PenTool(this)
