@@ -1,4 +1,4 @@
-import { ImageCanvasCommand, ImageCanvasEventType, ImageCanvasEventManager } from './common'
+import { ImageCanvasCommand, ImageCanvasEventType, ImageCanvasEventManager } from 'common'
 
 export interface CommandSender {
 	command(cmd: ImageCanvasCommand): void

@@ -12,7 +12,7 @@ import {
 	ImageCanvasEventManagerPlugin,
 	ImageCanvasEventPlayer,
 	ImageCanvasUndoManager,
-} from './common'
+} from 'common'
 
 import { CommandSender, DebugCommandSender } from './event-sender'
 
