@@ -14,7 +14,7 @@ import {
 	ImageCanvasUndoManager,
 } from 'common'
 
-import { CommandSender, DebugCommandSender } from './event-sender'
+import { CommandSender, SocketCommandSender } from './event-sender'
 
 import Vue from 'vue'
 import VueIndex from './views/index.vue'
@@ -218,11 +218,11 @@ class App {
 	imageCanvas: ImageCanvasDrawer
 	penTool: PenTool
 	selectedLayerId = 'default'
-	commandSender: CommandSender
+	commandSender!: CommandSender
 	eventManager: ImageCanvasEventManager
 	undoManager: ImageCanvasUndoManager
 
-	constructor(public canvasElm: HTMLCanvasElement) {
+	constructor(public canvasElm: HTMLCanvasElement, public socket: WebSocket) {
 		const factory = new OffscreenCanvasProxyFactory()
 		this.canvasProxy = new WebCanvasProxy(this.canvasElm)
 		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
@@ -240,8 +240,6 @@ class App {
 			},
 		})
 
-		this.commandSender = new DebugCommandSender(this.eventManager)
-
 		this.eventManager.registerPlugin(new EventRenderer(this))
 
 		this.undoManager = new ImageCanvasUndoManager(
@@ -256,6 +254,10 @@ class App {
 	}
 
 	init(): void {
+		const sender = new SocketCommandSender(this.eventManager, this.socket)
+		sender.start()
+
+		this.commandSender = sender
 		this.commandSender.command({ kind: 'createLayer' })
 		this.commandSender.command({ kind: 'createLayer' })
 
@@ -276,10 +278,14 @@ class App {
 }
 
 export function main(elm: HTMLCanvasElement): App {
-	const app = new App(elm)
+	const sock = new WebSocket("ws://127.0.0.1:5001")
+	const app = new App(elm, sock)
 
-	app.init()
-	app.render()
+	sock.onopen = () => {
+		console.log('started')
+		app.init()
+		app.render()
+	}
 
 	return app
 }

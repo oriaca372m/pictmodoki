@@ -8,7 +8,7 @@ module.exports = {
 	entry: './src/main.ts',
 	output: {
 		filename: 'main.js',
-		path: path.resolve(__dirname, 'dist')
+		path: path.resolve(__dirname, 'dist'),
 	},
 	devtool: 'inline-source-map',
 	module: {
