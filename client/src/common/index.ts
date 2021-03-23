@@ -1,7 +1,7 @@
 import { Size } from './primitives'
-import { LayerId, LayerDrawCommand, LayerCanvasModel, LayerDrawer } from './layer'
+import { LayerId, LayerDrawCommand } from './layer'
 import { ImageCanvasModel, ImageCanvasDrawer, ImageCanvasCommand } from './image-canvas'
-import { CanvasProxy, CanvasProxyFactory } from './canvas-proxy'
+import { CanvasProxyFactory } from './canvas-proxy'
 
 export { CanvasProxy, CanvasProxyFactory } from './canvas-proxy'
 export { ImageCanvasModel, ImageCanvasDrawer } from './image-canvas'
@@ -24,6 +24,7 @@ export interface Event {
 	id: EventId
 	userId: UserId
 	isRevoked: boolean
+	isVirtual: boolean
 	eventType: EventType
 }
 
@@ -53,31 +54,98 @@ export class EventPlayer {
 
 export interface EventManagerPlugin {
 	onEvent(event: Event): void
+	onHistoryChanged(): void
+}
+
+// virtual eventとreal eventの等価性を確認する
+function isEqualVirtualRealEvent(real: Event, virtual: Event): boolean {
+	if (real.userId !== virtual.userId) {
+		return false
+	}
+
+	return JSON.stringify(real.eventType) === JSON.stringify(virtual.eventType)
 }
 
 export class EventManager {
-	_history: Event[] = []
-	_plugins: EventManagerPlugin[] = []
+	private _history: Event[] = []
+	private _plugins: EventManagerPlugin[] = []
+	private _lastRealEvent = -1
+	private _isClean = true
 
 	registerPlugin(plugin: EventManagerPlugin): void {
 		this._plugins.push(plugin)
 	}
 
-	event(event: Event): void {
-		this._history.push(event)
+	get isClean(): boolean {
+		return this._isClean
+	}
 
+	// toIndexは最後の正しいエントリのインデックス
+	private _rewindHistory(toIndex: number): void {
+		this._history = this._history.splice(toIndex + 1)
+		this._plugins.forEach(x => { x.onHistoryChanged() })
+	}
+
+	// historyの最後の要素のインデックス
+	private get _lastIndex(): number {
+		return this._history.length - 1
+	}
+
+	// 戻り値: 処理を終了するべきか
+	private _pushRealEvent(event: Event): boolean {
+		if (this._lastRealEvent === this._lastIndex) {
+			this._history.push(event)
+			this._lastRealEvent++
+			this._isClean = true
+			return false
+		}
+
+		const vevent = this._history[this._lastRealEvent + 1]
+		if (isEqualVirtualRealEvent(event, vevent)) {
+			vevent.id = event.id
+			vevent.isVirtual = false
+			this._lastRealEvent++
+			this._isClean = this._lastRealEvent === this._lastIndex
+			return true
+		} else {
+			this._rewindHistory(this._lastRealEvent)
+			this._history.push(event)
+			this._lastRealEvent = this._lastIndex
+			this._isClean = true
+			return false
+		}
+	}
+
+	event(event: Event): void {
+		if (event.isVirtual) {
+			this._isClean = false
+			this._history.push(event)
+		} else {
+			if (this._pushRealEvent(event)) {
+				return
+			}
+		}
+
+		let historyChanged = false
 		if (event.eventType.kind === 'eventRevoked') {
 			const revokedId = event.eventType.eventId
 			this._history.find(x => x.id === revokedId)!.isRevoked = true
+			historyChanged = true
 		}
 
-		for (const plugin of this._plugins) {
-			plugin.onEvent(event)
+		this._plugins.forEach(x => { x.onEvent(event) })
+
+		if (historyChanged) {
+			this._plugins.forEach(x => { x.onHistoryChanged() })
 		}
 	}
 
 	get history(): readonly Event[] {
 		return this._history
+	}
+
+	getReversedHistory(): Event[] {
+		return Array.from(this._history).reverse()
 	}
 }
 
@@ -102,7 +170,11 @@ export class UndoManager implements EventManagerPlugin {
 	}
 
 	onEvent(_event: Event): void {
-		this._forwardOne()
+		// this._forwardOne()
+	}
+
+	onHistoryChanged(): void {
+		// pass
 	}
 
 	createUndoedImageCanvasModel(): ImageCanvasModel {
@@ -122,10 +194,30 @@ export class UndoManager implements EventManagerPlugin {
 		this._lastRenderedEventPlayer.playSingleEvent(this._eventManager.history[currentIndex + 1])
 	}
 
+	private _canCreateUndoEvent(): boolean {
+		if (this._eventManager.isClean) {
+			return true
+		}
+
+		for (const event of this._eventManager.getReversedHistory()) {
+			if (event.isVirtual) {
+				if (event.eventType.kind !== 'eventRevoked') {
+					return false
+				}
+			} else {
+				return true
+			}
+		}
+
+		return true
+	}
+
 	createUndoEvent(): EventType | undefined {
-		const clonedHistory = Array.from(this._eventManager.history)
-		const event = clonedHistory.reverse().find(x =>
-			x.eventType.kind !== 'eventRevoked' && x.userId === this._userId && !x.isRevoked)
+		if (!this._canCreateUndoEvent()) {
+			return
+		}
+		const event = this._eventManager.getReversedHistory().find(x =>
+			!x.isVirtual && x.eventType.kind !== 'eventRevoked' && x.userId === this._userId && !x.isRevoked)
 		if (event === undefined) {
 			return
 		}
@@ -152,18 +244,29 @@ export class DebugEventSender implements EventSender {
 	}
 
 	event(eventType: EventType): void {
-			this._pushEvent(eventType)
+		this._pushEvent(eventType)
 	}
 
 	private _pushEvent(eventType: EventType) {
 		this._manager.event({
-			id: this._eventId.toString(),
+			id: 'virtual',
 			userId: 'debugUser',
 			isRevoked: false,
+			isVirtual: true,
 			eventType
 		})
 
-		this._eventId++
+		setTimeout(() => {
+			this._manager.event({
+				id: this._eventId.toString(),
+				userId: 'debugUser',
+				isRevoked: false,
+				isVirtual: false,
+				eventType
+			})
+
+			this._eventId++
+		}, 1000)
 	}
 }
 

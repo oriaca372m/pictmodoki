@@ -52,7 +52,7 @@ class OffscreenCanvasProxyFactory implements CanvasProxyFactory {
 }
 
 class WebCanvasProxy implements CanvasProxy {
-	constructor(private readonly _canvas: HTMLCanvasElement) {}
+	constructor(private readonly _canvas: HTMLCanvasElement) { }
 
 	getContext(): CanvasRenderingContext2D {
 		const ctx = this._canvas.getContext('2d')
@@ -158,6 +158,8 @@ class PenTool implements Tool {
 		}
 
 		this._imageCanvas.endPreview()
+		this._app.render()
+
 		this._app.eventSender.command({
 			kind: 'drawLayer',
 			layer: this._app.selectedLayerId,
@@ -193,14 +195,16 @@ class EventRenderer implements EventManagerPlugin {
 
 	onEvent(event: Event): void {
 		if (event.eventType.kind === 'eventRevoked') {
-			console.log(event)
-			const model = this._app.undoManager.createUndoedImageCanvasModel()
-			this._app.imageCanvas.setModel(model)
-			this._app.render()
 			return
 		}
 
 		this._player.playSingleEvent(event)
+		this._app.render()
+	}
+
+	onHistoryChanged(): void {
+		const model = this._app.undoManager.createUndoedImageCanvasModel()
+		this._app.imageCanvas.setModel(model)
 		this._app.render()
 	}
 }
@@ -221,6 +225,18 @@ class App {
 		this.imageCanvas = new ImageCanvasDrawer(canvasModel, factory)
 
 		this.eventManager = new EventManager()
+		this.eventManager.event(
+			{
+				id: '-1',
+				userId: 'system',
+				isRevoked: false,
+				isVirtual: false,
+				eventType: {
+					kind: 'canvasInitialized',
+					size: this.canvasProxy.size,
+				}
+			})
+
 		this.eventSender = new DebugEventSender(this.eventManager)
 
 		this.eventSender.event({ kind: 'canvasInitialized', size: this.canvasProxy.size })
