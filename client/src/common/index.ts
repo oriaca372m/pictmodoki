@@ -1,5 +1,5 @@
 export { CanvasProxy, CanvasProxyFactory } from './canvas-proxy'
-export { ImageCanvasModel, ImageCanvasDrawer } from './image-canvas'
+export { ImageCanvasModel, ImageCanvasDrawer, ImageCanvasCommand } from './image-canvas'
 export { LayerDrawCommand } from './layer'
 export * from './primitives'
 export * from './image-canvas-event'

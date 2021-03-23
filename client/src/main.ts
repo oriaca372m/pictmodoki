@@ -11,10 +11,10 @@ import {
 	EventManager,
 	EventManagerPlugin,
 	EventPlayer,
-	EventSender,
-	DebugEventSender,
 	UndoManager,
 } from './common'
+
+import { EventSender, DebugEventSender } from './event-sender'
 
 import Vue from 'vue'
 import VueIndex from './views/index.vue'
