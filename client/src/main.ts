@@ -14,7 +14,7 @@ import {
 	ImageCanvasUndoManager,
 } from './common'
 
-import { EventSender, DebugEventSender } from './event-sender'
+import { CommandSender, DebugCommandSender } from './event-sender'
 
 import Vue from 'vue'
 import VueIndex from './views/index.vue'
@@ -160,7 +160,7 @@ class PenTool implements Tool {
 		this._imageCanvas.endPreview()
 		this._app.render()
 
-		this._app.eventSender.command({
+		this._app.commandSender.command({
 			kind: 'drawLayer',
 			layer: this._app.selectedLayerId,
 			drawCommand: this._constructCommand(),
@@ -218,7 +218,7 @@ class App {
 	imageCanvas: ImageCanvasDrawer
 	penTool: PenTool
 	selectedLayerId = 'default'
-	eventSender: EventSender
+	commandSender: CommandSender
 	eventManager: ImageCanvasEventManager
 	undoManager: ImageCanvasUndoManager
 
@@ -240,9 +240,7 @@ class App {
 			},
 		})
 
-		this.eventSender = new DebugEventSender(this.eventManager)
-
-		this.eventSender.event({ kind: 'canvasInitialized', size: this.canvasProxy.size })
+		this.commandSender = new DebugCommandSender(this.eventManager)
 
 		this.eventManager.registerPlugin(new EventRenderer(this))
 
@@ -258,25 +256,18 @@ class App {
 	}
 
 	init(): void {
-		this.eventSender.command({
-			kind: 'createLayer',
-			id: 'default',
-		})
-
-		this.eventSender.command({
-			kind: 'createLayer',
-			id: 'top-default',
-		})
+		this.commandSender.command({ kind: 'createLayer' })
+		this.commandSender.command({ kind: 'createLayer' })
 
 		this.penTool.enable()
 	}
 
 	undo(): void {
-		const event = this.undoManager.createUndoEvent()
+		const event = this.undoManager.createUndoCommand()
 		if (event === undefined) {
 			return
 		}
-		this.eventSender.event(event)
+		this.commandSender.command(event)
 	}
 
 	render(): void {

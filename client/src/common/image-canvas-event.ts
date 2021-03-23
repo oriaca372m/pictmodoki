@@ -2,6 +2,7 @@ import { Size } from './primitives'
 import { LayerId, LayerDrawCommand } from './layer'
 import { UserId } from './user'
 import { ImageCanvasModel, ImageCanvasDrawer } from './image-canvas'
+import { ImageCanvasCommand } from './image-canvas-command'
 import { CanvasProxyFactory } from './canvas-proxy'
 
 export type ImageCanvasEventType =
@@ -48,9 +49,9 @@ export class ImageCanvasEventPlayer {
 
 		const p = event.eventType
 		if (p.kind === 'layerDrawn') {
-			this._drawer.command({ kind: 'drawLayer', layer: p.layerId, drawCommand: p.drawCommand })
+			this._drawer.drawLayer(p.layerId, p.drawCommand)
 		} else if (p.kind === 'layerCreated') {
-			this._drawer.command({ kind: 'createLayer', id: p.layerId })
+			this._drawer.createLayer(p.layerId)
 		}
 	}
 }
@@ -198,7 +199,7 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 		return model
 	}
 
-	private _canCreateUndoEvent(): boolean {
+	private _canCreateUndoCommand(): boolean {
 		if (this._eventManager.isClean) {
 			return true
 		}
@@ -216,8 +217,8 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 		return true
 	}
 
-	createUndoEvent(): ImageCanvasEventType | undefined {
-		if (!this._canCreateUndoEvent()) {
+	createUndoCommand(): ImageCanvasCommand | undefined {
+		if (!this._canCreateUndoCommand()) {
 			return
 		}
 		const event = this._eventManager.getReversedHistory().find(x =>
@@ -226,6 +227,6 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 			return
 		}
 
-		return { kind: 'eventRevoked', eventId: event.id }
+		return { kind: 'revokeEvent', eventId: event.id }
 	}
 }

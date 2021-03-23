@@ -2,11 +2,6 @@ import { Size } from './primitives'
 import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from './canvas-proxy'
 import { LayerId, LayerDrawCommand, LayerCanvasModel, LayerDrawer } from './layer'
 
-export type ImageCanvasCommand =
-	| { kind: 'createLayer'; id: LayerId }
-	| { kind: 'removeLayer'; layer: LayerId }
-	| { kind: 'drawLayer'; layer: LayerId; drawCommand: LayerDrawCommand }
-
 export class ImageCanvasModel {
 	layers: LayerCanvasModel[] = []
 	constructor(readonly size: Size) { }
@@ -64,7 +59,7 @@ export class ImageCanvasDrawer {
 		return this._model.layers
 	}
 
-	private _createLayer(id: LayerId): LayerController {
+	createLayer(id: LayerId): LayerController {
 		const foundLayer = this.layers.find((x) => x.id === id)
 		if (foundLayer !== undefined) {
 			return this._layerControllers.get(foundLayer)!
@@ -86,14 +81,8 @@ export class ImageCanvasDrawer {
 		this._layerControllers.delete(controller.layer)
 	}
 
-	command(cmd: ImageCanvasCommand): void {
-		if (cmd.kind === 'createLayer') {
-			this._createLayer(cmd.id)
-		}
-
-		if (cmd.kind === 'drawLayer') {
-			this._findLayerById(cmd.layer).drawer.command(cmd.drawCommand)
-		}
+	drawLayer(id: LayerId, drawCmd: LayerDrawCommand): void {
+		this._findLayerById(id).drawer.command(drawCmd)
 	}
 
 	startPreview(layer: LayerId): void {
