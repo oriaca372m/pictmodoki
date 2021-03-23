@@ -4,6 +4,7 @@
 		<div>
 			<button @click="save">保存</button>
 			<button @click="restore">復元</button>
+			<button @click="undo">一つ戻す</button>
 		</div>
 		<div>
 			<button @click="selectColor('#ff0000')">赤</button>
@@ -59,6 +60,10 @@ export default {
 		restore: function() {
 			this.app.imageCanvas.setModel(this.savedCanvas.clone(this.app.imageCanvas.canvasProxyFactory))
 			this.app.render()
+		},
+
+		undo: function() {
+			this.app.undo()
 		}
 	}
 }

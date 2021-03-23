@@ -7,6 +7,13 @@ import {
 	Size,
 	Position,
 	Color,
+	Event,
+	EventManager,
+	EventManagerPlugin,
+	EventPlayer,
+	EventSender,
+	DebugEventSender,
+	UndoManager,
 } from './common'
 
 import Vue from 'vue'
@@ -151,12 +158,11 @@ class PenTool implements Tool {
 		}
 
 		this._imageCanvas.endPreview()
-		this._imageCanvas.command({
+		this._app.eventSender.command({
 			kind: 'drawLayer',
 			layer: this._app.selectedLayerId,
 			drawCommand: this._constructCommand(),
 		})
-		this._app.render()
 
 		this._pathPositions = undefined
 	}
@@ -179,32 +185,74 @@ class PenTool implements Tool {
 	}
 }
 
+class EventRenderer implements EventManagerPlugin {
+	private readonly _player: EventPlayer
+	constructor(private readonly _app: App) {
+		this._player = new EventPlayer(_app.imageCanvas)
+	}
+
+	onEvent(event: Event): void {
+		if (event.eventType.kind === 'eventRevoked') {
+			console.log(event)
+			const model = this._app.undoManager.createUndoedImageCanvasModel()
+			this._app.imageCanvas.setModel(model)
+			this._app.render()
+			return
+		}
+
+		this._player.playSingleEvent(event)
+		this._app.render()
+	}
+}
+
 class App {
 	canvasProxy: WebCanvasProxy
 	imageCanvas: ImageCanvasDrawer
 	penTool: PenTool
 	selectedLayerId = 'default'
+	eventSender: EventSender
+	eventManager: EventManager
+	undoManager: UndoManager
 
 	constructor(public canvasElm: HTMLCanvasElement) {
+		const factory = new OffscreenCanvasProxyFactory()
 		this.canvasProxy = new WebCanvasProxy(this.canvasElm)
 		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
-		this.imageCanvas = new ImageCanvasDrawer(canvasModel, new OffscreenCanvasProxyFactory())
+		this.imageCanvas = new ImageCanvasDrawer(canvasModel, factory)
+
+		this.eventManager = new EventManager()
+		this.eventSender = new DebugEventSender(this.eventManager)
+
+		this.eventSender.event({ kind: 'canvasInitialized', size: this.canvasProxy.size })
+
+		this.eventManager.registerPlugin(new EventRenderer(this))
+
+		this.undoManager = new UndoManager('debugUser', this.eventManager, factory, canvasModel)
+		this.eventManager.registerPlugin(this.undoManager)
 
 		this.penTool = new PenTool(this)
 	}
 
 	init(): void {
-		this.imageCanvas.command({
+		this.eventSender.command({
 			kind: 'createLayer',
 			id: 'default',
 		})
 
-		this.imageCanvas.command({
+		this.eventSender.command({
 			kind: 'createLayer',
 			id: 'top-default',
 		})
 
 		this.penTool.enable()
+	}
+
+	undo(): void {
+		const event = this.undoManager.createUndoEvent()
+		if (event === undefined) {
+			return
+		}
+		this.eventSender.event(event)
 	}
 
 	render(): void {
