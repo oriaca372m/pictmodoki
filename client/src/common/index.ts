@@ -18,14 +18,21 @@ export type EventType =
 
 export type EventId = string
 
-export type UserId = string
-
 export interface Event {
 	id: EventId
 	userId: UserId
 	isRevoked: boolean
 	isVirtual: boolean
 	eventType: EventType
+}
+
+// virtual eventとreal eventの等価性を確認する
+function isEqualVirtualRealEvent(real: Event, virtual: Event): boolean {
+	if (real.userId !== virtual.userId) {
+		return false
+	}
+
+	return JSON.stringify(real.eventType) === JSON.stringify(virtual.eventType)
 }
 
 export class EventPlayer {
@@ -55,15 +62,7 @@ export class EventPlayer {
 export interface EventManagerPlugin {
 	onEvent(event: Event): void
 	onHistoryChanged(): void
-}
-
-// virtual eventとreal eventの等価性を確認する
-function isEqualVirtualRealEvent(real: Event, virtual: Event): boolean {
-	if (real.userId !== virtual.userId) {
-		return false
-	}
-
-	return JSON.stringify(real.eventType) === JSON.stringify(virtual.eventType)
+	onHistoryWiped(wipedEvents: Event[]): void
 }
 
 export class EventManager {
@@ -71,6 +70,7 @@ export class EventManager {
 	private _plugins: EventManagerPlugin[] = []
 	private _lastRealEvent = -1
 	private _isClean = true
+	private _numRealEventToPreserve = 50
 
 	registerPlugin(plugin: EventManagerPlugin): void {
 		this._plugins.push(plugin)
@@ -84,6 +84,21 @@ export class EventManager {
 	private _rewindHistory(toIndex: number): void {
 		this._history = this._history.splice(toIndex + 1)
 		this._plugins.forEach(x => { x.onHistoryChanged() })
+	}
+
+	private _wipeHistoryIfnecessary(): void {
+		if (!this._isClean) {
+			return
+		}
+
+		const numToWipe = this._history.length - this._numRealEventToPreserve
+		if (numToWipe < 1) {
+			return
+		}
+
+		const wiped = this._history.splice(0, numToWipe)
+		this._lastRealEvent -= numToWipe
+		this._plugins.forEach(x => { x.onHistoryWiped(wiped) })
 	}
 
 	// historyの最後の要素のインデックス
@@ -118,10 +133,12 @@ export class EventManager {
 
 	event(event: Event): void {
 		if (event.isVirtual) {
-			this._isClean = false
 			this._history.push(event)
+			this._isClean = false
 		} else {
-			if (this._pushRealEvent(event)) {
+			const shouldExit = this._pushRealEvent(event)
+			this._wipeHistoryIfnecessary()
+			if (shouldExit) {
 				return
 			}
 		}
@@ -152,7 +169,6 @@ export class EventManager {
 export class UndoManager implements EventManagerPlugin {
 	private readonly _lastRendered: ImageCanvasModel
 	private readonly _lastRenderedDrawer: ImageCanvasDrawer
-	private readonly _lastRenderedEventId: EventId
 	private readonly _lastRenderedEventPlayer: EventPlayer
 
 	constructor(
@@ -164,34 +180,26 @@ export class UndoManager implements EventManagerPlugin {
 		this._lastRendered = currentImageCanvasModel.clone(this._canvasProxyFactory)
 		this._lastRenderedDrawer = new ImageCanvasDrawer(this._lastRendered, _canvasProxyFactory)
 		this._lastRenderedEventPlayer = new EventPlayer(this._lastRenderedDrawer)
-
-		const lastEventId = this._eventManager.history[this._eventManager.history.length - 1].id
-		this._lastRenderedEventId = lastEventId
 	}
 
-	onEvent(_event: Event): void {
-		// this._forwardOne()
+	onEvent(): void {
+		// pass
 	}
 
 	onHistoryChanged(): void {
 		// pass
 	}
 
+	onHistoryWiped(events: Event[]): void {
+		this._lastRenderedEventPlayer.play(events)
+	}
+
 	createUndoedImageCanvasModel(): ImageCanvasModel {
 		const model = this._lastRendered.clone(this._canvasProxyFactory)
 		const drawer = new ImageCanvasDrawer(model, this._canvasProxyFactory)
 		const player = new EventPlayer(drawer)
-		console.log(this._eventManager.history)
 		player.play(this._eventManager.history)
 		return model
-	}
-
-	private _forwardOne(): void {
-		const currentIndex = this._eventManager.history.findIndex(x => x.id === this._lastRenderedEventId)
-		if (currentIndex === -1) {
-			throw 'breaked undo history...'
-		}
-		this._lastRenderedEventPlayer.playSingleEvent(this._eventManager.history[currentIndex + 1])
 	}
 
 	private _canCreateUndoEvent(): boolean {
@@ -269,5 +277,7 @@ export class DebugEventSender implements EventSender {
 		}, 1000)
 	}
 }
+
+export type UserId = string
 
 export class User { }

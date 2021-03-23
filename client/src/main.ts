@@ -207,6 +207,10 @@ class EventRenderer implements EventManagerPlugin {
 		this._app.imageCanvas.setModel(model)
 		this._app.render()
 	}
+
+	onHistoryWiped(): void {
+		// pass
+	}
 }
 
 class App {
