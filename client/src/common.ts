@@ -6,14 +6,13 @@ export type LayerDrawCommand =
 	| { kind: 'erase'; positions: Position[]; width: number }
 	| { kind: 'clear' }
 
-export interface LayerCanvas {
-	readonly canvasProxy: CanvasProxy
+export class LayerCanvasModel {
+	constructor(readonly id: LayerId, private readonly _canvasProxy: CanvasProxy, private _name: string) {
+	}
 
-	command(cmd: LayerDrawCommand): void
-}
-
-class LayerController {
-	constructor(readonly id: LayerId, readonly layerCanvas: LayerCanvas, private _name: string) {}
+	get canvasProxy(): CanvasProxy {
+		return this._canvasProxy
+	}
 
 	get name(): string {
 		return this._name
@@ -21,16 +20,19 @@ class LayerController {
 	setName(name: string): void {
 		this._name = name
 	}
+
+	clone(factory: CanvasProxyFactory): LayerCanvasModel {
+		const newCanvas = factory.createCanvasProxy(this._canvasProxy.size)
+		this._canvasProxy.drawSelfTo(newCanvas.getContext())
+		return new LayerCanvasModel(this.id, newCanvas, this.name)
+	}
 }
 
-export class NormalLayer implements LayerCanvas {
+class LayerDrawer {
 	private readonly _drawer: CanvasDrawer
-	constructor(private readonly _canvasProxy: CanvasProxy) {
-		this._drawer = new CanvasDrawer(_canvasProxy)
-	}
 
-	get canvasProxy(): CanvasProxy {
-		return this._canvasProxy
+	constructor(readonly canvasProxy: CanvasProxy) {
+		this._drawer = new CanvasDrawer(this.canvasProxy)
 	}
 
 	command(cmd: LayerDrawCommand): void {
@@ -41,6 +43,14 @@ export class NormalLayer implements LayerCanvas {
 		} else if (cmd.kind === 'clear') {
 			this._drawer.clear()
 		}
+	}
+}
+
+class LayerController {
+	readonly drawer: LayerDrawer
+
+	constructor(readonly layer: LayerCanvasModel) {
+		this.drawer = new LayerDrawer(layer.canvasProxy)
 	}
 }
 
@@ -121,50 +131,180 @@ export type ImageCanvasCommand =
 	| { kind: 'removeLayer'; layer: LayerId }
 	| { kind: 'drawLayer'; layer: LayerId; drawCommand: LayerDrawCommand }
 
-export class User {}
+type EventType =
+	| { kind: 'layerCreated'; layerId: LayerId }
+	| { kind: 'layerRemoved'; layerId: LayerId }
+	| { kind: 'eventRevoked'; eventId: EventId }
+	| { kind: 'eventRestored'; eventId: EventId }
+	| { kind: 'layerDrawn'; layerId: LayerId; drawCommand: LayerDrawCommand }
 
-export class CommandHistory {
-	push(cmd: ImageCanvasCommand, sender: User): void {}
+type EventId = string
+
+interface Event {
+	id: EventId
+	userId: string
+	isRevoked: boolean
+	eventType: EventType
 }
 
-export class ImageCanvas {
-	private _layers: LayerController[] = []
+class EventPlayer {
+	constructor(private imageCanvas: ImageCanvasDrawer) {
+	}
 
-	private _previewOriginalLayer: LayerController | undefined
-	private _previewLayer: NormalLayer | undefined
+	play(events: Event[]): void {
+		for (const event of events) {
+			this.playSingleEvent(event)
+		}
+	}
 
-	constructor(
-		private readonly _size: Size,
-		private readonly _canvasProxyFactory: CanvasProxyFactory
-	) {}
+	playSingleEvent(event: Event): void {
+		if (event.isRevoked) {
+			return
+		}
 
-	get layers(): readonly LayerController[] {
-		return this._layers
+		const p = event.eventType
+		if (p.kind === 'layerDrawn') {
+			this.imageCanvas.command({ kind: 'drawLayer', layer: p.layerId, drawCommand: p.drawCommand })
+		}
+	}
+}
+
+export function findById<T, U extends { id: T }>(arr: readonly U[], id: T): U | undefined {
+	return arr.find(x => x.id === id)
+}
+
+export function findByIdError<T, U extends { id: T }>(arr: readonly U[], id: T): U {
+	return arr.find(x => x.id === id) ?? throwError(new Error('Could not found id'))
+}
+
+class EventManager {
+	_history: Event[] = []
+
+	event(event: Event) {
+		this._history.push(event)
+
+		if (event.eventType.kind === 'eventRevoked') {
+			const revokedId = event.eventType.eventId
+			findByIdError(this._history, revokedId).isRevoked = true
+			this._history.find(x => x.id === revokedId)!.isRevoked = true
+		}
+	}
+
+	get history(): Event[] {
+		return this._history
+	}
+}
+
+interface EventSender {
+	command(cmd: ImageCanvasCommand): void
+}
+
+class DebugEventSender implements EventSender {
+	private _eventId = 0
+	constructor(private _manager: EventManager) { }
+
+	command(cmd: ImageCanvasCommand): void {
+		if (cmd.kind === 'drawLayer') {
+			this._pushEvent({ kind: 'layerDrawn', layerId: cmd.layer, drawCommand: cmd.drawCommand })
+		}
+	}
+
+	private _pushEvent(eventType: EventType) {
+		this._manager.event({
+			id: this._eventId.toString(),
+			userId: 'debugUser',
+			isRevoked: false,
+			eventType
+		})
+
+		this._eventId++
+	}
+}
+
+export class User { }
+
+export class CommandHistory {
+	push(cmd: ImageCanvasCommand, sender: User): void { }
+}
+
+export class ImageCanvasModel {
+	layers: LayerCanvasModel[] = []
+	constructor(readonly size: Size) { }
+
+	clone(factory: CanvasProxyFactory): ImageCanvasModel {
+		const newImageCanvas = new ImageCanvasModel(this.size)
+		newImageCanvas.layers = this.layers.map(x => x.clone(factory))
+		return newImageCanvas
+	}
+}
+
+export class ImageCanvasDrawer {
+	private _model!: ImageCanvasModel
+	private _layerControllers = new Map<LayerCanvasModel, LayerController>()
+
+	private _previewOriginalLayer: LayerCanvasModel | undefined
+	private _previewLayer: LayerDrawer | undefined
+
+	constructor(model: ImageCanvasModel, private readonly _canvasProxyFactory: CanvasProxyFactory) {
+		this.setModel(model)
+	}
+
+	get model(): ImageCanvasModel {
+		return this._model
+	}
+
+	get canvasProxyFactory(): CanvasProxyFactory {
+		return this._canvasProxyFactory
+	}
+
+	setModel(model: ImageCanvasModel): void {
+		this._layerControllers.clear()
+		this._previewOriginalLayer = undefined
+		this._previewLayer = undefined
+
+		this._model = model
+		for (const layer of model.layers) {
+			this._layerControllers.set(layer, new LayerController(layer))
+		}
+	}
+
+	cloneModel(): ImageCanvasModel {
+		return this._model.clone(this._canvasProxyFactory)
+	}
+
+	get layers(): readonly LayerCanvasModel[] {
+		return this._model.layers
 	}
 
 	private _createLayer(id: LayerId): LayerController {
-		const foundLayer = this._layers.find((x) => x.id === id)
+		const foundLayer = this.layers.find((x) => x.id === id)
 		if (foundLayer !== undefined) {
-			return foundLayer
+			return this._layerControllers.get(foundLayer)!
 		}
-		const canvas = this._canvasProxyFactory.createCanvasProxy(this._size)
-		const layerCanvas = new NormalLayer(canvas)
-		const controller = new LayerController(id, layerCanvas, '新規レイヤー')
+
+		const canvas = this._canvasProxyFactory.createCanvasProxy(this._model.size)
+		const layerModel = new LayerCanvasModel(id, canvas, '新規レイヤー')
+		const controller = new LayerController(layerModel)
+
+		this._model.layers.push(layerModel)
+		this._layerControllers.set(layerModel, controller)
+
 		return controller
 	}
 
 	removeLayer(id: LayerId): void {
-		this._layers = this._layers.filter((x) => x.id !== id)
+		const controller = this._findLayerById(id)
+		this._model.layers = this._model.layers.filter(x => x.id === controller.layer.id)
+		this._layerControllers.delete(controller.layer)
 	}
 
 	command(cmd: ImageCanvasCommand): void {
 		if (cmd.kind === 'createLayer') {
-			const layer = this._createLayer(cmd.id)
-			this._layers.push(layer)
+			this._createLayer(cmd.id)
 		}
 
 		if (cmd.kind === 'drawLayer') {
-			this._findLayerById(cmd.layer).layerCanvas.command(cmd.drawCommand)
+			this._findLayerById(cmd.layer).drawer.command(cmd.drawCommand)
 		}
 	}
 
@@ -173,10 +313,10 @@ export class ImageCanvas {
 			return
 		}
 
-		this._previewOriginalLayer = this._findLayerById(layer)
+		this._previewOriginalLayer = this._findLayerById(layer).layer
 
-		const canvas = this._canvasProxyFactory.createCanvasProxy(this._size)
-		this._previewLayer = new NormalLayer(canvas)
+		const canvas = this._canvasProxyFactory.createCanvasProxy(this._model.size)
+		this._previewLayer = new LayerDrawer(canvas)
 	}
 
 	drawPreview(drawCmd: LayerDrawCommand): void {
@@ -186,7 +326,7 @@ export class ImageCanvas {
 
 		const drawer = new CanvasDrawer(this._previewLayer.canvasProxy)
 		drawer.clear()
-		drawer.drawCanvasProxy(this._previewOriginalLayer!.layerCanvas.canvasProxy)
+		drawer.drawCanvasProxy(this._previewOriginalLayer!.canvasProxy)
 		this._previewLayer.command(drawCmd)
 	}
 
@@ -198,19 +338,22 @@ export class ImageCanvas {
 	render(canvas: CanvasProxy): void {
 		const drawer = new CanvasDrawer(canvas)
 		drawer.clear()
-		for (const layer of this._layers) {
+		for (const layer of this._model.layers) {
 			if (this._previewOriginalLayer && this._previewOriginalLayer.id === layer.id) {
 				drawer.drawCanvasProxy(this._previewLayer!.canvasProxy)
 			} else {
-				drawer.drawCanvasProxy(layer.layerCanvas.canvasProxy)
+				drawer.drawCanvasProxy(layer.canvasProxy)
 			}
 		}
 	}
 
 	private _findLayerById(id: LayerId): LayerController {
-		return (
-			this._layers.find((x) => x.id === id) ?? throwError(new Error('レイヤーが見つからない'))
-		)
+		const model = this._model.layers.find((x) => x.id === id)
+		if (model === undefined) {
+			throw new Error('レイヤーが見つからない')
+		}
+
+		return this._layerControllers.get(model)!
 	}
 }
 

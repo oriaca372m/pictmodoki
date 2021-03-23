@@ -1,4 +1,4 @@
-import { CanvasProxy, CanvasProxyFactory, ImageCanvas, LayerDrawCommand } from './common'
+import { CanvasProxy, CanvasProxyFactory, ImageCanvasModel, ImageCanvasDrawer, LayerDrawCommand } from './common'
 import { Size, Position, Color } from './primitives'
 
 import Vue from 'vue'
@@ -69,7 +69,7 @@ class PenTool implements Tool {
 	color: Color = '#ff0000'
 	width = 10
 	mode: 'stroke' | 'erase' = 'stroke'
-	private readonly _imageCanvas: ImageCanvas
+	private readonly _imageCanvas: ImageCanvasDrawer
 	private readonly _canvasElm: HTMLCanvasElement
 
 	private _isEnabled = false
@@ -173,13 +173,14 @@ class PenTool implements Tool {
 
 class App {
 	canvasProxy: WebCanvasProxy
-	imageCanvas: ImageCanvas
+	imageCanvas: ImageCanvasDrawer
 	penTool: PenTool
 	selectedLayerId = 'default'
 
 	constructor(public canvasElm: HTMLCanvasElement) {
 		this.canvasProxy = new WebCanvasProxy(this.canvasElm)
-		this.imageCanvas = new ImageCanvas(this.canvasProxy.size, new OffscreenCanvasProxyFactory())
+		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
+		this.imageCanvas = new ImageCanvasDrawer(canvasModel, new OffscreenCanvasProxyFactory())
 
 		this.penTool = new PenTool(this)
 	}

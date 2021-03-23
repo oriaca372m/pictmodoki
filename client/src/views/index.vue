@@ -2,6 +2,10 @@
 	<div>
 		<canvas ref="canvas" width="800" height="800"></canvas>
 		<div>
+			<button @click="save">保存</button>
+			<button @click="restore">復元</button>
+		</div>
+		<div>
 			<button @click="selectColor('#ff0000')">赤</button>
 			<button @click="selectColor('#0000ff')">青</button>
 			<button @click="selectColor('erase')">消しゴム</button>
@@ -22,6 +26,7 @@ import { main } from '../main'
 export default {
 	data: () => ({
 		app: undefined,
+		savedCanvas: undefined,
 		counter: 0,
 		layers: [{ id: 'id1' }, { id: 'id2' }],
 		selectedLayerId: 'default'
@@ -29,7 +34,7 @@ export default {
 
 	mounted: function() {
 		this.app = main(this.$refs.canvas)
-		this.layers = this.app.imageCanvas.layers
+		this.layers = this.app.imageCanvas.model.layers
 	},
 
 	methods: {
@@ -45,6 +50,15 @@ export default {
 			}
 			this.app.penTool.mode = 'stroke'
 			this.app.penTool.color = color
+		},
+
+		save: function() {
+			this.savedCanvas = this.app.imageCanvas.cloneModel()
+		},
+
+		restore: function() {
+			this.app.imageCanvas.setModel(this.savedCanvas.clone(this.app.imageCanvas.canvasProxyFactory))
+			this.app.render()
 		}
 	}
 }
