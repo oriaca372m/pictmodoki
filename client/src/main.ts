@@ -251,7 +251,11 @@ export class App {
 	undoManager: ImageCanvasUndoManager
 	factory: OffscreenCanvasProxyFactory
 
-	constructor(public canvasElm: HTMLCanvasElement, public socket: WebSocket) {
+	constructor(
+		public canvasElm: HTMLCanvasElement,
+		public socket: WebSocket,
+		public userId: string
+	) {
 		this.factory = new OffscreenCanvasProxyFactory()
 		this.canvasProxy = new WebCanvasProxy(this.canvasElm)
 		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
@@ -272,7 +276,7 @@ export class App {
 		this.eventManager.registerPlugin(new EventRenderer(this))
 
 		this.undoManager = new ImageCanvasUndoManager(
-			'debugUser',
+			this.userId,
 			this.eventManager,
 			this.factory,
 			canvasModel
@@ -306,9 +310,12 @@ export class App {
 
 export function main(elm: HTMLCanvasElement): App {
 	const sock = new WebSocket('ws://127.0.0.1:5001')
-	const app = new App(elm, sock)
+	const userId = window.prompt('USER ID?') ?? 'default'
+	const app = new App(elm, sock, userId)
 
 	sock.onopen = () => {
+		sock.send(encode({ kind: 'setUserId', value: app.userId }))
+
 		console.log('started')
 		app.init()
 		app.render()

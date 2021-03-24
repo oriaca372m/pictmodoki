@@ -119,8 +119,8 @@ class App {
 		this.eventMgr.registerPlugin(this.undoMgr)
 
 		this.cmdInterpreter = new CommandInterpreter(this.eventMgr)
-		this.cmdInterpreter.command({ kind: 'createLayer' })
-		this.cmdInterpreter.command({ kind: 'createLayer' })
+		this.cmdInterpreter.command('system', { kind: 'createLayer' })
+		this.cmdInterpreter.command('system', { kind: 'createLayer' })
 	}
 
 	render(): void {
@@ -136,9 +136,9 @@ export class CommandInterpreter {
 	private _layerId = 0
 	constructor(private _manager: ImageCanvasEventManager) {}
 
-	command(cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {
+	command(userId: string, cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {
 		if (cmd.kind === 'drawLayer') {
-			const event = this._genEvent({
+			const event = this._genEvent(userId, {
 				kind: 'layerDrawn',
 				layerId: cmd.layer,
 				drawCommand: cmd.drawCommand,
@@ -146,7 +146,7 @@ export class CommandInterpreter {
 			this._pushEvent(event)
 			return event
 		} else if (cmd.kind === 'createLayer') {
-			const event = this._genEvent({
+			const event = this._genEvent(userId, {
 				kind: 'layerCreated',
 				layerId: this._layerId.toString(),
 			})
@@ -154,16 +154,16 @@ export class CommandInterpreter {
 			this._layerId++
 			return event
 		} else if (cmd.kind === 'revokeEvent') {
-			const event = this._genEvent({ kind: 'eventRevoked', eventId: cmd.eventId })
+			const event = this._genEvent(userId, { kind: 'eventRevoked', eventId: cmd.eventId })
 			this._pushEvent(event)
 			return event
 		}
 	}
 
-	private _genEvent(eventType: ImageCanvasEventType): ImageCanvasEvent {
+	private _genEvent(userId: string, eventType: ImageCanvasEventType): ImageCanvasEvent {
 		return {
 			id: this._eventId.toString(),
-			userId: 'debugUser',
+			userId,
 			isRevoked: false,
 			isVirtual: false,
 			eventType,
@@ -177,14 +177,27 @@ export class CommandInterpreter {
 	}
 }
 
+interface ConnectionData {
+	userId: string
+}
+
 function main() {
 	const s = new ws.Server({ port: 5001 })
 	const app = new App()
 
 	s.on('connection', (ws) => {
+		const connectionData: ConnectionData = {
+			userId: 'default',
+		}
+
 		ws.on('message', (message: unknown) => {
 			console.log(message)
 			const cmd = decode(message as Uint8Array) as Command
+
+			if (cmd.kind === 'setUserId') {
+				console.log(cmd.value)
+				connectionData.userId = cmd.value
+			}
 
 			if (cmd.kind === 'requestData') {
 				void (async () => {
@@ -198,7 +211,7 @@ function main() {
 			}
 
 			if (cmd.kind === 'imageCanvasCommand') {
-				const canvasEvent = app.cmdInterpreter.command(cmd.value)
+				const canvasEvent = app.cmdInterpreter.command(connectionData.userId, cmd.value)
 
 				s.clients.forEach((client) => {
 					if (canvasEvent === undefined) {

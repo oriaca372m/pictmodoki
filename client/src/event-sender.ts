@@ -91,7 +91,7 @@ export class SocketCommandSender implements CommandSender {
 	private _pushEvent(eventType: ImageCanvasEventType) {
 		this._manager.event({
 			id: 'virtual',
-			userId: 'debugUser',
+			userId: this._app.userId,
 			isRevoked: false,
 			isVirtual: true,
 			eventType,
