@@ -25,6 +25,7 @@
     "webpack-node-externals": "^2.5.2"
   },
   "dependencies": {
+    "@msgpack/msgpack": "^2.5.1",
     "canvas": "^2.7.0",
     "ws": "^7.4.4"
   }

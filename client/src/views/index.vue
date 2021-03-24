@@ -35,7 +35,10 @@ export default {
 
 	mounted: function() {
 		this.app = main(this.$refs.canvas)
-		this.layers = this.app.imageCanvas.model.layers
+
+		setInterval(() => {
+			this.layers = this.app.imageCanvas.model.layers
+		}, 1000)
 	},
 
 	methods: {

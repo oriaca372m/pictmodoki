@@ -16,15 +16,13 @@ import {
 
 import { CommandSender, SocketCommandSender } from './event-sender'
 
+import { encode } from '@msgpack/msgpack'
+
 import Vue from 'vue'
 import VueIndex from './views/index.vue'
 
 class OffscreenCanvasProxy implements CanvasProxy {
-	private readonly _canvas: OffscreenCanvas
-
-	constructor(private readonly _size: Size) {
-		this._canvas = new OffscreenCanvas(_size.width, _size.height)
-	}
+	constructor(private readonly _canvas: OffscreenCanvas) {}
 
 	getContext(): CanvasRenderingContext2D {
 		const ctx = this._canvas.getContext('2d')
@@ -40,14 +38,29 @@ class OffscreenCanvasProxy implements CanvasProxy {
 		ctx.drawImage(this._canvas, 0, 0)
 	}
 
+	async serialize(): Promise<Uint8Array> {
+		const blob = await this._canvas.convertToBlob()
+		const arrayBuffer = await blob.arrayBuffer()
+		return new Uint8Array(arrayBuffer)
+	}
+
 	get size(): Size {
-		return this._size
+		return { width: this._canvas.width, height: this._canvas.height }
 	}
 }
 
-class OffscreenCanvasProxyFactory implements CanvasProxyFactory {
+export class OffscreenCanvasProxyFactory implements CanvasProxyFactory {
 	createCanvasProxy(size: Size): CanvasProxy {
-		return new OffscreenCanvasProxy(size)
+		const canvas = new OffscreenCanvas(size.width, size.height)
+		return new OffscreenCanvasProxy(canvas)
+	}
+
+	async createCanvasProxyFromBitmap(data: Uint8Array): Promise<CanvasProxy> {
+		const image = await createImageBitmap(new Blob([data]))
+		const canvas = new OffscreenCanvas(image.width, image.height)
+		const renderer = canvas.getContext('2d')
+		renderer?.drawImage(image, 0, 0)
+		return new OffscreenCanvasProxy(canvas)
 	}
 }
 
@@ -65,6 +78,21 @@ class WebCanvasProxy implements CanvasProxy {
 
 	drawSelfTo(ctx: CanvasRenderingContext2D): void {
 		ctx.drawImage(this._canvas, 0, 0)
+	}
+
+	async serialize(): Promise<Uint8Array> {
+		return new Promise((resolve, reject) => {
+			this._canvas.toBlob((blob) => {
+				if (blob === null) {
+					reject()
+					return
+				}
+
+				blob.arrayBuffer()
+					.then((x) => resolve(new Uint8Array(x)))
+					.catch((x) => reject(x))
+			})
+		})
 	}
 
 	get size(): Size {
@@ -213,7 +241,7 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 	}
 }
 
-class App {
+export class App {
 	canvasProxy: WebCanvasProxy
 	imageCanvas: ImageCanvasDrawer
 	penTool: PenTool
@@ -221,12 +249,13 @@ class App {
 	commandSender!: CommandSender
 	eventManager: ImageCanvasEventManager
 	undoManager: ImageCanvasUndoManager
+	factory: OffscreenCanvasProxyFactory
 
 	constructor(public canvasElm: HTMLCanvasElement, public socket: WebSocket) {
-		const factory = new OffscreenCanvasProxyFactory()
+		this.factory = new OffscreenCanvasProxyFactory()
 		this.canvasProxy = new WebCanvasProxy(this.canvasElm)
 		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
-		this.imageCanvas = new ImageCanvasDrawer(canvasModel, factory)
+		this.imageCanvas = new ImageCanvasDrawer(canvasModel, this.factory)
 
 		this.eventManager = new ImageCanvasEventManager()
 		this.eventManager.event({
@@ -245,7 +274,7 @@ class App {
 		this.undoManager = new ImageCanvasUndoManager(
 			'debugUser',
 			this.eventManager,
-			factory,
+			this.factory,
 			canvasModel
 		)
 		this.eventManager.registerPlugin(this.undoManager)
@@ -254,12 +283,10 @@ class App {
 	}
 
 	init(): void {
-		const sender = new SocketCommandSender(this.eventManager, this.socket)
+		const sender = new SocketCommandSender(this, this.eventManager, this.socket)
 		sender.start()
 
 		this.commandSender = sender
-		this.commandSender.command({ kind: 'createLayer' })
-		this.commandSender.command({ kind: 'createLayer' })
 
 		this.penTool.enable()
 	}
@@ -285,6 +312,8 @@ export function main(elm: HTMLCanvasElement): App {
 		console.log('started')
 		app.init()
 		app.render()
+
+		sock.send(encode({ kind: 'requestData' }))
 	}
 
 	return app

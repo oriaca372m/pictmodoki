@@ -1,10 +1,13 @@
 import * as ws from 'ws'
 import { createCanvas, Canvas } from 'canvas'
+import { decode, encode } from '@msgpack/msgpack'
 
 import {
 	CanvasProxy,
 	CanvasProxyFactory,
 	Size,
+	Command,
+	Event,
 	ImageCanvasEvent,
 	ImageCanvasEventType,
 	ImageCanvasModel,
@@ -34,6 +37,11 @@ class NodeCanvasProxy implements CanvasProxy {
 
 	get size(): Size {
 		return { width: this._canvas.width, height: this._canvas.height }
+	}
+
+	serialize(): Promise<Uint8Array> {
+		const buf = this._canvas.toBuffer()
+		return Promise.resolve(new Uint8Array(buf))
 	}
 
 	saveFile(path: string): void {
@@ -111,12 +119,14 @@ class App {
 		this.eventMgr.registerPlugin(this.undoMgr)
 
 		this.cmdInterpreter = new CommandInterpreter(this.eventMgr)
+		this.cmdInterpreter.command({ kind: 'createLayer' })
+		this.cmdInterpreter.command({ kind: 'createLayer' })
 	}
 
 	render(): void {
 		console.log('onrenderer')
 		this.drawer.render(this.targetCanvas)
-		this.targetCanvas.saveFile(`${this.numFile}.png`)
+		// this.targetCanvas.saveFile(`${this.numFile}.png`)
 		this.numFile++
 	}
 }
@@ -174,13 +184,32 @@ function main() {
 	s.on('connection', (ws) => {
 		ws.on('message', (message: unknown) => {
 			console.log(message)
-			const cmd = JSON.parse(message as string) as ImageCanvasCommand
+			const cmd = decode(message as Uint8Array) as Command
 
-			const event = app.cmdInterpreter.command(cmd)
+			if (cmd.kind === 'requestData') {
+				void (async () => {
+					const event: Event = {
+						kind: 'dataSent',
+						value: await app.drawer.model.serialize(),
+					}
+					ws.send(encode(event))
+				})()
+			}
 
-			s.clients.forEach((client) => {
-				client.send(JSON.stringify(event))
-			})
+			if (cmd.kind === 'imageCanvasCommand') {
+				const canvasEvent = app.cmdInterpreter.command(cmd.value)
+
+				s.clients.forEach((client) => {
+					if (canvasEvent === undefined) {
+						return
+					}
+					const event: Event = {
+						kind: 'imageCanvasEvent',
+						value: canvasEvent,
+					}
+					client.send(encode(event))
+				})
+			}
 		})
 	})
 }

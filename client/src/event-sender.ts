@@ -1,28 +1,79 @@
 import {
+	Command,
+	Event,
 	ImageCanvasCommand,
-	ImageCanvasEvent,
 	ImageCanvasEventType,
 	ImageCanvasEventManager,
+	ImageCanvasModel,
+	SerializedImageCanvasModel,
+	LayerCanvasModel,
+	SerializedLayerCanvasModel,
 } from 'common'
+
+import { OffscreenCanvasProxyFactory, App } from './main'
+import { encode, decodeAsync } from '@msgpack/msgpack'
+
+async function deserializeLayerCanvasModel(
+	data: SerializedLayerCanvasModel,
+	factory: OffscreenCanvasProxyFactory
+): Promise<LayerCanvasModel> {
+	return new LayerCanvasModel(
+		data.id,
+		await factory.createCanvasProxyFromBitmap(data.image),
+		data.name
+	)
+}
+
+async function deserializeImageCanvasModel(
+	data: SerializedImageCanvasModel,
+	factory: OffscreenCanvasProxyFactory
+): Promise<ImageCanvasModel> {
+	const model = new ImageCanvasModel(data.size)
+	const layers = await Promise.all(
+		data.layers.map((x) => deserializeLayerCanvasModel(x, factory))
+	)
+	model.layers = layers
+	return model
+}
 
 export interface CommandSender {
 	command(cmd: ImageCanvasCommand): void
 }
 
 export class SocketCommandSender implements CommandSender {
-	constructor(private _manager: ImageCanvasEventManager, private _socket: WebSocket) {}
+	constructor(
+		private _app: App,
+		private _manager: ImageCanvasEventManager,
+		private _socket: WebSocket
+	) {}
 
 	start(): void {
 		this._socket.onmessage = (msg) => {
-			console.log(msg.data)
-			const event = JSON.parse(msg.data) as ImageCanvasEvent
-			this._manager.event(event)
+			void (async () => {
+				const blob = msg.data as Blob
+				console.log(blob)
+
+				const event = (await decodeAsync(blob.stream())) as Event
+				console.log(event)
+				if (event.kind === 'imageCanvasEvent') {
+					this._manager.event(event.value)
+				} else if (event.kind === 'dataSent') {
+					this._app.imageCanvas.setModel(
+						await deserializeImageCanvasModel(event.value, this._app.factory)
+					)
+					this._app.render()
+				}
+			})()
 		}
 	}
 
 	command(cmd: ImageCanvasCommand): void {
-		this._socket.send(JSON.stringify(cmd))
+		this._pushToSocket({ kind: 'imageCanvasCommand', value: cmd })
 		this._pushVirtualEvent(cmd)
+	}
+
+	private _pushToSocket(cmd: Command) {
+		this._socket.send(encode(cmd))
 	}
 
 	private _pushVirtualEvent(cmd: ImageCanvasCommand): void {

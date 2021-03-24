@@ -4,6 +4,7 @@ export interface CanvasProxy {
 	getContext(): CanvasRenderingContext2D
 	drawSelfTo(ctx: CanvasRenderingContext2D): void
 
+	serialize(): Promise<Uint8Array>
 	readonly size: Size
 }
 

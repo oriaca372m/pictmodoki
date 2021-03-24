@@ -1,6 +1,17 @@
 import { Size } from './primitives'
 import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from './canvas-proxy'
-import { LayerId, LayerDrawCommand, LayerCanvasModel, LayerDrawer } from './layer'
+import {
+	LayerId,
+	LayerDrawCommand,
+	LayerCanvasModel,
+	LayerDrawer,
+	SerializedLayerCanvasModel,
+} from './layer'
+
+export interface SerializedImageCanvasModel {
+	size: Size
+	layers: SerializedLayerCanvasModel[]
+}
 
 export class ImageCanvasModel {
 	layers: LayerCanvasModel[] = []
@@ -10,6 +21,13 @@ export class ImageCanvasModel {
 		const newImageCanvas = new ImageCanvasModel(this.size)
 		newImageCanvas.layers = this.layers.map((x) => x.clone(factory))
 		return newImageCanvas
+	}
+
+	async serialize(): Promise<SerializedImageCanvasModel> {
+		return {
+			size: this.size,
+			layers: await Promise.all(this.layers.map((x) => x.serialize())),
+		}
 	}
 }
 

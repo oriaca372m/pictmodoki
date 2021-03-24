@@ -27,6 +27,7 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
+    "@msgpack/msgpack": "^2.5.1",
     "common": "*",
     "vue": "^2.6.12"
   }

@@ -7,6 +7,12 @@ export type LayerDrawCommand =
 	| { kind: 'erase'; positions: Position[]; width: number }
 	| { kind: 'clear' }
 
+export interface SerializedLayerCanvasModel {
+	id: LayerId
+	name: string
+	image: Uint8Array
+}
+
 export class LayerCanvasModel {
 	constructor(
 		readonly id: LayerId,
@@ -29,6 +35,14 @@ export class LayerCanvasModel {
 		const newCanvas = factory.createCanvasProxy(this._canvasProxy.size)
 		this._canvasProxy.drawSelfTo(newCanvas.getContext())
 		return new LayerCanvasModel(this.id, newCanvas, this.name)
+	}
+
+	async serialize(): Promise<SerializedLayerCanvasModel> {
+		return {
+			id: this.id,
+			name: this._name,
+			image: await this._canvasProxy.serialize(),
+		}
 	}
 }
 
