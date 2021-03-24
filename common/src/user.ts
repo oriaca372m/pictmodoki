@@ -1,3 +1,3 @@
 export type UserId = string
 
-export class User { }
+export class User {}

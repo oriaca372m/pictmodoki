@@ -1,12 +1,16 @@
-import { ImageCanvasCommand, ImageCanvasEvent, ImageCanvasEventType, ImageCanvasEventManager } from 'common'
+import {
+	ImageCanvasCommand,
+	ImageCanvasEvent,
+	ImageCanvasEventType,
+	ImageCanvasEventManager,
+} from 'common'
 
 export interface CommandSender {
 	command(cmd: ImageCanvasCommand): void
 }
 
 export class SocketCommandSender implements CommandSender {
-	constructor(private _manager: ImageCanvasEventManager, private _socket: WebSocket) {
-	}
+	constructor(private _manager: ImageCanvasEventManager, private _socket: WebSocket) {}
 
 	start(): void {
 		this._socket.onmessage = (msg) => {
@@ -21,7 +25,7 @@ export class SocketCommandSender implements CommandSender {
 		this._pushVirtualEvent(cmd)
 	}
 
-	private _pushVirtualEvent(cmd: ImageCanvasCommand):void {
+	private _pushVirtualEvent(cmd: ImageCanvasCommand): void {
 		if (cmd.kind === 'drawLayer') {
 			this._pushEvent({
 				kind: 'layerDrawn',
@@ -47,8 +51,7 @@ export class SocketCommandSender implements CommandSender {
 export class DebugCommandSender implements CommandSender {
 	private _eventId = 0
 	private _layerId = 0
-	constructor(private _manager: ImageCanvasEventManager, private _socket: WebSocket) {
-	}
+	constructor(private _manager: ImageCanvasEventManager, private _socket: WebSocket) {}
 
 	command(cmd: ImageCanvasCommand): void {
 		if (cmd.kind === 'drawLayer') {

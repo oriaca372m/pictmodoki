@@ -278,7 +278,7 @@ class App {
 }
 
 export function main(elm: HTMLCanvasElement): App {
-	const sock = new WebSocket("ws://127.0.0.1:5001")
+	const sock = new WebSocket('ws://127.0.0.1:5001')
 	const app = new App(elm, sock)
 
 	sock.onopen = () => {

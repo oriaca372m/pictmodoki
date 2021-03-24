@@ -8,8 +8,11 @@ export type LayerDrawCommand =
 	| { kind: 'clear' }
 
 export class LayerCanvasModel {
-	constructor(readonly id: LayerId, private readonly _canvasProxy: CanvasProxy, private _name: string) {
-	}
+	constructor(
+		readonly id: LayerId,
+		private readonly _canvasProxy: CanvasProxy,
+		private _name: string
+	) {}
 
 	get canvasProxy(): CanvasProxy {
 		return this._canvasProxy

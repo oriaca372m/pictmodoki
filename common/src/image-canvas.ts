@@ -4,11 +4,11 @@ import { LayerId, LayerDrawCommand, LayerCanvasModel, LayerDrawer } from './laye
 
 export class ImageCanvasModel {
 	layers: LayerCanvasModel[] = []
-	constructor(readonly size: Size) { }
+	constructor(readonly size: Size) {}
 
 	clone(factory: CanvasProxyFactory): ImageCanvasModel {
 		const newImageCanvas = new ImageCanvasModel(this.size)
-		newImageCanvas.layers = this.layers.map(x => x.clone(factory))
+		newImageCanvas.layers = this.layers.map((x) => x.clone(factory))
 		return newImageCanvas
 	}
 }
@@ -77,7 +77,7 @@ export class ImageCanvasDrawer {
 
 	removeLayer(id: LayerId): void {
 		const controller = this._findLayerById(id)
-		this._model.layers = this._model.layers.filter(x => x.id === controller.layer.id)
+		this._model.layers = this._model.layers.filter((x) => x.id === controller.layer.id)
 		this._layerControllers.delete(controller.layer)
 	}
 

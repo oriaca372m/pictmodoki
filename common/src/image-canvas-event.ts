@@ -33,8 +33,7 @@ function isEqualVirtualRealEvent(real: ImageCanvasEvent, virtual: ImageCanvasEve
 }
 
 export class ImageCanvasEventPlayer {
-	constructor(private readonly _drawer: ImageCanvasDrawer) {
-	}
+	constructor(private readonly _drawer: ImageCanvasDrawer) {}
 
 	play(events: readonly ImageCanvasEvent[]): void {
 		for (const event of events) {
@@ -80,7 +79,9 @@ export class ImageCanvasEventManager {
 	// toIndexは最後の正しいエントリのインデックス
 	private _rewindHistory(toIndex: number): void {
 		this._history = this._history.splice(toIndex + 1)
-		this._plugins.forEach(x => { x.onHistoryChanged() })
+		this._plugins.forEach((x) => {
+			x.onHistoryChanged()
+		})
 	}
 
 	private _wipeHistoryIfnecessary(): void {
@@ -95,7 +96,9 @@ export class ImageCanvasEventManager {
 
 		const wiped = this._history.splice(0, numToWipe)
 		this._lastRealEvent -= numToWipe
-		this._plugins.forEach(x => { x.onHistoryWiped(wiped) })
+		this._plugins.forEach((x) => {
+			x.onHistoryWiped(wiped)
+		})
 	}
 
 	// historyの最後の要素のインデックス
@@ -143,14 +146,18 @@ export class ImageCanvasEventManager {
 		let historyChanged = false
 		if (event.eventType.kind === 'eventRevoked') {
 			const revokedId = event.eventType.eventId
-			this._history.find(x => x.id === revokedId)!.isRevoked = true
+			this._history.find((x) => x.id === revokedId)!.isRevoked = true
 			historyChanged = true
 		}
 
-		this._plugins.forEach(x => { x.onEvent(event) })
+		this._plugins.forEach((x) => {
+			x.onEvent(event)
+		})
 
 		if (historyChanged) {
-			this._plugins.forEach(x => { x.onHistoryChanged() })
+			this._plugins.forEach((x) => {
+				x.onHistoryChanged()
+			})
 		}
 	}
 
@@ -221,8 +228,15 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 		if (!this._canCreateUndoCommand()) {
 			return
 		}
-		const event = this._eventManager.getReversedHistory().find(x =>
-			!x.isVirtual && x.eventType.kind !== 'eventRevoked' && x.userId === this._userId && !x.isRevoked)
+		const event = this._eventManager
+			.getReversedHistory()
+			.find(
+				(x) =>
+					!x.isVirtual &&
+					x.eventType.kind !== 'eventRevoked' &&
+					x.userId === this._userId &&
+					!x.isRevoked
+			)
 		if (event === undefined) {
 			return
 		}

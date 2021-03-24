@@ -29,7 +29,7 @@ class NodeCanvasProxy implements CanvasProxy {
 	}
 
 	drawSelfTo(ctx: CanvasRenderingContext2D): void {
-		ctx.drawImage(this._canvas as unknown as OffscreenCanvas, 0, 0)
+		ctx.drawImage((this._canvas as unknown) as OffscreenCanvas, 0, 0)
 	}
 
 	get size(): Size {
@@ -124,7 +124,7 @@ class App {
 export class CommandInterpreter {
 	private _eventId = 0
 	private _layerId = 0
-	constructor(private _manager: ImageCanvasEventManager) { }
+	constructor(private _manager: ImageCanvasEventManager) {}
 
 	command(cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {
 		if (cmd.kind === 'drawLayer') {
@@ -136,7 +136,10 @@ export class CommandInterpreter {
 			this._pushEvent(event)
 			return event
 		} else if (cmd.kind === 'createLayer') {
-			const event = this._genEvent({ kind: 'layerCreated', layerId: this._layerId.toString() })
+			const event = this._genEvent({
+				kind: 'layerCreated',
+				layerId: this._layerId.toString(),
+			})
 			this._pushEvent(event)
 			this._layerId++
 			return event
@@ -168,14 +171,14 @@ function main() {
 	const s = new ws.Server({ port: 5001 })
 	const app = new App()
 
-	s.on('connection', ws => {
+	s.on('connection', (ws) => {
 		ws.on('message', (message: unknown) => {
 			console.log(message)
 			const cmd = JSON.parse(message as string) as ImageCanvasCommand
 
 			const event = app.cmdInterpreter.command(cmd)
 
-			s.clients.forEach(client => {
+			s.clients.forEach((client) => {
 				client.send(JSON.stringify(event))
 			})
 		})
