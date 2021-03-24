@@ -190,7 +190,8 @@ function main() {
 				void (async () => {
 					const event: Event = {
 						kind: 'dataSent',
-						value: await app.drawer.model.serialize(),
+						value: await app.undoMgr.getLastRenderedImageModel().serialize(),
+						log: app.eventMgr.history,
 					}
 					ws.send(encode(event))
 				})()

@@ -58,10 +58,10 @@ export class SocketCommandSender implements CommandSender {
 				if (event.kind === 'imageCanvasEvent') {
 					this._manager.event(event.value)
 				} else if (event.kind === 'dataSent') {
-					this._app.imageCanvas.setModel(
+					this._app.undoManager.setLastRenderedImageModel(
 						await deserializeImageCanvasModel(event.value, this._app.factory)
 					)
-					this._app.render()
+					this._app.eventManager.setHistory(event.log)
 				}
 			})()
 		}

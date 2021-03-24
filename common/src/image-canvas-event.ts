@@ -84,6 +84,14 @@ export class ImageCanvasEventManager {
 		})
 	}
 
+	setHistory(events: readonly ImageCanvasEvent[]): void {
+		this._history = Array.from(events)
+		this._lastRealEvent = this._lastIndex
+		this._plugins.forEach((x) => {
+			x.onHistoryChanged()
+		})
+	}
+
 	private _wipeHistoryIfnecessary(): void {
 		if (!this._isClean) {
 			return
@@ -171,7 +179,6 @@ export class ImageCanvasEventManager {
 }
 
 export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
-	private readonly _lastRendered: ImageCanvasModel
 	private readonly _lastRenderedDrawer: ImageCanvasDrawer
 	private readonly _lastRenderedEventPlayer: ImageCanvasEventPlayer
 
@@ -181,9 +188,17 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 		private readonly _canvasProxyFactory: CanvasProxyFactory,
 		currentImageCanvasModel: ImageCanvasModel
 	) {
-		this._lastRendered = currentImageCanvasModel.clone(this._canvasProxyFactory)
-		this._lastRenderedDrawer = new ImageCanvasDrawer(this._lastRendered, _canvasProxyFactory)
+		const model = currentImageCanvasModel.clone(this._canvasProxyFactory)
+		this._lastRenderedDrawer = new ImageCanvasDrawer(model, _canvasProxyFactory)
 		this._lastRenderedEventPlayer = new ImageCanvasEventPlayer(this._lastRenderedDrawer)
+	}
+
+	getLastRenderedImageModel(): ImageCanvasModel {
+		return this._lastRenderedDrawer.model
+	}
+
+	setLastRenderedImageModel(model: ImageCanvasModel): void {
+		return this._lastRenderedDrawer.setModel(model)
 	}
 
 	onEvent(): void {
@@ -199,7 +214,7 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 	}
 
 	createUndoedImageCanvasModel(): ImageCanvasModel {
-		const model = this._lastRendered.clone(this._canvasProxyFactory)
+		const model = this._lastRenderedDrawer.model.clone(this._canvasProxyFactory)
 		const drawer = new ImageCanvasDrawer(model, this._canvasProxyFactory)
 		const player = new ImageCanvasEventPlayer(drawer)
 		player.play(this._eventManager.history)
