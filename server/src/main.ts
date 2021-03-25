@@ -202,7 +202,7 @@ interface ConnectionData {
 }
 
 function main() {
-	const s = new ws.Server({ port: 5001 })
+	const s = new ws.Server({ port: 25567 })
 	const app = new App()
 
 	s.on('connection', (ws) => {
@@ -238,12 +238,14 @@ function main() {
 					return
 				}
 
+				const event: Event = {
+					kind: 'imageCanvasEvent',
+					value: canvasEvent,
+				}
+				const encodedEvent = encode(event)
+
 				s.clients.forEach((client) => {
-					const event: Event = {
-						kind: 'imageCanvasEvent',
-						value: canvasEvent,
-					}
-					client.send(encode(event))
+					client.send(encodedEvent)
 				})
 			}
 		})

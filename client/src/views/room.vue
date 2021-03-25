@@ -14,6 +14,9 @@
 				<button @click="selectColor('erase')">消しゴム</button>
 			</div>
 			<div>
+				<input type="number" v-model="size">
+			</div>
+			<div>
 				<button @click="createLayer">レイヤー作成</button>
 				<div v-for="layer in layers" :key="layer.id">
 					<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
@@ -30,9 +33,12 @@ import { main } from '../main'
 import { Chrome as ChromePicker } from 'vue-color'
 
 export default {
+	props: ['serverAddr', 'userName'],
+
 	data: () => ({
 		app: undefined,
 		layers: [],
+		size: "10",
 		color: '#ff0000ff',
 		selectedLayerId: undefined,
 	}),
@@ -42,7 +48,7 @@ export default {
 	},
 
 	mounted: function() {
-		this.app = main(this.$refs.canvas)
+		this.app = main(this.$refs.canvas, this.serverAddr, this.userName)
 
 		setInterval(() => {
 			this.layers = this.app.layerManager.layers
@@ -55,6 +61,10 @@ export default {
 			if (value.hex8) {
 				this.app.penTool.color = value.hex8
 			}
+		},
+
+		size: function(value) {
+			this.app.penTool.width = parseInt(value, 10)
 		}
 	},
 

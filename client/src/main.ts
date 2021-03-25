@@ -19,7 +19,10 @@ import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
 import { LayerManager } from './layer-manager'
 
 import Vue from 'vue'
+import VueRouter from 'vue-router'
 import VueIndex from './views/index.vue'
+import VueHome from './views/home.vue'
+import VueRoom from './views/room.vue'
 
 class EventRenderer implements ImageCanvasEventManagerPlugin {
 	private readonly _player: ImageCanvasEventPlayer
@@ -138,9 +141,8 @@ async function deserializeImageCanvasModel(
 	return model
 }
 
-export function main(elm: HTMLCanvasElement): App {
-	const api = new WebSocketApi('ws://127.0.0.1:5001')
-	const userId = window.prompt('USER ID?') ?? 'default'
+export function main(elm: HTMLCanvasElement, serverAddr: string, userId: string): App {
+	const api = new WebSocketApi(serverAddr)
 	const app = new App(elm, api, userId)
 
 	api.addOpenHandler(() => {
@@ -172,8 +174,17 @@ export function main(elm: HTMLCanvasElement): App {
 	return app
 }
 
+Vue.use(VueRouter)
 Vue.config.productionTip = false
 
+const router = new VueRouter({
+	routes: [
+		{ path: '/', component: VueHome },
+		{ path: '/room/:serverAddr/:userName', name: 'room', component: VueRoom, props: true },
+	],
+})
+
 new Vue({
+	router,
 	render: (h) => h(VueIndex),
 }).$mount('#app')
