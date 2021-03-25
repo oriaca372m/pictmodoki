@@ -9,6 +9,7 @@ import {
 	ImageCanvasUndoManager,
 	LayerCanvasModel,
 	SerializedLayerCanvasModel,
+	LayerId,
 } from 'common'
 
 import { CommandSender, SocketCommandSender } from './event-sender'
@@ -49,7 +50,7 @@ export class App {
 	canvasProxy: WebCanvasProxy
 	imageCanvas: ImageCanvasDrawer
 	penTool: PenTool
-	selectedLayerId = 'default'
+	selectedLayerId: LayerId | undefined
 	commandSender!: CommandSender
 	eventManager: ImageCanvasEventManager
 	undoManager: ImageCanvasUndoManager

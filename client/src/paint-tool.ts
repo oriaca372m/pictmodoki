@@ -1,4 +1,4 @@
-import { ImageCanvasDrawer, LayerDrawCommand, Position, Color } from 'common'
+import { ImageCanvasDrawer, LayerDrawCommand, Position, Color, LayerId } from 'common'
 import { App } from './main'
 
 export interface PaintTool {
@@ -15,6 +15,7 @@ export class PenTool implements PaintTool {
 	mode: 'stroke' | 'erase' = 'stroke'
 	private readonly _imageCanvas: ImageCanvasDrawer
 	private readonly _canvasElm: HTMLCanvasElement
+	private _targetLayerId: LayerId | undefined
 
 	private _isEnabled = false
 
@@ -62,8 +63,13 @@ export class PenTool implements PaintTool {
 			return
 		}
 
+		this._targetLayerId = this._app.selectedLayerId
+		if (this._targetLayerId === undefined) {
+			return
+		}
+
 		this._pathPositions = [pos]
-		this._imageCanvas.startPreview(this._app.selectedLayerId)
+		this._imageCanvas.startPreview(this._targetLayerId)
 	}
 
 	private _continueStroke({ x, y }: Position) {
@@ -91,7 +97,7 @@ export class PenTool implements PaintTool {
 
 		this._app.commandSender.command({
 			kind: 'drawLayer',
-			layer: this._app.selectedLayerId,
+			layer: this._app.selectedLayerId!,
 			drawCommand: this._constructCommand(),
 		})
 
