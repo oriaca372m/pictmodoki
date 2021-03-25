@@ -201,6 +201,7 @@ function main() {
 
 			if (cmd.kind === 'requestData') {
 				void (async () => {
+					// TODO: Eventの構築中に他のメッセージが送信されないようにする
 					const event: Event = {
 						kind: 'dataSent',
 						value: await app.undoMgr.getLastRenderedImageModel().serialize(),

@@ -354,10 +354,12 @@ export function main(elm: HTMLCanvasElement): App {
 		}
 
 		void (async () => {
+			api.blockEvent()
 			app.undoManager.setLastRenderedImageModel(
 				await deserializeImageCanvasModel(event.value, app.factory)
 			)
 			app.eventManager.setHistory(event.log)
+			api.resumeEvent()
 		})()
 	})
 

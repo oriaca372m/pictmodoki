@@ -37,9 +37,10 @@ export class WebSocketApi {
 	private _onMessage(msg: MessageEvent<unknown>) {
 		void (async () => {
 			const blob = msg.data as Blob
-
+			// TODO: デコードにかかる時間によっては到着順が保証されなくなる?
 			const event = (await decodeAsync(blob.stream())) as Event
 			console.log(event)
+
 			this._eventHandlers.forEach((h) => {
 				h(event)
 			})
@@ -48,5 +49,14 @@ export class WebSocketApi {
 
 	sendCommand(cmd: Command): void {
 		this._socket.send(encode(cmd))
+	}
+
+	blockEvent(): void {
+		// TODO: イベントハンドラにデータが流れないようにする
+		// その間に来たデータはキューにためておく
+	}
+	resumeEvent(): void {
+		// TODO: blockEventの効果を解除する
+		// キューは消費する
 	}
 }
