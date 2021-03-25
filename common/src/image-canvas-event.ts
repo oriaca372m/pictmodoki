@@ -80,7 +80,8 @@ export class ImageCanvasEventManager {
 
 	// toIndexは最後の正しいエントリのインデックス
 	private _rewindHistory(toIndex: number): void {
-		this._history = this._history.splice(toIndex + 1)
+		this._history.splice(toIndex + 1)
+		this._lastRealEvent = this._lastIndex
 		this._plugins.forEach((x) => {
 			x.onHistoryChanged()
 		})
@@ -133,6 +134,7 @@ export class ImageCanvasEventManager {
 			this._isClean = this._lastRealEvent === this._lastIndex
 			return true
 		} else {
+			console.log('この近くでバグったら多分ここが悪い01')
 			this._rewindHistory(this._lastRealEvent)
 			this._history.push(event)
 			this._lastRealEvent = this._lastIndex
