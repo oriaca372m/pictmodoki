@@ -46,6 +46,10 @@ export class ImageCanvasDrawer {
 	private _previewOriginalLayer: LayerCanvasModel | undefined
 	private _previewLayer: LayerDrawer | undefined
 
+	private _shouldUpdateCache = true
+	private _cacheTop!: LayerDrawer
+	private _cacheBottom!: LayerDrawer
+
 	constructor(model: ImageCanvasModel, private readonly _canvasProxyFactory: CanvasProxyFactory) {
 		this.setModel(model)
 	}
@@ -62,6 +66,10 @@ export class ImageCanvasDrawer {
 		this._layerControllers.clear()
 		this._previewOriginalLayer = undefined
 		this._previewLayer = undefined
+
+		this._shouldUpdateCache = true
+		this._cacheTop = new LayerDrawer(this._canvasProxyFactory.createCanvasProxy(model.size))
+		this._cacheBottom = new LayerDrawer(this._canvasProxyFactory.createCanvasProxy(model.size))
 
 		this._model = model
 		for (const layer of model.layers) {
@@ -97,10 +105,12 @@ export class ImageCanvasDrawer {
 		const controller = this._findLayerById(id)
 		this._model.layers = this._model.layers.filter((x) => x.id !== controller.layer.id)
 		this._layerControllers.delete(controller.layer)
+		this._shouldUpdateCache = true
 	}
 
 	drawLayer(id: LayerId, drawCmd: LayerDrawCommand): void {
 		this._findLayerById(id).drawer.command(drawCmd)
+		this._shouldUpdateCache = true
 	}
 
 	startPreview(layer: LayerId): void {
@@ -130,9 +140,32 @@ export class ImageCanvasDrawer {
 		this._previewLayer = undefined
 	}
 
+	private _findLayerById(id: LayerId): LayerController {
+		const model = this._model.layers.find((x) => x.id === id)
+		if (model === undefined) {
+			throw new Error('レイヤーが見つからない')
+		}
+
+		return this._layerControllers.get(model)!
+	}
+
 	render(canvas: CanvasProxy): void {
+		if (this._previewLayer === undefined) {
+			this._fullRender(canvas)
+			return
+		}
+
+		if (this._shouldUpdateCache) {
+			this._updateCache()
+		}
+
+		this._cacheRender(canvas)
+	}
+
+	private _fullRender(canvas: CanvasProxy): void {
 		const drawer = new CanvasDrawer(canvas)
 		drawer.clear()
+
 		for (const layer of this._model.layers) {
 			if (this._previewOriginalLayer && this._previewOriginalLayer.id === layer.id) {
 				drawer.drawCanvasProxy(this._previewLayer!.canvasProxy)
@@ -142,12 +175,36 @@ export class ImageCanvasDrawer {
 		}
 	}
 
-	private _findLayerById(id: LayerId): LayerController {
-		const model = this._model.layers.find((x) => x.id === id)
-		if (model === undefined) {
-			throw new Error('レイヤーが見つからない')
+	private _cacheRender(canvas: CanvasProxy): void {
+		const drawer = new CanvasDrawer(canvas)
+		drawer.clear()
+
+		drawer.drawCanvasProxy(this._cacheBottom.canvasProxy)
+		drawer.drawCanvasProxy(this._previewLayer!.canvasProxy)
+		drawer.drawCanvasProxy(this._cacheTop.canvasProxy)
+	}
+
+	private _updateCache(): void {
+		const bottomDrawer = new CanvasDrawer(this._cacheBottom.canvasProxy)
+		const topDrawer = new CanvasDrawer(this._cacheTop.canvasProxy)
+		bottomDrawer.clear()
+		topDrawer.clear()
+
+		let isDrawingBottom = true
+
+		for (const layer of this._model.layers) {
+			if (this._previewOriginalLayer!.id === layer.id) {
+				isDrawingBottom = false
+				continue
+			}
+
+			if (isDrawingBottom) {
+				bottomDrawer.drawCanvasProxy(layer.canvasProxy)
+			} else {
+				topDrawer.drawCanvasProxy(layer.canvasProxy)
+			}
 		}
 
-		return this._layerControllers.get(model)!
+		this._shouldUpdateCache = false
 	}
 }
