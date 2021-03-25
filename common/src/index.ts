@@ -7,3 +7,4 @@ export * from './image-canvas-event'
 
 export * from './command'
 export * from './event'
+export * from './user'

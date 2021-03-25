@@ -222,7 +222,33 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 }
 
 export class ImageCanvasEventRevoker {
+	static readonly unrevokableEvents: ImageCanvasEventType['kind'][] = [
+		'eventRevoked',
+		'layerCreated',
+	]
+
 	constructor(private readonly _eventManager: ImageCanvasEventManager) {}
+
+	isRevokable(userId: UserId, eventId: ImageCanvasEventId): boolean {
+		const event = this._eventManager.history.find((x) => x.id === eventId)
+		if (event === undefined) {
+			return false
+		}
+
+		if (event.userId !== userId) {
+			return false
+		}
+
+		if (event.isRevoked) {
+			return false
+		}
+
+		if (ImageCanvasEventRevoker.unrevokableEvents.includes(event.eventType.kind)) {
+			return false
+		}
+
+		return true
+	}
 
 	private _canCreateUndoCommand(): boolean {
 		if (this._eventManager.isClean) {
@@ -255,7 +281,7 @@ export class ImageCanvasEventRevoker {
 					x.userId === userId &&
 					!x.isRevoked
 			)
-		if (event === undefined) {
+		if (event === undefined || !this.isRevokable(userId, event.id)) {
 			return
 		}
 

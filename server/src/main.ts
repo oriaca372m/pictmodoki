@@ -17,6 +17,8 @@ import {
 	ImageCanvasEventManager,
 	ImageCanvasEventManagerPlugin,
 	ImageCanvasUndoManager,
+	ImageCanvasEventRevoker,
+	UserId,
 } from 'common'
 
 import * as fs from 'fs'
@@ -69,13 +71,11 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 		}
 
 		this._player.playSingleEvent(event)
-		this._app.render()
 	}
 
 	onHistoryChanged(): void {
 		const model = this._app.undoMgr.createUndoedImageCanvasModel()
 		this._app.drawer.setModel(model)
-		this._app.render()
 	}
 
 	onHistoryWiped(): void {
@@ -91,8 +91,6 @@ class App {
 	undoMgr: ImageCanvasUndoManager
 	targetCanvas: NodeCanvasProxy
 	cmdInterpreter: CommandInterpreter
-
-	numFile = 0
 
 	constructor() {
 		this.size = { width: 800, height: 800 }
@@ -118,33 +116,37 @@ class App {
 		this.undoMgr = new ImageCanvasUndoManager(this.eventMgr, this.factory, model)
 		this.eventMgr.registerPlugin(this.undoMgr)
 
-		this.cmdInterpreter = new CommandInterpreter(this.eventMgr)
+		this.cmdInterpreter = new CommandInterpreter(this.drawer, this.eventMgr)
 		this.cmdInterpreter.command('system', { kind: 'createLayer' })
 		this.cmdInterpreter.command('system', { kind: 'createLayer' })
-	}
-
-	render(): void {
-		console.log('onrenderer')
-		this.drawer.render(this.targetCanvas)
-		// this.targetCanvas.saveFile(`${this.numFile}.png`)
-		this.numFile++
 	}
 }
 
 export class CommandInterpreter {
 	private _eventId = 0
 	private _layerId = 0
-	constructor(private _manager: ImageCanvasEventManager) {}
+	private readonly _revoker: ImageCanvasEventRevoker
 
-	command(userId: string, cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {
+	constructor(
+		private readonly _drawer: ImageCanvasDrawer,
+		private readonly _manager: ImageCanvasEventManager
+	) {
+		this._revoker = new ImageCanvasEventRevoker(this._manager)
+	}
+
+	command(userId: UserId, cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {
 		if (cmd.kind === 'drawLayer') {
-			const event = this._genEvent(userId, {
-				kind: 'layerDrawn',
-				layerId: cmd.layer,
-				drawCommand: cmd.drawCommand,
-			})
-			this._pushEvent(event)
-			return event
+			if (this._drawer.layers.find((x) => x.id === cmd.layer) === undefined) {
+				return
+			}
+
+			return this._pushEvent(
+				this._genEvent(userId, {
+					kind: 'layerDrawn',
+					layerId: cmd.layer,
+					drawCommand: cmd.drawCommand,
+				})
+			)
 		} else if (cmd.kind === 'createLayer') {
 			const event = this._genEvent(userId, {
 				kind: 'layerCreated',
@@ -154,13 +156,15 @@ export class CommandInterpreter {
 			this._layerId++
 			return event
 		} else if (cmd.kind === 'revokeEvent') {
-			const event = this._genEvent(userId, { kind: 'eventRevoked', eventId: cmd.eventId })
-			this._pushEvent(event)
-			return event
+			if (this._revoker.isRevokable(userId, cmd.eventId)) {
+				return this._pushEvent(
+					this._genEvent(userId, { kind: 'eventRevoked', eventId: cmd.eventId })
+				)
+			}
 		}
 	}
 
-	private _genEvent(userId: string, eventType: ImageCanvasEventType): ImageCanvasEvent {
+	private _genEvent(userId: UserId, eventType: ImageCanvasEventType): ImageCanvasEvent {
 		return {
 			id: this._eventId.toString(),
 			userId,
@@ -170,10 +174,10 @@ export class CommandInterpreter {
 		}
 	}
 
-	private _pushEvent(event: ImageCanvasEvent): void {
-		console.log('pushevent')
+	private _pushEvent(event: ImageCanvasEvent): ImageCanvasEvent {
 		this._manager.event(event)
 		this._eventId++
+		return event
 	}
 }
 
@@ -191,11 +195,10 @@ function main() {
 		}
 
 		ws.on('message', (message: unknown) => {
-			console.log(message)
 			const cmd = decode(message as Uint8Array) as Command
+			console.log(cmd)
 
 			if (cmd.kind === 'setUserId') {
-				console.log(cmd.value)
 				connectionData.userId = cmd.value
 			}
 
@@ -213,11 +216,13 @@ function main() {
 
 			if (cmd.kind === 'imageCanvasCommand') {
 				const canvasEvent = app.cmdInterpreter.command(connectionData.userId, cmd.value)
+				if (canvasEvent === undefined) {
+					console.log('不正なコマンド')
+					console.log(cmd.value)
+					return
+				}
 
 				s.clients.forEach((client) => {
-					if (canvasEvent === undefined) {
-						return
-					}
 					const event: Event = {
 						kind: 'imageCanvasEvent',
 						value: canvasEvent,
