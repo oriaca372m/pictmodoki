@@ -15,6 +15,7 @@ import {
 } from 'common'
 
 import { CommandSender, SocketCommandSender } from './event-sender'
+import { WebSocketApi } from './web-socket-api'
 
 import { encode } from '@msgpack/msgpack'
 
@@ -253,7 +254,7 @@ export class App {
 
 	constructor(
 		public canvasElm: HTMLCanvasElement,
-		public socket: WebSocket,
+		public api: WebSocketApi,
 		public userId: string
 	) {
 		this.factory = new OffscreenCanvasProxyFactory()
@@ -287,7 +288,7 @@ export class App {
 	}
 
 	init(): void {
-		const sender = new SocketCommandSender(this, this.eventManager, this.socket)
+		const sender = new SocketCommandSender(this, this.eventManager, this.api)
 		sender.start()
 
 		this.commandSender = sender
@@ -309,20 +310,21 @@ export class App {
 }
 
 export function main(elm: HTMLCanvasElement): App {
-	const sock = new WebSocket('ws://127.0.0.1:5001')
+	const api = new WebSocketApi('ws://127.0.0.1:5001')
 	const userId = window.prompt('USER ID?') ?? 'default'
-	const app = new App(elm, sock, userId)
+	const app = new App(elm, api, userId)
 
-	sock.onopen = () => {
-		sock.send(encode({ kind: 'setUserId', value: app.userId }))
+	api.addOpenHandler(() => {
+		api.sendCommand({ kind: 'setUserId', value: app.userId })
 
 		console.log('started')
 		app.init()
 		app.render()
 
-		sock.send(encode({ kind: 'requestData' }))
-	}
+		api.sendCommand({ kind: 'requestData' })
+	})
 
+	api.start()
 	return app
 }
 

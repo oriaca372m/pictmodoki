@@ -1,6 +1,4 @@
 import {
-	Command,
-	Event,
 	ImageCanvasCommand,
 	ImageCanvasEventType,
 	ImageCanvasEventManager,
@@ -11,7 +9,7 @@ import {
 } from 'common'
 
 import { OffscreenCanvasProxyFactory, App } from './main'
-import { encode, decodeAsync } from '@msgpack/msgpack'
+import { WebSocketApi } from './web-socket-api'
 
 async function deserializeLayerCanvasModel(
 	data: SerializedLayerCanvasModel,
@@ -44,36 +42,28 @@ export class SocketCommandSender implements CommandSender {
 	constructor(
 		private _app: App,
 		private _manager: ImageCanvasEventManager,
-		private _socket: WebSocket
+		private _api: WebSocketApi
 	) {}
 
 	start(): void {
-		this._socket.onmessage = (msg) => {
-			void (async () => {
-				const blob = msg.data as Blob
-				console.log(blob)
-
-				const event = (await decodeAsync(blob.stream())) as Event
-				console.log(event)
-				if (event.kind === 'imageCanvasEvent') {
-					this._manager.event(event.value)
-				} else if (event.kind === 'dataSent') {
+		this._api.addEventHandler((event) => {
+			console.log(event)
+			if (event.kind === 'imageCanvasEvent') {
+				this._manager.event(event.value)
+			} else if (event.kind === 'dataSent') {
+				void (async () => {
 					this._app.undoManager.setLastRenderedImageModel(
 						await deserializeImageCanvasModel(event.value, this._app.factory)
 					)
 					this._app.eventManager.setHistory(event.log)
-				}
-			})()
-		}
+				})()
+			}
+		})
 	}
 
 	command(cmd: ImageCanvasCommand): void {
-		this._pushToSocket({ kind: 'imageCanvasCommand', value: cmd })
+		this._api.sendCommand({ kind: 'imageCanvasCommand', value: cmd })
 		this._pushVirtualEvent(cmd)
-	}
-
-	private _pushToSocket(cmd: Command) {
-		this._socket.send(encode(cmd))
 	}
 
 	private _pushVirtualEvent(cmd: ImageCanvasCommand): void {
