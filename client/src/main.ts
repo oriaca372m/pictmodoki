@@ -2,6 +2,7 @@ import {
 	CanvasProxy,
 	CanvasProxyFactory,
 	ImageCanvasModel,
+	SerializedImageCanvasModel,
 	ImageCanvasDrawer,
 	LayerDrawCommand,
 	Size,
@@ -12,12 +13,12 @@ import {
 	ImageCanvasEventManagerPlugin,
 	ImageCanvasEventPlayer,
 	ImageCanvasUndoManager,
+	LayerCanvasModel,
+	SerializedLayerCanvasModel,
 } from 'common'
 
 import { CommandSender, SocketCommandSender } from './event-sender'
 import { WebSocketApi } from './web-socket-api'
-
-import { encode } from '@msgpack/msgpack'
 
 import Vue from 'vue'
 import VueIndex from './views/index.vue'
@@ -309,6 +310,29 @@ export class App {
 	}
 }
 
+async function deserializeLayerCanvasModel(
+	data: SerializedLayerCanvasModel,
+	factory: OffscreenCanvasProxyFactory
+): Promise<LayerCanvasModel> {
+	return new LayerCanvasModel(
+		data.id,
+		await factory.createCanvasProxyFromBitmap(data.image),
+		data.name
+	)
+}
+
+async function deserializeImageCanvasModel(
+	data: SerializedImageCanvasModel,
+	factory: OffscreenCanvasProxyFactory
+): Promise<ImageCanvasModel> {
+	const model = new ImageCanvasModel(data.size)
+	const layers = await Promise.all(
+		data.layers.map((x) => deserializeLayerCanvasModel(x, factory))
+	)
+	model.layers = layers
+	return model
+}
+
 export function main(elm: HTMLCanvasElement): App {
 	const api = new WebSocketApi('ws://127.0.0.1:5001')
 	const userId = window.prompt('USER ID?') ?? 'default'
@@ -322,6 +346,19 @@ export function main(elm: HTMLCanvasElement): App {
 		app.render()
 
 		api.sendCommand({ kind: 'requestData' })
+	})
+
+	api.addEventHandler((event) => {
+		if (event.kind !== 'dataSent') {
+			return
+		}
+
+		void (async () => {
+			app.undoManager.setLastRenderedImageModel(
+				await deserializeImageCanvasModel(event.value, app.factory)
+			)
+			app.eventManager.setHistory(event.log)
+		})()
 	})
 
 	api.start()

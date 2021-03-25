@@ -1,38 +1,7 @@
-import {
-	ImageCanvasCommand,
-	ImageCanvasEventType,
-	ImageCanvasEventManager,
-	ImageCanvasModel,
-	SerializedImageCanvasModel,
-	LayerCanvasModel,
-	SerializedLayerCanvasModel,
-} from 'common'
+import { ImageCanvasCommand, ImageCanvasEventType, ImageCanvasEventManager } from 'common'
 
-import { OffscreenCanvasProxyFactory, App } from './main'
+import { App } from './main'
 import { WebSocketApi } from './web-socket-api'
-
-async function deserializeLayerCanvasModel(
-	data: SerializedLayerCanvasModel,
-	factory: OffscreenCanvasProxyFactory
-): Promise<LayerCanvasModel> {
-	return new LayerCanvasModel(
-		data.id,
-		await factory.createCanvasProxyFromBitmap(data.image),
-		data.name
-	)
-}
-
-async function deserializeImageCanvasModel(
-	data: SerializedImageCanvasModel,
-	factory: OffscreenCanvasProxyFactory
-): Promise<ImageCanvasModel> {
-	const model = new ImageCanvasModel(data.size)
-	const layers = await Promise.all(
-		data.layers.map((x) => deserializeLayerCanvasModel(x, factory))
-	)
-	model.layers = layers
-	return model
-}
 
 export interface CommandSender {
 	command(cmd: ImageCanvasCommand): void
@@ -47,17 +16,11 @@ export class SocketCommandSender implements CommandSender {
 
 	start(): void {
 		this._api.addEventHandler((event) => {
-			console.log(event)
-			if (event.kind === 'imageCanvasEvent') {
-				this._manager.event(event.value)
-			} else if (event.kind === 'dataSent') {
-				void (async () => {
-					this._app.undoManager.setLastRenderedImageModel(
-						await deserializeImageCanvasModel(event.value, this._app.factory)
-					)
-					this._app.eventManager.setHistory(event.log)
-				})()
+			if (event.kind !== 'imageCanvasEvent') {
+				return
 			}
+
+			this._manager.event(event.value)
 		})
 	}
 
@@ -92,7 +55,7 @@ export class SocketCommandSender implements CommandSender {
 export class DebugCommandSender implements CommandSender {
 	private _eventId = 0
 	private _layerId = 0
-	constructor(private _manager: ImageCanvasEventManager, private _socket: WebSocket) {}
+	constructor(private _manager: ImageCanvasEventManager) {}
 
 	command(cmd: ImageCanvasCommand): void {
 		if (cmd.kind === 'drawLayer') {
