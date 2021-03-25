@@ -1,39 +1,45 @@
 <template>
-	<div>
-		<canvas ref="canvas" width="800" height="800"></canvas>
-		<div>
-			<button @click="undo">一つ戻す</button>
+	<div class="app">
+		<div class="canvas-area">
+			<canvas ref="canvas" width="800" height="800"></canvas>
 		</div>
-		<div>
-			<button @click="selectColor('#ff0000')">赤</button>
-			<button @click="selectColor('#0000ff')">青</button>
-			<button @click="selectColor('erase')">消しゴム</button>
-		</div>
-		<div>
-			<button @click="createLayer">レイヤー作成</button>
-			<div v-for="layer in layers" :key="layer.id">
-				<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
-				<button @click="selectLayerId(layer.id)">選択</button>
-				<button @click="removeLayerId(layer.id)">削除</button>
+		<div class="tool-area">
+			<div>
+				<button @click="undo">一つ戻す</button>
+			</div>
+			<div>
+				<ChromePicker v-model="color" />
+				<button @click="selectColor('#ff0000')">赤</button>
+				<button @click="selectColor('#0000ff')">青</button>
+				<button @click="selectColor('erase')">消しゴム</button>
+			</div>
+			<div>
+				<button @click="createLayer">レイヤー作成</button>
+				<div v-for="layer in layers" :key="layer.id">
+					<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
+					<button @click="selectLayerId(layer.id)">選択</button>
+					<button @click="removeLayerId(layer.id)">削除</button>
+				</div>
 			</div>
 		</div>
-		<p>hello vue!</p>
-		<p>count: {{ counter }}</p>
-		<button @click="counter += 1">increment</button>
 	</div>
 </template>
 
 <script>
 import { main } from '../main'
+import { Chrome as ChromePicker } from 'vue-color'
 
 export default {
 	data: () => ({
 		app: undefined,
-		savedCanvas: undefined,
-		counter: 0,
-		layers: [{ id: 'id1' }, { id: 'id2' }],
+		layers: [],
+		color: '#ff0000ff',
 		selectedLayerId: undefined,
 	}),
+
+	components: {
+		ChromePicker
+	},
 
 	mounted: function() {
 		this.app = main(this.$refs.canvas)
@@ -42,6 +48,14 @@ export default {
 			this.layers = this.app.layerManager.layers
 			this.selectedLayerId = this.app.layerManager.selectedLayerId
 		}, 1000)
+	},
+
+	watch: {
+		color: function(value) {
+			if (value.hex8) {
+				this.app.penTool.color = value.hex8
+			}
+		}
 	},
 
 	methods: {
@@ -66,6 +80,8 @@ export default {
 				return
 			}
 			this.app.penTool.mode = 'stroke'
+
+			this.color = color
 			this.app.penTool.color = color
 		},
 
@@ -75,3 +91,9 @@ export default {
 	}
 }
 </script>
+
+<style>
+.app {
+	display: flex;
+}
+</style>

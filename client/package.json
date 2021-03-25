@@ -14,10 +14,12 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
+    "css-loader": "^5.2.0",
     "eslint": "^7.22.0",
     "eslint-config-prettier": "^8.1.0",
     "html-webpack-plugin": "^5.3.1",
     "prettier": "^2.2.1",
+    "style-loader": "^2.0.0",
     "ts-loader": "^8.0.18",
     "typescript": "^4.2.3",
     "vue-loader": "^15.9.6",
@@ -29,6 +31,7 @@
   "dependencies": {
     "@msgpack/msgpack": "^2.5.1",
     "common": "*",
-    "vue": "^2.6.12"
+    "vue": "^2.6.12",
+    "vue-color": "^2.8.1"
   }
 }
