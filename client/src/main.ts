@@ -62,6 +62,7 @@ export class App {
 	factory: OffscreenCanvasProxyFactory
 	revoker: ImageCanvasEventRevoker
 	layerManager: LayerManager
+	shouldRender = false
 
 	constructor(
 		public canvasElm: HTMLCanvasElement,
@@ -94,6 +95,8 @@ export class App {
 
 		this.layerManager = new LayerManager(this)
 		this.penTool = new PenTool(this)
+
+		this.renderLoop()
 	}
 
 	init(): void {
@@ -114,7 +117,18 @@ export class App {
 	}
 
 	render(): void {
-		this.imageCanvas.render(this.canvasProxy)
+		this.shouldRender = true
+	}
+
+	renderLoop(): void {
+		if (this.shouldRender) {
+			this.imageCanvas.render(this.canvasProxy)
+			this.shouldRender = false
+		}
+
+		window.requestAnimationFrame(() => {
+			this.renderLoop()
+		})
 	}
 }
 

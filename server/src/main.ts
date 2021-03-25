@@ -94,7 +94,7 @@ class App {
 	cmdInterpreter: CommandInterpreter
 
 	constructor() {
-		this.size = { width: 800, height: 800 }
+		this.size = { width: 3000, height: 3000 }
 		this.factory = new NodeCanvasProxyFactory()
 		this.targetCanvas = this.factory.createCanvasProxy(this.size)
 		const model = new ImageCanvasModel(this.size)

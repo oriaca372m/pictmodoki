@@ -1,7 +1,7 @@
 <template>
 	<div class="app">
 		<div class="canvas-area">
-			<canvas ref="canvas" width="800" height="800"></canvas>
+			<canvas ref="canvas" width="3000" height="3000"></canvas>
 		</div>
 		<div class="tool-area">
 			<div>
