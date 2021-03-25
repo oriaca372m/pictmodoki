@@ -2,8 +2,6 @@
 	<div>
 		<canvas ref="canvas" width="800" height="800"></canvas>
 		<div>
-			<button @click="save">保存</button>
-			<button @click="restore">復元</button>
 			<button @click="undo">一つ戻す</button>
 		</div>
 		<div>
@@ -11,9 +9,13 @@
 			<button @click="selectColor('#0000ff')">青</button>
 			<button @click="selectColor('erase')">消しゴム</button>
 		</div>
-		<div v-for="layer in layers" :key="layer.id">
-			<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
-			<button @click="selectLayerId(layer.id)">select</button>
+		<div>
+			<button @click="createLayer">レイヤー作成</button>
+			<div v-for="layer in layers" :key="layer.id">
+				<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
+				<button @click="selectLayerId(layer.id)">選択</button>
+				<button @click="removeLayerId(layer.id)">削除</button>
+			</div>
 		</div>
 		<p>hello vue!</p>
 		<p>count: {{ counter }}</p>
@@ -30,21 +32,32 @@ export default {
 		savedCanvas: undefined,
 		counter: 0,
 		layers: [{ id: 'id1' }, { id: 'id2' }],
-		selectedLayerId: 'default'
+		selectedLayerId: undefined,
 	}),
 
 	mounted: function() {
 		this.app = main(this.$refs.canvas)
 
 		setInterval(() => {
-			this.layers = this.app.imageCanvas.model.layers
+			this.layers = this.app.layerManager.layers
+			this.selectedLayerId = this.app.layerManager.selectedLayerId
 		}, 1000)
 	},
 
 	methods: {
 		selectLayerId: function(id) {
-			this.app.selectedLayerId = id
-			this.selectedLayerId = id
+			const succeeded = this.app.layerManager.selectLayerId(id)
+			if (succeeded) {
+				this.selectedLayerId = id
+			}
+		},
+
+		removeLayerId: function(id) {
+			this.app.layerManager.removeLayer(id)
+		},
+
+		createLayer: function() {
+			this.app.layerManager.createLayer()
 		},
 
 		selectColor: function(color) {
@@ -54,15 +67,6 @@ export default {
 			}
 			this.app.penTool.mode = 'stroke'
 			this.app.penTool.color = color
-		},
-
-		save: function() {
-			this.savedCanvas = this.app.imageCanvas.cloneModel()
-		},
-
-		restore: function() {
-			this.app.imageCanvas.setModel(this.savedCanvas.clone(this.app.imageCanvas.canvasProxyFactory))
-			this.app.render()
 		},
 
 		undo: function() {

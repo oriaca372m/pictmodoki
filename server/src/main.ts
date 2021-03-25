@@ -3,6 +3,7 @@ import { createCanvas, Canvas } from 'canvas'
 import { decode, encode } from '@msgpack/msgpack'
 
 import {
+	LayerId,
 	CanvasProxy,
 	CanvasProxyFactory,
 	Size,
@@ -134,9 +135,13 @@ export class CommandInterpreter {
 		this._revoker = new ImageCanvasEventRevoker(this._manager)
 	}
 
+	private _isLayerFound(layerId: LayerId): boolean {
+		return this._drawer.layers.find((x) => x.id === layerId) !== undefined
+	}
+
 	command(userId: UserId, cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {
 		if (cmd.kind === 'drawLayer') {
-			if (this._drawer.layers.find((x) => x.id === cmd.layer) === undefined) {
+			if (!this._isLayerFound(cmd.layer)) {
 				return
 			}
 
@@ -155,6 +160,17 @@ export class CommandInterpreter {
 			this._pushEvent(event)
 			this._layerId++
 			return event
+		} else if (cmd.kind === 'removeLayer') {
+			if (!this._isLayerFound(cmd.layer)) {
+				return
+			}
+
+			return this._pushEvent(
+				this._genEvent(userId, {
+					kind: 'layerRemoved',
+					layerId: cmd.layer,
+				})
+			)
 		} else if (cmd.kind === 'revokeEvent') {
 			if (this._revoker.isRevokable(userId, cmd.eventId)) {
 				return this._pushEvent(

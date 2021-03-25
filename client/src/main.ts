@@ -9,7 +9,6 @@ import {
 	ImageCanvasUndoManager,
 	LayerCanvasModel,
 	SerializedLayerCanvasModel,
-	LayerId,
 	ImageCanvasEventRevoker,
 } from 'common'
 
@@ -17,6 +16,7 @@ import { CommandSender, SocketCommandSender } from './event-sender'
 import { WebSocketApi } from './web-socket-api'
 import { PenTool } from './paint-tool'
 import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
+import { LayerManager } from './layer-manager'
 
 import Vue from 'vue'
 import VueIndex from './views/index.vue'
@@ -33,12 +33,14 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 		}
 
 		this._player.playSingleEvent(event)
+		this._app.layerManager.update()
 		this._app.render()
 	}
 
 	onHistoryChanged(): void {
 		const model = this._app.undoManager.createUndoedImageCanvasModel()
 		this._app.imageCanvas.setModel(model)
+		this._app.layerManager.update()
 		this._app.render()
 	}
 
@@ -51,12 +53,12 @@ export class App {
 	canvasProxy: WebCanvasProxy
 	imageCanvas: ImageCanvasDrawer
 	penTool: PenTool
-	selectedLayerId: LayerId | undefined
 	commandSender!: CommandSender
 	eventManager: ImageCanvasEventManager
 	undoManager: ImageCanvasUndoManager
 	factory: OffscreenCanvasProxyFactory
 	revoker: ImageCanvasEventRevoker
+	layerManager: LayerManager
 
 	constructor(
 		public canvasElm: HTMLCanvasElement,
@@ -87,6 +89,7 @@ export class App {
 
 		this.revoker = new ImageCanvasEventRevoker(this.eventManager)
 
+		this.layerManager = new LayerManager(this)
 		this.penTool = new PenTool(this)
 	}
 

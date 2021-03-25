@@ -63,7 +63,7 @@ export class PenTool implements PaintTool {
 			return
 		}
 
-		this._targetLayerId = this._app.selectedLayerId
+		this._targetLayerId = this._app.layerManager.selectedLayerId
 		if (this._targetLayerId === undefined) {
 			return
 		}
@@ -97,7 +97,7 @@ export class PenTool implements PaintTool {
 
 		this._app.commandSender.command({
 			kind: 'drawLayer',
-			layer: this._app.selectedLayerId!,
+			layer: this._targetLayerId!,
 			drawCommand: this._constructCommand(),
 		})
 

@@ -95,7 +95,7 @@ export class ImageCanvasDrawer {
 
 	removeLayer(id: LayerId): void {
 		const controller = this._findLayerById(id)
-		this._model.layers = this._model.layers.filter((x) => x.id === controller.layer.id)
+		this._model.layers = this._model.layers.filter((x) => x.id !== controller.layer.id)
 		this._layerControllers.delete(controller.layer)
 	}
 

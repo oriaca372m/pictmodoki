@@ -51,6 +51,8 @@ export class ImageCanvasEventPlayer {
 			this._drawer.drawLayer(p.layerId, p.drawCommand)
 		} else if (p.kind === 'layerCreated') {
 			this._drawer.createLayer(p.layerId)
+		} else if (p.kind === 'layerRemoved') {
+			this._drawer.removeLayer(p.layerId)
 		}
 	}
 }
