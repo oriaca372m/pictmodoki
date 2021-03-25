@@ -10,6 +10,7 @@ import {
 	LayerCanvasModel,
 	SerializedLayerCanvasModel,
 	LayerId,
+	ImageCanvasEventRevoker,
 } from 'common'
 
 import { CommandSender, SocketCommandSender } from './event-sender'
@@ -55,6 +56,7 @@ export class App {
 	eventManager: ImageCanvasEventManager
 	undoManager: ImageCanvasUndoManager
 	factory: OffscreenCanvasProxyFactory
+	revoker: ImageCanvasEventRevoker
 
 	constructor(
 		public canvasElm: HTMLCanvasElement,
@@ -80,13 +82,10 @@ export class App {
 
 		this.eventManager.registerPlugin(new EventRenderer(this))
 
-		this.undoManager = new ImageCanvasUndoManager(
-			this.userId,
-			this.eventManager,
-			this.factory,
-			canvasModel
-		)
+		this.undoManager = new ImageCanvasUndoManager(this.eventManager, this.factory, canvasModel)
 		this.eventManager.registerPlugin(this.undoManager)
+
+		this.revoker = new ImageCanvasEventRevoker(this.eventManager)
 
 		this.penTool = new PenTool(this)
 	}
@@ -101,7 +100,7 @@ export class App {
 	}
 
 	undo(): void {
-		const event = this.undoManager.createUndoCommand()
+		const event = this.revoker.createUndoCommand(this.userId)
 		if (event === undefined) {
 			return
 		}

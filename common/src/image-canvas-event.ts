@@ -183,7 +183,6 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 	private readonly _lastRenderedEventPlayer: ImageCanvasEventPlayer
 
 	constructor(
-		private readonly _userId: UserId,
 		private readonly _eventManager: ImageCanvasEventManager,
 		private readonly _canvasProxyFactory: CanvasProxyFactory,
 		currentImageCanvasModel: ImageCanvasModel
@@ -220,6 +219,10 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 		player.play(this._eventManager.history)
 		return model
 	}
+}
+
+export class ImageCanvasEventRevoker {
+	constructor(private readonly _eventManager: ImageCanvasEventManager) {}
 
 	private _canCreateUndoCommand(): boolean {
 		if (this._eventManager.isClean) {
@@ -239,7 +242,7 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 		return true
 	}
 
-	createUndoCommand(): ImageCanvasCommand | undefined {
+	createUndoCommand(userId: UserId): ImageCanvasCommand | undefined {
 		if (!this._canCreateUndoCommand()) {
 			return
 		}
@@ -249,7 +252,7 @@ export class ImageCanvasUndoManager implements ImageCanvasEventManagerPlugin {
 				(x) =>
 					!x.isVirtual &&
 					x.eventType.kind !== 'eventRevoked' &&
-					x.userId === this._userId &&
+					x.userId === userId &&
 					!x.isRevoked
 			)
 		if (event === undefined) {

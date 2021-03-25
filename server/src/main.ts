@@ -115,7 +115,7 @@ class App {
 
 		this.eventMgr.registerPlugin(new EventRenderer(this))
 
-		this.undoMgr = new ImageCanvasUndoManager('debugUser', this.eventMgr, this.factory, model)
+		this.undoMgr = new ImageCanvasUndoManager(this.eventMgr, this.factory, model)
 		this.eventMgr.registerPlugin(this.undoMgr)
 
 		this.cmdInterpreter = new CommandInterpreter(this.eventMgr)
