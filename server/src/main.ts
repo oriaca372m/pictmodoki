@@ -277,9 +277,24 @@ function main() {
 				return
 			}
 
-			if (connectionData.userData === undefined) {
+			const userData = connectionData.userData
+			if (userData === undefined) {
 				console.error('非ログイン時の不正なコマンド')
 				return
+			}
+
+			if (cmd.kind === 'sendChat') {
+				const event: Event = {
+					kind: 'chatSent',
+					userId: userData.userId,
+					name: userData.name,
+					message: cmd.message,
+				}
+				const encoded = encode(event)
+
+				s.clients.forEach((client) => {
+					client.send(encoded)
+				})
 			}
 
 			if (cmd.kind === 'requestData') {
@@ -295,10 +310,7 @@ function main() {
 			}
 
 			if (cmd.kind === 'imageCanvasCommand') {
-				const canvasEvent = app.cmdInterpreter.command(
-					connectionData.userData.userId,
-					cmd.value
-				)
+				const canvasEvent = app.cmdInterpreter.command(userData.userId, cmd.value)
 				if (canvasEvent === undefined) {
 					console.log('不正なコマンド')
 					console.log(cmd.value)

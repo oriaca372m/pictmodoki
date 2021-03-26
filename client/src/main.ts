@@ -65,6 +65,7 @@ export class App {
 	layerManager: LayerManager
 	shouldRender = false
 	userId: UserId | undefined
+	chatManager: ChatManager
 
 	constructor(public canvasElm: HTMLCanvasElement, public api: WebSocketApi) {
 		this.factory = new OffscreenCanvasProxyFactory()
@@ -93,6 +94,8 @@ export class App {
 
 		this.layerManager = new LayerManager(this)
 		this.penTool = new PenTool(this)
+
+		this.chatManager = new ChatManager(api)
 
 		this.renderLoop()
 	}
@@ -155,6 +158,30 @@ async function deserializeImageCanvasModel(
 	)
 	model.layers = layers
 	return model
+}
+
+type ChatMessageRecievedHandler = (userId: UserId, userName: string, message: string) => void
+class ChatManager {
+	private readonly _messageRecievedHandlers: ChatMessageRecievedHandler[] = []
+
+	constructor(private readonly _api: WebSocketApi) {
+		this._api.addEventHandler((event) => {
+			if (event.kind === 'chatSent') {
+				this._messageRecievedHandlers.forEach((x) =>
+					x(event.userId, event.name, event.message)
+				)
+				return
+			}
+		})
+	}
+
+	addMessageRecievedHandler(handler: ChatMessageRecievedHandler) {
+		this._messageRecievedHandlers.push(handler)
+	}
+
+	sendMessage(message: string) {
+		this._api.sendCommand({ kind: 'sendChat', message })
+	}
 }
 
 export function main(elm: HTMLCanvasElement, serverAddr: string, userName: string): App {

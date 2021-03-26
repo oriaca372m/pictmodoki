@@ -24,6 +24,16 @@
 					<button @click="removeLayerId(layer.id)">削除</button>
 				</div>
 			</div>
+			<div>
+				<h1>チャット</h1>
+				<div>
+					<input v-model="messageToSend" @keyup.enter="sendChat">
+					<button @click="sendChat">送信</button>
+				</div>
+				<div v-for="chat in chatMessages.slice().reverse()" :key="chat.msgId">
+					<p>{{ chat.name }}: {{ chat.msg }}</p>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -41,6 +51,8 @@ export default {
 		size: "10",
 		color: '#ff0000ff',
 		selectedLayerId: undefined,
+		messageToSend: '',
+		chatMessages: []
 	}),
 
 	components: {
@@ -49,6 +61,9 @@ export default {
 
 	mounted: function() {
 		this.app = main(this.$refs.canvas, this.serverAddr, this.userName)
+		this.app.chatManager.addMessageRecievedHandler((id, name, msg) => {
+			this.chatMessages.push({ msgId: this.chatMessages.length, id, name, msg })
+		})
 
 		setInterval(() => {
 			this.layers = this.app.layerManager.layers
@@ -97,6 +112,14 @@ export default {
 
 		undo: function() {
 			this.app.undo()
+		},
+
+		sendChat: function() {
+			if (this.messageToSend === '') {
+				return
+			}
+			this.app.chatManager.sendMessage(this.messageToSend)
+			this.messageToSend = ''
 		}
 	}
 }
