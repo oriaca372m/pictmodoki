@@ -10,6 +10,7 @@ import {
 	LayerCanvasModel,
 	SerializedLayerCanvasModel,
 	ImageCanvasEventRevoker,
+	UserId,
 } from 'common'
 
 import { CommandSender, SocketCommandSender } from './event-sender'
@@ -63,12 +64,9 @@ export class App {
 	revoker: ImageCanvasEventRevoker
 	layerManager: LayerManager
 	shouldRender = false
+	userId: UserId | undefined
 
-	constructor(
-		public canvasElm: HTMLCanvasElement,
-		public api: WebSocketApi,
-		public userId: string
-	) {
+	constructor(public canvasElm: HTMLCanvasElement, public api: WebSocketApi) {
 		this.factory = new OffscreenCanvasProxyFactory()
 		this.canvasProxy = new WebCanvasProxy(this.canvasElm)
 		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
@@ -109,6 +107,10 @@ export class App {
 	}
 
 	undo(): void {
+		if (this.userId === undefined) {
+			return
+		}
+
 		const event = this.revoker.createUndoCommand(this.userId)
 		if (event === undefined) {
 			return
@@ -155,12 +157,12 @@ async function deserializeImageCanvasModel(
 	return model
 }
 
-export function main(elm: HTMLCanvasElement, serverAddr: string, userId: string): App {
+export function main(elm: HTMLCanvasElement, serverAddr: string, userName: string): App {
 	const api = new WebSocketApi(serverAddr)
-	const app = new App(elm, api, userId)
+	const app = new App(elm, api)
 
 	api.addOpenHandler(() => {
-		api.sendCommand({ kind: 'setUserId', value: app.userId })
+		api.sendCommand({ kind: 'login', name: userName, reconnectionToken: undefined })
 
 		console.log('started')
 		app.init()
@@ -170,18 +172,27 @@ export function main(elm: HTMLCanvasElement, serverAddr: string, userId: string)
 	})
 
 	api.addEventHandler((event) => {
-		if (event.kind !== 'dataSent') {
+		if (event.kind === 'loginAccepted') {
+			app.userId = event.userId
 			return
 		}
 
-		void (async () => {
-			api.blockEvent()
-			app.undoManager.setLastRenderedImageModel(
-				await deserializeImageCanvasModel(event.value, app.factory)
-			)
-			app.eventManager.setHistory(event.log)
-			api.resumeEvent()
-		})()
+		if (event.kind === 'userLoggedIn') {
+			console.log(`${event.name} さん(id: ${event.userId})がログインしました`)
+			return
+		}
+
+		if (event.kind === 'dataSent') {
+			void (async () => {
+				api.blockEvent()
+				app.undoManager.setLastRenderedImageModel(
+					await deserializeImageCanvasModel(event.value, app.factory)
+				)
+				app.eventManager.setHistory(event.log)
+				api.resumeEvent()
+			})()
+			return
+		}
 	})
 
 	api.start()

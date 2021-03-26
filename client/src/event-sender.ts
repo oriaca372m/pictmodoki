@@ -25,6 +25,10 @@ export class SocketCommandSender implements CommandSender {
 	}
 
 	command(cmd: ImageCanvasCommand): void {
+		if (this._app.userId === undefined) {
+			throw new Error('コマンド早すぎ')
+		}
+
 		this._api.sendCommand({ kind: 'imageCanvasCommand', value: cmd })
 		this._pushVirtualEvent(cmd)
 	}
@@ -44,7 +48,7 @@ export class SocketCommandSender implements CommandSender {
 	private _pushEvent(eventType: ImageCanvasEventType) {
 		this._manager.event({
 			id: 'virtual',
-			userId: this._app.userId,
+			userId: this._app.userId!,
 			isRevoked: false,
 			isVirtual: true,
 			eventType,

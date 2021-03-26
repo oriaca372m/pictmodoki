@@ -1,6 +1,7 @@
 import * as ws from 'ws'
 import { createCanvas, Canvas } from 'canvas'
 import { decode, encode } from '@msgpack/msgpack'
+import Crypto from 'crypto'
 
 import {
 	LayerId,
@@ -197,25 +198,88 @@ export class CommandInterpreter {
 	}
 }
 
+interface UserData {
+	userId: UserId
+	name: string
+	reconnectionToken: string
+}
+
+class UserManager {
+	private _currentUserId = 0
+	private readonly _users: UserData[] = []
+
+	createUser(name: string): UserData {
+		const token = Crypto.randomBytes(16).toString('hex')
+
+		const data = {
+			userId: this._currentUserId.toString(),
+			name,
+			reconnectionToken: token,
+		}
+
+		this._currentUserId++
+		return data
+	}
+
+	findByReconnectionToken(token: string): UserData | undefined {
+		return this._users.find((x) => x.reconnectionToken === token)
+	}
+}
+
 interface ConnectionData {
-	userId: string
+	userData: UserData | undefined
 }
 
 function main() {
 	const s = new ws.Server({ port: 25567 })
 	const app = new App()
+	const userManager = new UserManager()
 
 	s.on('connection', (ws) => {
 		const connectionData: ConnectionData = {
-			userId: 'default',
+			userData: undefined,
 		}
 
 		ws.on('message', (message: unknown) => {
 			const cmd = decode(message as Uint8Array) as Command
 			console.log(cmd)
 
-			if (cmd.kind === 'setUserId') {
-				connectionData.userId = cmd.value
+			if (cmd.kind === 'login') {
+				let userData
+				if (cmd.reconnectionToken !== undefined) {
+					userData = userManager.findByReconnectionToken(cmd.reconnectionToken)
+				}
+
+				if (userData === undefined) {
+					userData = userManager.createUser(cmd.name)
+				}
+
+				connectionData.userData = userData
+				const acceptedEvent: Event = {
+					kind: 'loginAccepted',
+					userId: userData.userId,
+					name: userData.name,
+					reconnectionToken: userData.reconnectionToken,
+				}
+				ws.send(encode(acceptedEvent))
+
+				const loggedInEvent: Event = {
+					kind: 'userLoggedIn',
+					userId: userData.userId,
+					name: userData.name,
+				}
+				const encoded = encode(loggedInEvent)
+
+				s.clients.forEach((client) => {
+					client.send(encoded)
+				})
+
+				return
+			}
+
+			if (connectionData.userData === undefined) {
+				console.error('非ログイン時の不正なコマンド')
+				return
 			}
 
 			if (cmd.kind === 'requestData') {
@@ -231,7 +295,10 @@ function main() {
 			}
 
 			if (cmd.kind === 'imageCanvasCommand') {
-				const canvasEvent = app.cmdInterpreter.command(connectionData.userId, cmd.value)
+				const canvasEvent = app.cmdInterpreter.command(
+					connectionData.userData.userId,
+					cmd.value
+				)
 				if (canvasEvent === undefined) {
 					console.log('不正なコマンド')
 					console.log(cmd.value)

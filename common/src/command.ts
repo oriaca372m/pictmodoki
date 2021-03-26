@@ -3,4 +3,4 @@ import { ImageCanvasCommand } from './image-canvas-command'
 export type Command =
 	| { kind: 'imageCanvasCommand'; value: ImageCanvasCommand }
 	| { kind: 'requestData' }
-	| { kind: 'setUserId'; value: string }
+	| { kind: 'login'; name: string; reconnectionToken: string | undefined }
