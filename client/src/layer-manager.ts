@@ -45,4 +45,9 @@ export class LayerManager {
 	get layers(): readonly LayerCanvasModel[] {
 		return this._app.imageCanvas.model.layers
 	}
+
+	setLayerVisibility(id: LayerId, isVisible: boolean): void {
+		this._drawer.setLayerVisibility(id, isVisible)
+		this._app.render()
+	}
 }

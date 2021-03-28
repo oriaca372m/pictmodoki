@@ -33,6 +33,7 @@ export class ImageCanvasModel {
 
 class LayerController {
 	readonly drawer: LayerDrawer
+	isVisible = true
 
 	constructor(readonly layer: LayerCanvasModel) {
 		this.drawer = new LayerDrawer(layer.canvasProxy)
@@ -83,6 +84,14 @@ export class ImageCanvasDrawer {
 
 	get layers(): readonly LayerCanvasModel[] {
 		return this._model.layers
+	}
+
+	setLayerVisibility(layerId: LayerId, isVisible: boolean): void {
+		const layer = this._findLayerById(layerId)
+		if (layer.isVisible !== isVisible) {
+			layer.isVisible = isVisible
+			this._shouldUpdateCache = true
+		}
 	}
 
 	createLayer(id: LayerId): LayerController {
@@ -167,6 +176,11 @@ export class ImageCanvasDrawer {
 		drawer.clear()
 
 		for (const layer of this._model.layers) {
+			const controller = this._layerControllers.get(layer)!
+			if (!controller.isVisible) {
+				continue
+			}
+
 			if (this._previewOriginalLayer && this._previewOriginalLayer.id === layer.id) {
 				drawer.drawCanvasProxy(this._previewLayer!.canvasProxy)
 			} else {
@@ -180,7 +194,11 @@ export class ImageCanvasDrawer {
 		drawer.clear()
 
 		drawer.drawCanvasProxy(this._cacheBottom.canvasProxy)
-		drawer.drawCanvasProxy(this._previewLayer!.canvasProxy)
+
+		const controller = this._layerControllers.get(this._previewOriginalLayer!)!
+		if (controller.isVisible) {
+			drawer.drawCanvasProxy(this._previewLayer!.canvasProxy)
+		}
 		drawer.drawCanvasProxy(this._cacheTop.canvasProxy)
 	}
 
@@ -195,6 +213,11 @@ export class ImageCanvasDrawer {
 		for (const layer of this._model.layers) {
 			if (this._previewOriginalLayer!.id === layer.id) {
 				isDrawingBottom = false
+				continue
+			}
+
+			const controller = this._layerControllers.get(layer)!
+			if (!controller.isVisible) {
 				continue
 			}
 

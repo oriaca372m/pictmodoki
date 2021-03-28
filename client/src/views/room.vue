@@ -22,12 +22,14 @@
 				<button @click="setSize(3)">3</button>
 				<button @click="setSize(20)">20</button>
 			</div>
-			<div>
+			<div class="layer-selector">
 				<button @click="createLayer">レイヤー作成</button>
 				<div v-for="layer in layers" :key="layer.id">
-					<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
 					<button @click="selectLayerId(layer.id)">選択</button>
+					<button @click="setLayerVisibility(layer.id, true)">表示</button>
+					<button @click="setLayerVisibility(layer.id, false)">非表示</button>
 					<button @click="removeLayerId(layer.id)">削除</button>
+					<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
 				</div>
 			</div>
 			<div>
@@ -128,6 +130,10 @@ export default {
 			this.app.undo()
 		},
 
+		setLayerVisibility: function(id, isVisible) {
+			this.app.layerManager.setLayerVisibility(id, isVisible)
+		},
+
 		sendChat: function() {
 			if (this.messageToSend === '') {
 				return
@@ -142,5 +148,9 @@ export default {
 <style>
 .app {
 	display: flex;
+}
+
+.layer-selector {
+	overflow: auto;
 }
 </style>
