@@ -9,12 +9,18 @@
 			</div>
 			<div>
 				<ChromePicker v-model="color" />
+				<button @click="pen">ペン</button>
+				<button @click="selectColor('#000000')">黒</button>
 				<button @click="selectColor('#ff0000')">赤</button>
 				<button @click="selectColor('#0000ff')">青</button>
 				<button @click="selectColor('erase')">消しゴム</button>
 			</div>
 			<div>
 				<input type="number" v-model="size">
+			</div>
+			<div>
+				<button @click="setSize(3)">3</button>
+				<button @click="setSize(20)">20</button>
 			</div>
 			<div>
 				<button @click="createLayer">レイヤー作成</button>
@@ -91,12 +97,20 @@ export default {
 			}
 		},
 
+		setSize: function(value) {
+			this.size = value
+		},
+
 		removeLayerId: function(id) {
 			this.app.layerManager.removeLayer(id)
 		},
 
 		createLayer: function() {
 			this.app.layerManager.createLayer()
+		},
+
+		pen: function() {
+			this.app.penTool.mode = 'stroke'
 		},
 
 		selectColor: function(color) {
