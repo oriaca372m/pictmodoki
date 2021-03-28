@@ -24,13 +24,15 @@
 			</div>
 			<div class="layer-selector">
 				<button @click="createLayer">レイヤー作成</button>
-				<div v-for="layer in layers" :key="layer.id">
-					<button @click="selectLayerId(layer.id)">選択</button>
-					<button @click="setLayerVisibility(layer.id, true)">表示</button>
-					<button @click="setLayerVisibility(layer.id, false)">非表示</button>
-					<button @click="removeLayerId(layer.id)">削除</button>
-					<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
-				</div>
+				<draggable v-model="layers" @end="setLayerOrder">
+					<div v-for="layer in layers" :key="layer.id">
+						<button @click="selectLayerId(layer.id)">選択</button>
+						<button @click="setLayerVisibility(layer.id, true)">表示</button>
+						<button @click="setLayerVisibility(layer.id, false)">非表示</button>
+						<button @click="removeLayerId(layer.id)">削除</button>
+						<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
+					</div>
+				</draggable>
 			</div>
 			<div>
 				<h1>チャット</h1>
@@ -49,6 +51,7 @@
 <script>
 import { main } from '../main'
 import { Chrome as ChromePicker } from 'vue-color'
+import Draggable from 'vuedraggable'
 
 export default {
 	props: ['serverAddr', 'userName'],
@@ -60,11 +63,12 @@ export default {
 		color: '#ff0000ff',
 		selectedLayerId: undefined,
 		messageToSend: '',
-		chatMessages: []
+		chatMessages: [],
 	}),
 
 	components: {
-		ChromePicker
+		ChromePicker,
+		Draggable,
 	},
 
 	mounted: function() {
@@ -76,7 +80,13 @@ export default {
 			})
 
 			const layerUpdated = () => {
-				this.layers = this.app.paintApp.layerManager.layers
+				const sortedLayers = []
+				const layers = this.app.paintApp.imageCanvas.model.layers
+				for (const id of this.app.paintApp.imageCanvas.model.order) {
+					const layer = layers.find(x => x.id === id)
+					sortedLayers.push(layer)
+				}
+				this.layers = sortedLayers
 				this.selectedLayerId = this.app.paintApp.layerManager.selectedLayerId
 			}
 
@@ -94,10 +104,14 @@ export default {
 
 		size: function(value) {
 			this.app.paintApp.penTool.width = parseInt(value, 10)
-		}
+		},
 	},
 
 	methods: {
+		setLayerOrder: function() {
+			this.app.paintApp.layerManager.setLayerOrder(this.layers.map(x => x.id))
+		},
+
 		selectLayerId: function(id) {
 			const succeeded = this.app.paintApp.layerManager.selectLayerId(id)
 			if (succeeded) {

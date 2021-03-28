@@ -56,4 +56,8 @@ export class LayerManager {
 		this._app.render()
 		this.updated.emit()
 	}
+
+	setLayerOrder(order: LayerId[]): void {
+		this._app.commandSender.command({ kind: 'setLayerOrder', order })
+	}
 }

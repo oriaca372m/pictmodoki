@@ -11,22 +11,77 @@ import {
 export interface SerializedImageCanvasModel {
 	size: Size
 	layers: SerializedLayerCanvasModel[]
+	order: LayerId[]
 }
 
 export class ImageCanvasModel {
-	layers: LayerCanvasModel[] = []
+	private _layers: LayerCanvasModel[] = []
+	private _order: LayerId[] = []
+
 	constructor(readonly size: Size) {}
+
+	get layers(): readonly LayerCanvasModel[] {
+		return this._layers
+	}
+
+	get order(): readonly LayerId[] {
+		return this._order
+	}
+
+	private _validateOrder(layer: readonly LayerCanvasModel[], order: readonly LayerId[]): void {
+		const layerSet = new Set(layer.map((x) => x.id))
+		const orderSet = new Set(order)
+
+		for (const id of layerSet) {
+			if (!orderSet.has(id)) {
+				throw new Error('orderがlayersが持っているIDを持っていない')
+			}
+		}
+
+		for (const id of orderSet) {
+			if (!layerSet.has(id)) {
+				throw new Error('orderがlayersが持っていないIDを持っている')
+			}
+		}
+	}
+
+	// 引数に与えた配列を変更しないでね
+	// (cloneするべき?)
+	setLayers(layers: LayerCanvasModel[], order: LayerId[]): void {
+		this._validateOrder(layers, order)
+		this._layers = layers
+		this._order = order
+	}
+
+	// 引数に与えた配列を変更しないでね
+	// (cloneするべき?)
+	setOrder(order: LayerId[]): void {
+		this._validateOrder(this._layers, order)
+		this._order = order
+	}
+
+	addLayer(layerModel: LayerCanvasModel): void {
+		this._layers.push(layerModel)
+		this._order.push(layerModel.id)
+	}
+
+	removeLayer(id: LayerId): void {
+		this._layers = this._layers.filter((x) => x.id !== id)
+		this._order = this._order.filter((x) => x !== id)
+	}
 
 	clone(factory: CanvasProxyFactory): ImageCanvasModel {
 		const newImageCanvas = new ImageCanvasModel(this.size)
-		newImageCanvas.layers = this.layers.map((x) => x.clone(factory))
+		newImageCanvas._layers = this._layers.map((x) => x.clone(factory))
+		newImageCanvas._order = Array.from(this._order)
 		return newImageCanvas
 	}
 
 	async serialize(): Promise<SerializedImageCanvasModel> {
 		return {
 			size: this.size,
-			layers: await Promise.all(this.layers.map((x) => x.serialize())),
+			layers: await Promise.all(this._layers.map((x) => x.serialize())),
+			order: this._order,
 		}
 	}
 }
@@ -42,7 +97,8 @@ class LayerController {
 
 export class ImageCanvasDrawer {
 	private _model!: ImageCanvasModel
-	private _layerControllers = new Map<LayerCanvasModel, LayerController>()
+	private readonly _layerControllers = new Map<LayerCanvasModel, LayerController>()
+	private readonly _idToControllerMap = new Map<LayerId, LayerController>()
 
 	private _previewOriginalLayer: LayerCanvasModel | undefined
 	private _previewLayer: LayerDrawer | undefined
@@ -63,8 +119,22 @@ export class ImageCanvasDrawer {
 		return this._canvasProxyFactory
 	}
 
+	private _setLayerController(
+		model: LayerCanvasModel,
+		controller?: LayerController
+	): LayerController {
+		if (controller === undefined) {
+			controller = new LayerController(model)
+		}
+
+		this._layerControllers.set(model, controller)
+		this._idToControllerMap.set(model.id, controller)
+		return controller
+	}
+
 	setModel(model: ImageCanvasModel): void {
 		this._layerControllers.clear()
+		this._idToControllerMap.clear()
 		this._previewOriginalLayer = undefined
 		this._previewLayer = undefined
 
@@ -74,7 +144,7 @@ export class ImageCanvasDrawer {
 
 		this._model = model
 		for (const layer of model.layers) {
-			this._layerControllers.set(layer, new LayerController(layer))
+			this._setLayerController(layer)
 		}
 	}
 
@@ -95,26 +165,29 @@ export class ImageCanvasDrawer {
 	}
 
 	createLayer(id: LayerId): LayerController {
-		const foundLayer = this.layers.find((x) => x.id === id)
+		const foundLayer = this._idToControllerMap.get(id)
 		if (foundLayer !== undefined) {
-			return this._layerControllers.get(foundLayer)!
+			return foundLayer
 		}
 
 		const canvas = this._canvasProxyFactory.createCanvasProxy(this._model.size)
+
 		const layerModel = new LayerCanvasModel(id, canvas, '新規レイヤー')
-		const controller = new LayerController(layerModel)
-
-		this._model.layers.push(layerModel)
-		this._layerControllers.set(layerModel, controller)
-
-		return controller
+		this._model.addLayer(layerModel)
+		return this._setLayerController(layerModel)
 	}
 
 	removeLayer(id: LayerId): void {
 		const controller = this._findLayerById(id)
-		this._model.layers = this._model.layers.filter((x) => x.id !== controller.layer.id)
+
+		this._model.removeLayer(id)
 		this._layerControllers.delete(controller.layer)
+		this._idToControllerMap.delete(id)
 		this._shouldUpdateCache = true
+	}
+
+	setLayerOrder(order: LayerId[]): void {
+		this._model.setOrder(order)
 	}
 
 	drawLayer(id: LayerId, drawCmd: LayerDrawCommand): void {
@@ -150,12 +223,12 @@ export class ImageCanvasDrawer {
 	}
 
 	private _findLayerById(id: LayerId): LayerController {
-		const model = this._model.layers.find((x) => x.id === id)
-		if (model === undefined) {
+		const controller = this._idToControllerMap.get(id)
+		if (controller === undefined) {
 			throw new Error('レイヤーが見つからない')
 		}
 
-		return this._layerControllers.get(model)!
+		return controller
 	}
 
 	render(canvas: CanvasProxy): void {
@@ -175,16 +248,16 @@ export class ImageCanvasDrawer {
 		const drawer = new CanvasDrawer(canvas)
 		drawer.clear()
 
-		for (const layer of this._model.layers) {
-			const controller = this._layerControllers.get(layer)!
+		for (const id of this._model.order) {
+			const controller = this._idToControllerMap.get(id)!
 			if (!controller.isVisible) {
 				continue
 			}
 
-			if (this._previewOriginalLayer && this._previewOriginalLayer.id === layer.id) {
+			if (this._previewOriginalLayer && this._previewOriginalLayer.id === id) {
 				drawer.drawCanvasProxy(this._previewLayer!.canvasProxy)
 			} else {
-				drawer.drawCanvasProxy(layer.canvasProxy)
+				drawer.drawCanvasProxy(controller.drawer.canvasProxy)
 			}
 		}
 	}
@@ -210,21 +283,21 @@ export class ImageCanvasDrawer {
 
 		let isDrawingBottom = true
 
-		for (const layer of this._model.layers) {
-			if (this._previewOriginalLayer!.id === layer.id) {
+		for (const id of this._model.order) {
+			if (this._previewOriginalLayer!.id === id) {
 				isDrawingBottom = false
 				continue
 			}
 
-			const controller = this._layerControllers.get(layer)!
+			const controller = this._idToControllerMap.get(id)!
 			if (!controller.isVisible) {
 				continue
 			}
 
 			if (isDrawingBottom) {
-				bottomDrawer.drawCanvasProxy(layer.canvasProxy)
+				bottomDrawer.drawCanvasProxy(controller.drawer.canvasProxy)
 			} else {
-				topDrawer.drawCanvasProxy(layer.canvasProxy)
+				topDrawer.drawCanvasProxy(controller.drawer.canvasProxy)
 			}
 		}
 

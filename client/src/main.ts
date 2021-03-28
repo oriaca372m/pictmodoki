@@ -153,7 +153,7 @@ async function deserializeImageCanvasModel(
 	const layers = await Promise.all(
 		data.layers.map((x) => deserializeLayerCanvasModel(x, factory))
 	)
-	model.layers = layers
+	model.setLayers(layers, data.order)
 	return model
 }
 

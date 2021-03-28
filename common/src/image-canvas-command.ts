@@ -7,3 +7,4 @@ export type ImageCanvasCommand =
 	| { kind: 'drawLayer'; layer: LayerId; drawCommand: LayerDrawCommand }
 	| { kind: 'revokeEvent'; eventId: ImageCanvasEventId }
 	| { kind: 'restoreEvent'; eventId: ImageCanvasEventId }
+	| { kind: 'setLayerOrder'; order: LayerId[] }

@@ -178,6 +178,13 @@ export class CommandInterpreter {
 					this._genEvent(userId, { kind: 'eventRevoked', eventId: cmd.eventId })
 				)
 			}
+		} else if (cmd.kind === 'setLayerOrder') {
+			return this._pushEvent(
+				this._genEvent(userId, {
+					kind: 'layerOrderChanged',
+					order: cmd.order,
+				})
+			)
 		}
 	}
 

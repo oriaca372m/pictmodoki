@@ -12,6 +12,7 @@ export type ImageCanvasEventType =
 	| { kind: 'eventRevoked'; eventId: ImageCanvasEventId }
 	| { kind: 'eventRestored'; eventId: ImageCanvasEventId }
 	| { kind: 'layerDrawn'; layerId: LayerId; drawCommand: LayerDrawCommand }
+	| { kind: 'layerOrderChanged'; order: LayerId[] }
 
 export type ImageCanvasEventId = string
 
@@ -53,6 +54,8 @@ export class ImageCanvasEventPlayer {
 			this._drawer.createLayer(p.layerId)
 		} else if (p.kind === 'layerRemoved') {
 			this._drawer.removeLayer(p.layerId)
+		} else if (p.kind === 'layerOrderChanged') {
+			this._drawer.setLayerOrder(p.order)
 		}
 	}
 }
