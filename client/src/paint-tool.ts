@@ -1,5 +1,5 @@
 import { ImageCanvasDrawer, LayerDrawCommand, Position, Color, LayerId } from 'common'
-import { App } from './main'
+import { PaintApp } from './main'
 
 export interface PaintTool {
 	enable(): void
@@ -19,7 +19,7 @@ export class PenTool implements PaintTool {
 
 	private _isEnabled = false
 
-	constructor(private readonly _app: App) {
+	constructor(private readonly _app: PaintApp) {
 		this._imageCanvas = _app.imageCanvas
 		this._canvasElm = _app.canvasElm
 

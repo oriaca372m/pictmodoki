@@ -18,6 +18,7 @@ import { WebSocketApi } from './web-socket-api'
 import { PenTool } from './paint-tool'
 import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
 import { LayerManager } from './layer-manager'
+import { TypedEvent } from './typed-event'
 
 import Vue from 'vue'
 import VueRouter from 'vue-router'
@@ -27,7 +28,7 @@ import VueRoom from './views/room.vue'
 
 class EventRenderer implements ImageCanvasEventManagerPlugin {
 	private readonly _player: ImageCanvasEventPlayer
-	constructor(private readonly _app: App) {
+	constructor(private readonly _app: PaintApp) {
 		this._player = new ImageCanvasEventPlayer(_app.imageCanvas)
 	}
 
@@ -53,7 +54,7 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 	}
 }
 
-export class App {
+export class PaintApp {
 	canvasProxy: WebCanvasProxy
 	imageCanvas: ImageCanvasDrawer
 	penTool: PenTool
@@ -64,10 +65,8 @@ export class App {
 	revoker: ImageCanvasEventRevoker
 	layerManager: LayerManager
 	shouldRender = false
-	userId: UserId | undefined
-	chatManager: ChatManager
 
-	constructor(public canvasElm: HTMLCanvasElement, public api: WebSocketApi) {
+	constructor(public app: App, public canvasElm: HTMLCanvasElement, public api: WebSocketApi) {
 		this.factory = new OffscreenCanvasProxyFactory()
 		this.canvasProxy = new WebCanvasProxy(this.canvasElm)
 		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
@@ -95,13 +94,11 @@ export class App {
 		this.layerManager = new LayerManager(this)
 		this.penTool = new PenTool(this)
 
-		this.chatManager = new ChatManager(api)
-
 		this.renderLoop()
 	}
 
 	init(): void {
-		const sender = new SocketCommandSender(this, this.eventManager, this.api)
+		const sender = new SocketCommandSender(this.app, this.eventManager, this.api)
 		sender.start()
 
 		this.commandSender = sender
@@ -110,11 +107,11 @@ export class App {
 	}
 
 	undo(): void {
-		if (this.userId === undefined) {
+		if (this.app.userId === undefined) {
 			return
 		}
 
-		const event = this.revoker.createUndoCommand(this.userId)
+		const event = this.revoker.createUndoCommand(this.app.userId)
 		if (event === undefined) {
 			return
 		}
@@ -184,45 +181,71 @@ class ChatManager {
 	}
 }
 
+export class App {
+	private _api: WebSocketApi
+	private _paintApp: PaintApp | undefined
+	private _userId: UserId | undefined
+	private _chatManager: ChatManager | undefined
+	readonly ready = new TypedEvent<void>()
+
+	get paintApp(): PaintApp | undefined {
+		return this._paintApp
+	}
+
+	get userId(): UserId | undefined {
+		return this._userId
+	}
+
+	get chatManager(): ChatManager | undefined {
+		return this._chatManager
+	}
+
+	constructor(elm: HTMLCanvasElement, serverAddr: string, userName: string) {
+		this._api = new WebSocketApi(serverAddr)
+
+		this._api.addOpenHandler(() => {
+			this._api.sendCommand({ kind: 'login', name: userName, reconnectionToken: undefined })
+
+			const app = new PaintApp(this, elm, this._api)
+			this._paintApp = app
+			app.init()
+			app.render()
+
+			this._api.sendCommand({ kind: 'requestData' })
+			this._chatManager = new ChatManager(this._api)
+			this.ready.emit()
+		})
+
+		this._api.addEventHandler((event) => {
+			if (event.kind === 'loginAccepted') {
+				this._userId = event.userId
+				return
+			}
+
+			if (event.kind === 'userLoggedIn') {
+				console.log(`${event.name} さん(id: ${event.userId})がログインしました`)
+				return
+			}
+
+			if (event.kind === 'dataSent') {
+				void (async () => {
+					this._api.blockEvent()
+					this._paintApp!.undoManager.setLastRenderedImageModel(
+						await deserializeImageCanvasModel(event.value, this._paintApp!.factory)
+					)
+					this._paintApp!.eventManager.setHistory(event.log)
+					this._api.resumeEvent()
+				})()
+				return
+			}
+		})
+
+		this._api.start()
+	}
+}
+
 export function main(elm: HTMLCanvasElement, serverAddr: string, userName: string): App {
-	const api = new WebSocketApi(serverAddr)
-	const app = new App(elm, api)
-
-	api.addOpenHandler(() => {
-		api.sendCommand({ kind: 'login', name: userName, reconnectionToken: undefined })
-
-		console.log('started')
-		app.init()
-		app.render()
-
-		api.sendCommand({ kind: 'requestData' })
-	})
-
-	api.addEventHandler((event) => {
-		if (event.kind === 'loginAccepted') {
-			app.userId = event.userId
-			return
-		}
-
-		if (event.kind === 'userLoggedIn') {
-			console.log(`${event.name} さん(id: ${event.userId})がログインしました`)
-			return
-		}
-
-		if (event.kind === 'dataSent') {
-			void (async () => {
-				api.blockEvent()
-				app.undoManager.setLastRenderedImageModel(
-					await deserializeImageCanvasModel(event.value, app.factory)
-				)
-				app.eventManager.setHistory(event.log)
-				api.resumeEvent()
-			})()
-			return
-		}
-	})
-
-	api.start()
+	const app = new App(elm, serverAddr, userName)
 	return app
 }
 

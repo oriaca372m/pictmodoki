@@ -69,31 +69,34 @@ export default {
 
 	mounted: function() {
 		this.app = main(this.$refs.canvas, this.serverAddr, this.userName)
-		this.app.chatManager.addMessageRecievedHandler((id, name, msg) => {
-			this.chatMessages.push({ msgId: this.chatMessages.length, id, name, msg })
-		})
 
-		setInterval(() => {
-			this.layers = this.app.layerManager.layers
-			this.selectedLayerId = this.app.layerManager.selectedLayerId
-		}, 1000)
+		this.app.ready.once(() => {
+			this.app.chatManager.addMessageRecievedHandler((id, name, msg) => {
+				this.chatMessages.push({ msgId: this.chatMessages.length, id, name, msg })
+			})
+
+			setInterval(() => {
+				this.layers = this.app.paintApp.layerManager.layers
+				this.selectedLayerId = this.app.paintApp.layerManager.selectedLayerId
+			}, 1000)
+		})
 	},
 
 	watch: {
 		color: function(value) {
 			if (value.hex8) {
-				this.app.penTool.color = value.hex8
+				this.app.paintApp.penTool.color = value.hex8
 			}
 		},
 
 		size: function(value) {
-			this.app.penTool.width = parseInt(value, 10)
+			this.app.paintApp.penTool.width = parseInt(value, 10)
 		}
 	},
 
 	methods: {
 		selectLayerId: function(id) {
-			const succeeded = this.app.layerManager.selectLayerId(id)
+			const succeeded = this.app.paintApp.layerManager.selectLayerId(id)
 			if (succeeded) {
 				this.selectedLayerId = id
 			}
@@ -104,34 +107,34 @@ export default {
 		},
 
 		removeLayerId: function(id) {
-			this.app.layerManager.removeLayer(id)
+			this.app.paintApp.layerManager.removeLayer(id)
 		},
 
 		createLayer: function() {
-			this.app.layerManager.createLayer()
+			this.app.paintApp.layerManager.createLayer()
 		},
 
 		pen: function() {
-			this.app.penTool.mode = 'stroke'
+			this.app.paintApp.penTool.mode = 'stroke'
 		},
 
 		selectColor: function(color) {
 			if (color === 'erase') {
-				this.app.penTool.mode = 'erase'
+				this.app.paintApp.penTool.mode = 'erase'
 				return
 			}
-			this.app.penTool.mode = 'stroke'
+			this.app.paintApp.penTool.mode = 'stroke'
 
 			this.color = color
-			this.app.penTool.color = color
+			this.app.paintApp.penTool.color = color
 		},
 
 		undo: function() {
-			this.app.undo()
+			this.app.paintApp.undo()
 		},
 
 		setLayerVisibility: function(id, isVisible) {
-			this.app.layerManager.setLayerVisibility(id, isVisible)
+			this.app.paintApp.layerManager.setLayerVisibility(id, isVisible)
 		},
 
 		sendChat: function() {

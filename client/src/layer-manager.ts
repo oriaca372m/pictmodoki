@@ -1,11 +1,11 @@
 import { ImageCanvasDrawer, LayerCanvasModel, LayerId } from 'common'
-import { App } from './main'
+import { PaintApp } from './main'
 
 export class LayerManager {
 	private _selectedLayerId: LayerId | undefined
 	private readonly _drawer: ImageCanvasDrawer
 
-	constructor(private readonly _app: App) {
+	constructor(private readonly _app: PaintApp) {
 		this._drawer = this._app.imageCanvas
 	}
 
