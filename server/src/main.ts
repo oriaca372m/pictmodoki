@@ -137,7 +137,7 @@ export class CommandInterpreter {
 	}
 
 	private _isLayerFound(layerId: LayerId): boolean {
-		return this._drawer.layers.find((x) => x.id === layerId) !== undefined
+		return this._drawer.findLayerModelById(layerId) !== undefined
 	}
 
 	command(userId: UserId, cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {

@@ -25,7 +25,7 @@ export class LayerManager {
 
 	// 成功したらtrue
 	selectLayerId(layerId: LayerId): boolean {
-		const found = this._app.imageCanvas.model.layers.find((x) => x.id === layerId)
+		const found = this._app.imageCanvas.findLayerModelById(layerId)
 		if (found === undefined) {
 			return false
 		}

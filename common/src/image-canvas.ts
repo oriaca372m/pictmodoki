@@ -231,6 +231,10 @@ export class ImageCanvasDrawer {
 		return controller
 	}
 
+	findLayerModelById(id: LayerId): LayerCanvasModel | undefined {
+		return this._idToControllerMap.get(id)?.layer
+	}
+
 	render(canvas: CanvasProxy): void {
 		if (this._previewLayer === undefined) {
 			this._fullRender(canvas)

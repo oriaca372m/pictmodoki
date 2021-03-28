@@ -80,13 +80,9 @@ export default {
 			})
 
 			const layerUpdated = () => {
-				const sortedLayers = []
-				const layers = this.app.paintApp.imageCanvas.model.layers
-				for (const id of this.app.paintApp.imageCanvas.model.order) {
-					const layer = layers.find(x => x.id === id)
-					sortedLayers.push(layer)
-				}
-				this.layers = sortedLayers
+				this.layers = this.app.paintApp.imageCanvas.model.order.map(
+					(x) => this.app.paintApp.imageCanvas.findLayerModelById(x)
+				)
 				this.selectedLayerId = this.app.paintApp.layerManager.selectedLayerId
 			}
 
