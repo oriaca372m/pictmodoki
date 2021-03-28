@@ -1,9 +1,11 @@
 import { ImageCanvasDrawer, LayerCanvasModel, LayerId } from 'common'
 import { PaintApp } from './main'
+import { TypedEvent } from './typed-event'
 
 export class LayerManager {
 	private _selectedLayerId: LayerId | undefined
 	private readonly _drawer: ImageCanvasDrawer
+	readonly updated = new TypedEvent<void>()
 
 	constructor(private readonly _app: PaintApp) {
 		this._drawer = this._app.imageCanvas
@@ -11,12 +13,14 @@ export class LayerManager {
 
 	update(): void {
 		if (this._selectedLayerId === undefined) {
+			this.updated.emit()
 			return
 		}
 
 		if (!this.selectLayerId(this._selectedLayerId)) {
 			this._selectedLayerId = undefined
 		}
+		this.updated.emit()
 	}
 
 	// 成功したらtrue
@@ -27,6 +31,7 @@ export class LayerManager {
 		}
 
 		this._selectedLayerId = layerId
+		this.updated.emit()
 		return true
 	}
 
@@ -49,5 +54,6 @@ export class LayerManager {
 	setLayerVisibility(id: LayerId, isVisible: boolean): void {
 		this._drawer.setLayerVisibility(id, isVisible)
 		this._app.render()
+		this.updated.emit()
 	}
 }

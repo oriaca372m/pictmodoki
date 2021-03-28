@@ -75,10 +75,13 @@ export default {
 				this.chatMessages.push({ msgId: this.chatMessages.length, id, name, msg })
 			})
 
-			setInterval(() => {
+			const layerUpdated = () => {
 				this.layers = this.app.paintApp.layerManager.layers
 				this.selectedLayerId = this.app.paintApp.layerManager.selectedLayerId
-			}, 1000)
+			}
+
+			this.app.paintApp.layerManager.updated.on(layerUpdated)
+			layerUpdated()
 		})
 	},
 
