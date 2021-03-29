@@ -1,7 +1,9 @@
 <template>
 	<div class="app">
-		<div class="canvas-area">
-			<canvas ref="canvas" width="3000" height="3000"></canvas>
+		<div ref="canvasScrollContainer" class="canvas-area">
+			<div ref="canvasContainer" class="canvas-container">
+				<canvas :style="canvasStyle" ref="canvas" width="3000" height="3000"></canvas>
+			</div>
 		</div>
 		<div class="tool-area">
 			<div>
@@ -21,6 +23,14 @@
 			<div>
 				<button @click="setSize(3)">3</button>
 				<button @click="setSize(20)">20</button>
+			</div>
+			<div>
+				<div>
+					<label>拡大率</label><input type="number" v-model="scale">
+				</div>
+				<div>
+					<label>角度</label><input type="number" v-model="rotation">
+				</div>
 			</div>
 			<div class="layer-selector">
 				<button @click="createLayer">レイヤー作成</button>
@@ -64,6 +74,8 @@ export default {
 		selectedLayerId: undefined,
 		messageToSend: '',
 		chatMessages: [],
+		scale: 100,
+		rotation: 0,
 	}),
 
 	components: {
@@ -71,8 +83,19 @@ export default {
 		Draggable,
 	},
 
+	computed: {
+		canvasStyle: function() {
+			return {
+				transform: `scale(${this.scale / 100}) rotate(${this.rotation}deg)`
+			}
+		}
+	},
+
 	mounted: function() {
-		this.app = main(this.$refs.canvas, this.serverAddr, this.userName)
+		this.$refs.canvasScrollContainer.scrollTop = 5000
+		this.$refs.canvasScrollContainer.scrollLeft = 5000
+
+		this.app = main(this.$refs.canvasContainer, this.$refs.canvas, this.serverAddr, this.userName)
 
 		this.app.ready.once(() => {
 			this.app.chatManager.addMessageRecievedHandler((id, name, msg) => {
@@ -101,6 +124,14 @@ export default {
 		size: function(value) {
 			this.app.paintApp.penTool.width = parseInt(value, 10)
 		},
+
+		scale: function(value) {
+			this.app.paintApp.canvasScale = value / 100
+		},
+
+		rotation: function(value) {
+			this.app.paintApp.canvasRotation = Math.PI * value / 180
+		}
 	},
 
 	methods: {
@@ -164,9 +195,35 @@ export default {
 <style>
 .app {
 	display: flex;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
 }
 
 .layer-selector {
+	overflow: auto;
+}
+
+.canvas-area {
+	flex: 1;
+	overflow: auto;
+}
+
+.canvas-container {
+	display: flex;
+	width: 10000px;
+	height: 10000px;
+	align-items: center;
+	justify-content: center;
+	background-color: lightgray;
+}
+
+.canvas-container canvas {
+	background-color: white;
+}
+
+.tool-area {
+	width: 300px;
 	overflow: auto;
 }
 </style>

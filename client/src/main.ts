@@ -10,12 +10,13 @@ import {
 	LayerCanvasModel,
 	SerializedLayerCanvasModel,
 	ImageCanvasEventRevoker,
+	Position,
 	UserId,
 } from 'common'
 
 import { CommandSender, SocketCommandSender } from './event-sender'
 import { WebSocketApi } from './web-socket-api'
-import { PenTool } from './paint-tool'
+import { PaintTool, PenTool } from './paint-tool'
 import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
 import { LayerManager } from './layer-manager'
 import { TypedEvent } from './typed-event'
@@ -58,6 +59,7 @@ export class PaintApp {
 	canvasProxy: WebCanvasProxy
 	imageCanvas: ImageCanvasDrawer
 	penTool: PenTool
+	activeTool: PaintTool | undefined
 	commandSender!: CommandSender
 	eventManager: ImageCanvasEventManager
 	undoManager: ImageCanvasUndoManager
@@ -65,6 +67,8 @@ export class PaintApp {
 	revoker: ImageCanvasEventRevoker
 	layerManager: LayerManager
 	shouldRender = false
+	canvasScale = 1.0
+	canvasRotation = 0.0
 
 	constructor(public app: App, public canvasElm: HTMLCanvasElement, public api: WebSocketApi) {
 		this.factory = new OffscreenCanvasProxyFactory()
@@ -104,6 +108,51 @@ export class PaintApp {
 		this.commandSender = sender
 
 		this.penTool.enable()
+		this.activeTool = this.penTool
+
+		this.app.canvasContainerElm.addEventListener('mousedown', (e) => {
+			this.activeTool?.onMouseDown(this._getPosFromEvent(e))
+		})
+
+		this.app.canvasContainerElm.addEventListener('mousemove', (e) => {
+			this.activeTool?.onMouseMoved(this._getPosFromEvent(e))
+		})
+
+		this.app.canvasContainerElm.addEventListener('mouseup', (e) => {
+			this.activeTool?.onMouseUp(this._getPosFromEvent(e))
+		})
+	}
+
+	private _getPosFromEvent(e: MouseEvent): Position {
+		const rect = this.app.canvasContainerElm.getBoundingClientRect()
+
+		// 中央を0とした座標に変換
+		let x = e.clientX - rect.left - rect.width / 2
+		let y = e.clientY - rect.top - rect.height / 2
+
+		// 拡大率に合わせて座標変換
+		x /= this.canvasScale
+		y /= this.canvasScale
+
+		// 角度に応じて座標変換
+		const rot = -this.canvasRotation
+		if (rot !== 0) {
+			const nx = x * Math.cos(rot) - y * Math.sin(rot)
+			const ny = x * Math.sin(rot) + y * Math.cos(rot)
+			x = nx
+			y = ny
+		}
+
+		// キャンバスの左上を0とした座標に変換
+		const canvasSize = this.imageCanvas.model.size
+		x += canvasSize.width / 2
+		y += canvasSize.height / 2
+
+		// はみ出し防止
+		x = Math.max(0, Math.min(x, Math.floor(canvasSize.width)))
+		y = Math.max(0, Math.min(y, Math.floor(canvasSize.height)))
+
+		return { x, y }
 	}
 
 	undo(): void {
@@ -200,13 +249,18 @@ export class App {
 		return this._chatManager
 	}
 
-	constructor(elm: HTMLCanvasElement, serverAddr: string, userName: string) {
+	constructor(
+		readonly canvasContainerElm: HTMLDivElement,
+		readonly canvasElm: HTMLCanvasElement,
+		serverAddr: string,
+		userName: string
+	) {
 		this._api = new WebSocketApi(serverAddr)
 
 		this._api.addOpenHandler(() => {
 			this._api.sendCommand({ kind: 'login', name: userName, reconnectionToken: undefined })
 
-			const app = new PaintApp(this, elm, this._api)
+			const app = new PaintApp(this, canvasElm, this._api)
 			this._paintApp = app
 			app.init()
 			app.render()
@@ -244,8 +298,13 @@ export class App {
 	}
 }
 
-export function main(elm: HTMLCanvasElement, serverAddr: string, userName: string): App {
-	const app = new App(elm, serverAddr, userName)
+export function main(
+	container: HTMLDivElement,
+	elm: HTMLCanvasElement,
+	serverAddr: string,
+	userName: string
+): App {
+	const app = new App(container, elm, serverAddr, userName)
 	return app
 }
 

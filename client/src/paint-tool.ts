@@ -5,6 +5,10 @@ export interface PaintTool {
 	enable(): void
 	disable(): void
 
+	onMouseMoved(pos: Position): void
+	onMouseDown(pos: Position): void
+	onMouseUp(pos: Position): void
+
 	readonly isEnabled: boolean
 }
 
@@ -14,35 +18,12 @@ export class PenTool implements PaintTool {
 	width = 10
 	mode: 'stroke' | 'erase' = 'stroke'
 	private readonly _imageCanvas: ImageCanvasDrawer
-	private readonly _canvasElm: HTMLCanvasElement
 	private _targetLayerId: LayerId | undefined
 
 	private _isEnabled = false
 
 	constructor(private readonly _app: PaintApp) {
 		this._imageCanvas = _app.imageCanvas
-		this._canvasElm = _app.canvasElm
-
-		this._canvasElm.addEventListener('mousedown', (e) => {
-			if (!this._isEnabled) {
-				return
-			}
-			this._startStroke(this._getPosFromEvent(e))
-		})
-
-		this._canvasElm.addEventListener('mousemove', (e) => {
-			if (!this._isEnabled) {
-				return
-			}
-			this._continueStroke(this._getPosFromEvent(e))
-		})
-
-		this._canvasElm.addEventListener('mouseup', () => {
-			if (!this._isEnabled) {
-				return
-			}
-			this._finishStroke()
-		})
 	}
 
 	enable(): void {
@@ -56,6 +37,18 @@ export class PenTool implements PaintTool {
 
 	get isEnabled(): boolean {
 		return this._isEnabled
+	}
+
+	onMouseDown(pos: Position): void {
+		this._startStroke(pos)
+	}
+
+	onMouseMoved(pos: Position): void {
+		this._continueStroke(pos)
+	}
+
+	onMouseUp(_pos: Position): void {
+		this._finishStroke()
 	}
 
 	private _startStroke(pos: Position) {
@@ -102,14 +95,6 @@ export class PenTool implements PaintTool {
 		})
 
 		this._pathPositions = undefined
-	}
-
-	private _getPosFromEvent(e: MouseEvent): Position {
-		const rect = this._canvasElm.getBoundingClientRect()
-		const x = e.clientX - rect.left
-		const y = e.clientY - rect.top
-
-		return { x, y }
 	}
 
 	private _constructCommand(): LayerDrawCommand {
