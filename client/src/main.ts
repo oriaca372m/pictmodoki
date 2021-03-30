@@ -1,7 +1,6 @@
 import {
 	ImageCanvasModel,
 	SerializedImageCanvasModel,
-	ImageCanvasDrawer,
 	ImageCanvasEvent,
 	ImageCanvasEventManager,
 	ImageCanvasEventManagerPlugin,
@@ -20,6 +19,7 @@ import { PaintTool, PenTool } from './paint-tool'
 import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
 import { LayerManager } from './layer-manager'
 import { TypedEvent } from './typed-event'
+import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
 
 import Vue from 'vue'
 import VueRouter from 'vue-router'
@@ -57,7 +57,7 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 
 export class PaintApp {
 	canvasProxy: WebCanvasProxy
-	imageCanvas: ImageCanvasDrawer
+	imageCanvas: ImageCanvasDrawerWithPreview
 	penTool: PenTool
 	activeTool: PaintTool | undefined
 	commandSender!: CommandSender
@@ -74,7 +74,7 @@ export class PaintApp {
 		this.factory = new OffscreenCanvasProxyFactory()
 		this.canvasProxy = new WebCanvasProxy(this.canvasElm)
 		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
-		this.imageCanvas = new ImageCanvasDrawer(canvasModel, this.factory)
+		this.imageCanvas = new ImageCanvasDrawerWithPreview(canvasModel, this.factory)
 
 		this.eventManager = new ImageCanvasEventManager()
 		this.eventManager.event({

@@ -1,5 +1,7 @@
-import { ImageCanvasDrawer, LayerDrawCommand, Position, Color, LayerId } from 'common'
+import { LayerDrawCommand, Position, Color, LayerId } from 'common'
+
 import { PaintApp } from './main'
+import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
 
 export interface PaintTool {
 	enable(): void
@@ -17,7 +19,7 @@ export class PenTool implements PaintTool {
 	color: Color = '#ff0000'
 	width = 10
 	mode: 'stroke' | 'erase' = 'stroke'
-	private readonly _imageCanvas: ImageCanvasDrawer
+	private readonly _imageCanvas: ImageCanvasDrawerWithPreview
 	private _targetLayerId: LayerId | undefined
 
 	private _isEnabled = false
