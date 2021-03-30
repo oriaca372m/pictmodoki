@@ -95,14 +95,18 @@ class LayerController {
 	}
 }
 
+interface PreviewInfo {
+	originalLayer: LayerCanvasModel
+	previewLayer: LayerDrawer
+	command?: LayerDrawCommand
+}
+
 export class ImageCanvasDrawer {
 	private _model!: ImageCanvasModel
 	private readonly _layerControllers = new Map<LayerCanvasModel, LayerController>()
 	private readonly _idToControllerMap = new Map<LayerId, LayerController>()
 
-	private _previewOriginalLayer: LayerCanvasModel | undefined
-	private _previewLayer: LayerDrawer | undefined
-
+	private _previewInfo: PreviewInfo | undefined
 	private _shouldUpdateCache = true
 	private _cacheTop!: LayerDrawer
 	private _cacheBottom!: LayerDrawer
@@ -135,8 +139,6 @@ export class ImageCanvasDrawer {
 	setModel(model: ImageCanvasModel): void {
 		this._layerControllers.clear()
 		this._idToControllerMap.clear()
-		this._previewOriginalLayer = undefined
-		this._previewLayer = undefined
 
 		this._shouldUpdateCache = true
 		this._cacheTop = new LayerDrawer(this._canvasProxyFactory.createCanvasProxy(model.size))
@@ -145,6 +147,18 @@ export class ImageCanvasDrawer {
 		this._model = model
 		for (const layer of model.layers) {
 			this._setLayerController(layer)
+		}
+
+		if (this._previewInfo === undefined) {
+			return
+		}
+
+		const found = this._idToControllerMap.get(this._previewInfo.originalLayer.id)
+		if (found !== undefined) {
+			this._setPreviewInfo(found.layer)
+			this._updatePreview()
+		} else {
+			this.endPreview()
 		}
 	}
 
@@ -184,6 +198,10 @@ export class ImageCanvasDrawer {
 		this._layerControllers.delete(controller.layer)
 		this._idToControllerMap.delete(id)
 		this._shouldUpdateCache = true
+
+		if (this._previewInfo !== undefined && this._previewInfo.originalLayer.id === id) {
+			this.endPreview()
+		}
 	}
 
 	setLayerOrder(order: LayerId[]): void {
@@ -196,30 +214,50 @@ export class ImageCanvasDrawer {
 	}
 
 	startPreview(layer: LayerId): void {
-		if (this._previewOriginalLayer !== undefined && this._previewOriginalLayer.id === layer) {
+		if (this._previewInfo !== undefined && this._previewInfo.originalLayer.id === layer) {
 			return
 		}
 
-		this._previewOriginalLayer = this._findLayerById(layer).layer
+		this.endPreview()
+		const found = this._idToControllerMap.get(layer)
+		if (found !== undefined) {
+			this._setPreviewInfo(found.layer)
+		}
+	}
 
-		const canvas = this._canvasProxyFactory.createCanvasProxy(this._model.size)
-		this._previewLayer = new LayerDrawer(canvas)
+	private _setPreviewInfo(originalLayer: LayerCanvasModel): void {
+		this._previewInfo = {
+			originalLayer,
+			previewLayer: new LayerDrawer(
+				this._canvasProxyFactory.createCanvasProxy(this._model.size)
+			),
+		}
 	}
 
 	drawPreview(drawCmd: LayerDrawCommand): void {
-		if (this._previewLayer === undefined) {
+		if (this._previewInfo === undefined) {
 			throw new Error('startPreview() must be called before calling drawPreview().')
 		}
 
-		const drawer = new CanvasDrawer(this._previewLayer.canvasProxy)
+		this._previewInfo.command = drawCmd
+		this._updatePreview()
+	}
+
+	private _updatePreview(): void {
+		const info = this._previewInfo!
+
+		const drawer = info.previewLayer.canvasDrawer
 		drawer.clear()
-		drawer.drawCanvasProxy(this._previewOriginalLayer!.canvasProxy)
-		this._previewLayer.command(drawCmd)
+		drawer.drawCanvasProxy(info.originalLayer.canvasProxy)
+
+		if (info.command !== undefined) {
+			info.previewLayer.command(info.command)
+		}
 	}
 
 	endPreview(): void {
-		this._previewOriginalLayer = undefined
-		this._previewLayer = undefined
+		this._previewInfo = undefined
+		this._shouldUpdateCache = true
 	}
 
 	private _findLayerById(id: LayerId): LayerController {
@@ -236,7 +274,7 @@ export class ImageCanvasDrawer {
 	}
 
 	render(canvas: CanvasProxy): void {
-		if (this._previewLayer === undefined) {
+		if (this._previewInfo === undefined) {
 			this._fullRender(canvas)
 			return
 		}
@@ -248,6 +286,7 @@ export class ImageCanvasDrawer {
 		this._cacheRender(canvas)
 	}
 
+	// プレビューは常に使用されない
 	private _fullRender(canvas: CanvasProxy): void {
 		const drawer = new CanvasDrawer(canvas)
 		drawer.clear()
@@ -258,11 +297,7 @@ export class ImageCanvasDrawer {
 				continue
 			}
 
-			if (this._previewOriginalLayer && this._previewOriginalLayer.id === id) {
-				drawer.drawCanvasProxy(this._previewLayer!.canvasProxy)
-			} else {
-				drawer.drawCanvasProxy(controller.drawer.canvasProxy)
-			}
+			drawer.drawCanvasProxy(controller.drawer.canvasProxy)
 		}
 	}
 
@@ -272,9 +307,10 @@ export class ImageCanvasDrawer {
 
 		drawer.drawCanvasProxy(this._cacheBottom.canvasProxy)
 
-		const controller = this._layerControllers.get(this._previewOriginalLayer!)!
+		const info = this._previewInfo!
+		const controller = this._layerControllers.get(info.originalLayer)!
 		if (controller.isVisible) {
-			drawer.drawCanvasProxy(this._previewLayer!.canvasProxy)
+			drawer.drawCanvasProxy(info.previewLayer.canvasProxy)
 		}
 		drawer.drawCanvasProxy(this._cacheTop.canvasProxy)
 	}
@@ -288,7 +324,7 @@ export class ImageCanvasDrawer {
 		let isDrawingBottom = true
 
 		for (const id of this._model.order) {
-			if (this._previewOriginalLayer!.id === id) {
+			if (this._previewInfo!.originalLayer.id === id) {
 				isDrawingBottom = false
 				continue
 			}
@@ -298,11 +334,8 @@ export class ImageCanvasDrawer {
 				continue
 			}
 
-			if (isDrawingBottom) {
-				bottomDrawer.drawCanvasProxy(controller.drawer.canvasProxy)
-			} else {
-				topDrawer.drawCanvasProxy(controller.drawer.canvasProxy)
-			}
+			const drawer = isDrawingBottom ? bottomDrawer : topDrawer
+			drawer.drawCanvasProxy(controller.drawer.canvasProxy)
 		}
 
 		this._shouldUpdateCache = false

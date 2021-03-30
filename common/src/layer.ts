@@ -62,4 +62,8 @@ export class LayerDrawer {
 			this._drawer.clear()
 		}
 	}
+
+	get canvasDrawer(): CanvasDrawer {
+		return this._drawer
+	}
 }
