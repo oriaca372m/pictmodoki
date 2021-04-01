@@ -9,17 +9,17 @@ import {
 	LayerCanvasModel,
 	SerializedLayerCanvasModel,
 	ImageCanvasEventRevoker,
-	Position,
 	UserId,
 } from 'common'
 
 import { CommandSender, SocketCommandSender } from './event-sender'
 import { WebSocketApi } from './web-socket-api'
-import { PaintTool, PenTool } from './paint-tool'
+import { PenTool, EraserTool } from './paint-tool'
 import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
 import { LayerManager } from './layer-manager'
 import { TypedEvent } from './typed-event'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
+import { ToolManager } from './tool-manager'
 
 import Vue from 'vue'
 import VueRouter from 'vue-router'
@@ -58,14 +58,15 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 export class PaintApp {
 	canvasProxy: WebCanvasProxy
 	imageCanvas: ImageCanvasDrawerWithPreview
-	penTool: PenTool
-	activeTool: PaintTool | undefined
+	toolManager: ToolManager
 	commandSender!: CommandSender
 	eventManager: ImageCanvasEventManager
 	undoManager: ImageCanvasUndoManager
 	factory: OffscreenCanvasProxyFactory
 	revoker: ImageCanvasEventRevoker
 	layerManager: LayerManager
+	readonly penTool: PenTool
+	readonly eraserTool: EraserTool
 	shouldRender = false
 	canvasScale = 1.0
 	canvasRotation = 0.0
@@ -97,6 +98,10 @@ export class PaintApp {
 
 		this.layerManager = new LayerManager(this)
 		this.penTool = new PenTool(this)
+		this.eraserTool = new EraserTool(this)
+		this.toolManager = new ToolManager(this, this.app.canvasContainerElm)
+		this.toolManager.registerTool('pen', this.penTool)
+		this.toolManager.registerTool('eraser', this.eraserTool)
 
 		this.renderLoop()
 	}
@@ -106,53 +111,7 @@ export class PaintApp {
 		sender.start()
 
 		this.commandSender = sender
-
-		this.penTool.enable()
-		this.activeTool = this.penTool
-
-		this.app.canvasContainerElm.addEventListener('mousedown', (e) => {
-			this.activeTool?.onMouseDown(this._getPosFromEvent(e))
-		})
-
-		this.app.canvasContainerElm.addEventListener('mousemove', (e) => {
-			this.activeTool?.onMouseMoved(this._getPosFromEvent(e))
-		})
-
-		this.app.canvasContainerElm.addEventListener('mouseup', (e) => {
-			this.activeTool?.onMouseUp(this._getPosFromEvent(e))
-		})
-	}
-
-	private _getPosFromEvent(e: MouseEvent): Position {
-		const rect = this.app.canvasContainerElm.getBoundingClientRect()
-
-		// 中央を0とした座標に変換
-		let x = e.clientX - rect.left - rect.width / 2
-		let y = e.clientY - rect.top - rect.height / 2
-
-		// 拡大率に合わせて座標変換
-		x /= this.canvasScale
-		y /= this.canvasScale
-
-		// 角度に応じて座標変換
-		const rot = -this.canvasRotation
-		if (rot !== 0) {
-			const nx = x * Math.cos(rot) - y * Math.sin(rot)
-			const ny = x * Math.sin(rot) + y * Math.cos(rot)
-			x = nx
-			y = ny
-		}
-
-		// キャンバスの左上を0とした座標に変換
-		const canvasSize = this.imageCanvas.model.size
-		x += canvasSize.width / 2
-		y += canvasSize.height / 2
-
-		// はみ出し防止
-		x = Math.max(0, Math.min(x, Math.floor(canvasSize.width)))
-		y = Math.max(0, Math.min(y, Math.floor(canvasSize.height)))
-
-		return { x, y }
+		this.toolManager.selectTool('pen')
 	}
 
 	undo(): void {

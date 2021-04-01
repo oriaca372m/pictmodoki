@@ -10,19 +10,32 @@
 				<button @click="undo">一つ戻す</button>
 			</div>
 			<div>
+				<h1>ツール選択</h1>
+				<button @click="selectTool('pen')">ペン</button>
+				<button @click="selectTool('spuit')">スポイト</button>
+				<button @click="selectTool('eraser')">消しゴム</button>
+			</div>
+			<div>
 				<ChromePicker v-model="color" />
-				<button @click="pen">ペン</button>
 				<button @click="selectColor('#000000')">黒</button>
 				<button @click="selectColor('#ff0000')">赤</button>
 				<button @click="selectColor('#0000ff')">青</button>
-				<button @click="selectColor('erase')">消しゴム</button>
 			</div>
 			<div>
-				<input type="number" v-model="size">
+				<h1>ペンの太さ</h1>
+				<div>
+					<button @click="setSize(3)">3</button>
+					<button @click="setSize(20)">20</button>
+					<input type="number" v-model="size">
+				</div>
 			</div>
 			<div>
-				<button @click="setSize(3)">3</button>
-				<button @click="setSize(20)">20</button>
+				<h1>消しゴムの太さ</h1>
+				<div>
+					<button @click="setEraserSize(3)">3</button>
+					<button @click="setEraserSize(20)">20</button>
+					<input type="number" v-model="eraserSize">
+				</div>
 			</div>
 			<div>
 				<div>
@@ -69,7 +82,8 @@ export default {
 	data: () => ({
 		app: undefined,
 		layers: [],
-		size: "10",
+		size: 10,
+		eraserSize: 20,
 		color: '#ff0000ff',
 		selectedLayerId: undefined,
 		messageToSend: '',
@@ -122,7 +136,11 @@ export default {
 		},
 
 		size: function(value) {
-			this.app.paintApp.penTool.width = parseInt(value, 10)
+			this.app.paintApp.penTool.width = value
+		},
+
+		eraserSize: function(value) {
+			this.app.paintApp.eraserTool.width = value
 		},
 
 		scale: function(value) {
@@ -148,6 +166,10 @@ export default {
 
 		setSize: function(value) {
 			this.size = value
+		},
+
+		setEraserSize: function(value) {
+			this.eraser = value
 		},
 
 		removeLayerId: function(id) {
@@ -187,6 +209,10 @@ export default {
 			}
 			this.app.chatManager.sendMessage(this.messageToSend)
 			this.messageToSend = ''
+		},
+
+		selectTool: function(name) {
+			this.app.paintApp.toolManager.selectTool(name)
 		}
 	}
 }
@@ -225,5 +251,10 @@ export default {
 .tool-area {
 	width: 300px;
 	overflow: auto;
+}
+
+.tool-area h1 {
+	font-size: 1rem;
+	margin: 0;
 }
 </style>
