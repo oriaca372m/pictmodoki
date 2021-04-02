@@ -16,7 +16,6 @@
 				<button @click="selectTool('eraser')">消しゴム</button>
 			</div>
 			<div>
-				<!-- <ChromePicker v-model="color" /> -->
 				<button @click="selectColor('#000000')">黒</button>
 				<button @click="selectColor('#ff0000')">赤</button>
 				<button @click="selectColor('#0000ff')">青</button>
@@ -75,7 +74,6 @@
 
 <script>
 import { main } from '../main'
-import { Chrome as ChromePicker } from 'vue-color'
 import Draggable from 'vuedraggable'
 
 export default {
@@ -95,7 +93,6 @@ export default {
 	}),
 
 	components: {
-		ChromePicker,
 		Draggable,
 	},
 

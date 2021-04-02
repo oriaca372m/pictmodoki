@@ -32,7 +32,6 @@
     "@msgpack/msgpack": "^2.5.1",
     "common": "*",
     "vue": "^3.0.11",
-    "vue-color": "^2.8.1",
     "vue-router": "4",
     "vuedraggable": "^4.0.1"
   }
