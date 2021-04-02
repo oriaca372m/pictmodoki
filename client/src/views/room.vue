@@ -16,7 +16,7 @@
 				<button @click="selectTool('eraser')">消しゴム</button>
 			</div>
 			<div>
-				<ChromePicker v-model="color" />
+				<!-- <ChromePicker v-model="color" /> -->
 				<button @click="selectColor('#000000')">黒</button>
 				<button @click="selectColor('#ff0000')">赤</button>
 				<button @click="selectColor('#0000ff')">青</button>
@@ -47,14 +47,16 @@
 			</div>
 			<div class="layer-selector">
 				<button @click="createLayer">レイヤー作成</button>
-				<draggable v-model="layers" @end="setLayerOrder">
-					<div v-for="layer in layers" :key="layer.id">
-						<button @click="selectLayerId(layer.id)">選択</button>
-						<button @click="setLayerVisibility(layer.id, true)">表示</button>
-						<button @click="setLayerVisibility(layer.id, false)">非表示</button>
-						<button @click="removeLayerId(layer.id)">削除</button>
-						<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
-					</div>
+				<draggable v-model="layers" item-key="id" @end="setLayerOrder">
+					<template #item="{ element: layer }">
+						<div>
+							<button @click="selectLayerId(layer.id)">選択</button>
+							<button @click="setLayerVisibility(layer.id, true)">表示</button>
+							<button @click="setLayerVisibility(layer.id, false)">非表示</button>
+							<button @click="removeLayerId(layer.id)">削除</button>
+							<label><template v-if="layer.id === selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
+						</div>
+					</template>
 				</draggable>
 			</div>
 			<div>
@@ -118,7 +120,10 @@ export default {
 
 			const layerUpdated = () => {
 				this.layers = this.app.paintApp.imageCanvas.model.order.map(
-					(x) => this.app.paintApp.imageCanvas.findLayerModelById(x)
+					(x) => {
+						const layer = this.app.paintApp.imageCanvas.findLayerModelById(x)
+						return { id: layer.id, name: layer.name }
+					}
 				)
 				this.selectedLayerId = this.app.paintApp.layerManager.selectedLayerId
 			}

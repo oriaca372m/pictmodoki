@@ -21,8 +21,8 @@ import { TypedEvent } from './typed-event'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
 import { ToolManager } from './tool-manager'
 
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import { createApp } from 'vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import VueIndex from './views/index.vue'
 import VueHome from './views/home.vue'
 import VueRoom from './views/room.vue'
@@ -267,17 +267,15 @@ export function main(
 	return app
 }
 
-Vue.use(VueRouter)
-Vue.config.productionTip = false
+const vueApp = createApp(VueIndex)
 
-const router = new VueRouter({
+const router = createRouter({
+	history: createWebHashHistory(),
 	routes: [
 		{ path: '/', component: VueHome },
 		{ path: '/room/:serverAddr/:userName', name: 'room', component: VueRoom, props: true },
 	],
 })
 
-new Vue({
-	router,
-	render: (h) => h(VueIndex),
-}).$mount('#app')
+vueApp.use(router)
+vueApp.mount('#app')
