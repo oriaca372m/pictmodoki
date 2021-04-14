@@ -16,6 +16,7 @@
 				<button @click="selectTool('eraser')">消しゴム</button>
 			</div>
 			<div>
+				<ColorPicker v-model="color"/>
 				<button @click="selectColor('#000000')">黒</button>
 				<button @click="selectColor('#ff0000')">赤</button>
 				<button @click="selectColor('#0000ff')">青</button>
@@ -74,6 +75,7 @@
 
 <script>
 import { main } from '../main'
+import ColorPicker from '../components/color-picker'
 import Draggable from 'vuedraggable'
 
 export default {
@@ -84,7 +86,8 @@ export default {
 		layers: [],
 		size: 10,
 		eraserSize: 20,
-		color: '#ff0000ff',
+		color: '#ff0000',
+		colorCode: '#00ff00',
 		selectedLayerId: undefined,
 		messageToSend: '',
 		chatMessages: [],
@@ -93,6 +96,7 @@ export default {
 	}),
 
 	components: {
+		ColorPicker,
 		Draggable,
 	},
 
@@ -105,10 +109,12 @@ export default {
 	},
 
 	mounted: function() {
+		console.log('test')
 		this.$refs.canvasScrollContainer.scrollTop = 5000
 		this.$refs.canvasScrollContainer.scrollLeft = 5000
 
 		this.app = main(this.$refs.canvasContainer, this.$refs.canvas, this.serverAddr, this.userName)
+		console.log(this.app)
 
 		this.app.ready.once(() => {
 			this.app.chatManager.addMessageRecievedHandler((id, name, msg) => {
@@ -132,8 +138,8 @@ export default {
 
 	watch: {
 		color: function(value) {
-			if (value.hex8) {
-				this.app.paintApp.penTool.color = value.hex8
+			if (this.app && value.rgbCode) {
+				this.app.paintApp.penTool.color = value.rgbCode
 			}
 		},
 
@@ -194,7 +200,6 @@ export default {
 			this.app.paintApp.penTool.mode = 'stroke'
 
 			this.color = color
-			this.app.paintApp.penTool.color = color
 		},
 
 		undo: function() {
@@ -251,7 +256,7 @@ export default {
 }
 
 .tool-area {
-	width: 300px;
+	width: 350px;
 	overflow: auto;
 }
 
