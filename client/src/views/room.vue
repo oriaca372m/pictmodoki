@@ -125,6 +125,12 @@ export default {
 
 			this.app.paintApp.layerManager.updated.on(layerUpdated)
 			layerUpdated()
+
+			window.addEventListener('keydown', (e) => {
+				if (e.key === 'z') {
+					this.app.paintApp.undo()
+				}
+			})
 		})
 	},
 
