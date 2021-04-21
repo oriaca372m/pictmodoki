@@ -13,6 +13,7 @@ interface PreviewInfo {
 	originalLayer: LayerCanvasModel
 	previewLayer: LayerDrawer
 	command?: LayerDrawCommand
+	drawnCommand?: LayerDrawCommand
 }
 
 export class ImageCanvasDrawerWithPreview extends ImageCanvasDrawer {
@@ -35,7 +36,6 @@ export class ImageCanvasDrawerWithPreview extends ImageCanvasDrawer {
 		const found = this.findLayerModelById(this._previewInfo.originalLayer.id)
 		if (found !== undefined) {
 			this._setPreviewInfo(found)
-			this._updatePreview()
 		} else {
 			this.endPreview()
 		}
@@ -92,16 +92,19 @@ export class ImageCanvasDrawerWithPreview extends ImageCanvasDrawer {
 		}
 
 		this._previewInfo.command = drawCmd
-		this._updatePreview()
 	}
 
-	private _updatePreview(): void {
+	private _updatePreview(force = false): void {
 		const info = this._previewInfo!
+		if (!force && info.command === info.drawnCommand) {
+			return
+		}
 
 		const drawer = info.previewLayer.canvasDrawer
 		drawer.clear()
 		drawer.drawCanvasProxy(info.originalLayer.canvasProxy)
 
+		info.drawnCommand = info.command
 		if (info.command !== undefined) {
 			info.previewLayer.command(info.command)
 		}
@@ -122,6 +125,7 @@ export class ImageCanvasDrawerWithPreview extends ImageCanvasDrawer {
 			this._updateCache()
 		}
 
+		this._updatePreview()
 		this._cacheRender(canvas)
 	}
 
@@ -162,6 +166,7 @@ export class ImageCanvasDrawerWithPreview extends ImageCanvasDrawer {
 			drawer.drawCanvasProxy(controller.drawer.canvasProxy)
 		}
 
+		this._updatePreview(true)
 		this._shouldUpdateCache = false
 	}
 }
