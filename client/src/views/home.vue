@@ -10,24 +10,7 @@
 	</div>
 </template>
 
-<script>
-export default {
-	data: () => ({
-		serverAddr: 'ws://127.0.0.1:25567',
-		userName: '名無しのなっしー',
-	}),
+<style>
+</style>
 
-	created: function () {
-		this.serverAddr = `ws://${window.location.hostname}:25567/`
-	},
-
-	methods: {
-		joinRoom: function () {
-			this.$router.push({ name: 'room', params: {
-				serverAddr: this.serverAddr,
-				userName: this.userName,
-			} })
-		}
-	}
-}
-</script>
+<script src="./home-script"></script>

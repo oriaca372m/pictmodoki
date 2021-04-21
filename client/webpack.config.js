@@ -19,6 +19,9 @@ module.exports = {
 			{
 				test: /\.ts$/,
 				loader: 'ts-loader',
+				options: {
+					appendTsSuffixTo: [/\.vue$/],
+				},
 			},
 			{
 				test: /\.css/,
@@ -31,7 +34,7 @@ module.exports = {
 		],
 	},
 	resolve: {
-		extensions: ['.wasm', '.ts', '.mjs', '.js', '.json'],
+		extensions: ['.wasm', '.ts', '.vue', '.mjs', '.js', '.json'],
 		alias: {
 			Src: path.resolve(__dirname, 'src/'),
 		},
