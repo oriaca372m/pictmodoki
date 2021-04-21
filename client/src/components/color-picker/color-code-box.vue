@@ -5,7 +5,7 @@
 <style scoped>
 input {
 	box-sizing: border-box;
-	width: 300px;
+	width: 220px;
 }
 </style>
 

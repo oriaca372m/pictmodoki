@@ -1,4 +1,4 @@
-import { defineComponent, computed, ref, watch } from 'vue'
+import { defineComponent, computed, ref, onMounted } from 'vue'
 
 export default defineComponent({
 	props: {
@@ -8,6 +8,12 @@ export default defineComponent({
 
 	setup(props, { emit }) {
 		const bar = ref<HTMLDivElement>()
+		const barSize = ref(1)
+
+		onMounted(() => {
+			const rect = bar.value!.getBoundingClientRect()
+			barSize.value = rect.height
+		})
 
 		const value = computed({
 			get: () => props.modelValue,
@@ -60,7 +66,7 @@ export default defineComponent({
 			window.removeEventListener('keydown', keydown)
 		}
 
-		const cursory = computed(() => Math.floor(props.modelValue * 200))
+		const cursory = computed(() => Math.floor(props.modelValue * barSize.value))
 
 		return {
 			bar,

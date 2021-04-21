@@ -11,33 +11,40 @@
 			</div>
 			<ColorBar class='hue-bar' type="hue" v-model="rawColor.hue" />
 			<ColorBar class='opacity-bar' type="opacity" v-model="rawColor.opacity" />
-			<div class="color-preview" :style="{ 'background-color': previewColor }"></div>
 		</div>
-		<ColorCodeBox v-model="rawColor" />
+		<div class="color-picker-sub">
+			<div class="color-preview" :style="{ 'background-color': previewColor }"></div>
+			<ColorCodeBox v-model="rawColor" />
+		</div>
 	</div>
 </template>
 
 <style scoped>
 .color-picker {
 	border: solid;
-	padding: 10px;
-	width: 300px;
+	padding: 7px;
+	width: 260px;
 }
 
 .color-picker-main {
-	height: 200px;
+	height: 150px;
 	display: flex;
 	margin-bottom: 10px;
 }
 
-.hue-bar, .opacity-bar, .color-preview {
+.color-picker-sub {
+	display: flex;
+	height: 30px;
+}
+
+.hue-bar, .opacity-bar {
 	margin-left: 10px;
 }
 
 .sv-picker {
 	position: relative;
 	width: 200px;
-	height: 200px;
+	height: 150px;
 	background-image:
 		linear-gradient(to bottom, rgb(0, 0, 0), transparent),
 		linear-gradient(to right, rgb(255, 255, 255), rgba(255, 255, 255, 0));
@@ -47,14 +54,15 @@
 	position: absolute;
 	transform: translate(-50%, -50%);
 	border: solid;
-	width: 10px;
-	height: 10px;
+	width: 6px;
+	height: 6px;
 	pointer-events: none;
 }
 
 .color-preview {
 	width: 30px;
 	height: 30px;
+	margin-right: 10px;
 }
 </style>
 

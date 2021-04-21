@@ -12,7 +12,7 @@
 .color-bar {
 	position: relative;
 	width: 20px;
-	height: 200px;
+	height: 150px;
 }
 
 .hue-color-bar {
@@ -38,11 +38,15 @@
 
 .color-bar-cursor {
 	position: absolute;
-	transform: translate(-50%, 0);
-	width: 5px;
-	height: 1px;
+	transform: translate(-50%, -50%);
+	width: 10px;
+	height: 4px;
 	background-color: black;
 	pointer-events: none;
+}
+
+.opacity-color-bar .color-bar-cursor {
+	background-color: red;
 }
 </style>
 
