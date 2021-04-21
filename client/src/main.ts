@@ -26,6 +26,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import VueIndex from './views/index.vue'
 import VueHome from './views/home.vue'
 import VueRoom from './views/room.vue'
+import VueColorPickerTest from './views/color-picker-test.vue'
 
 class EventRenderer implements ImageCanvasEventManagerPlugin {
 	private readonly _player: ImageCanvasEventPlayer
@@ -273,6 +274,7 @@ const router = createRouter({
 	history: createWebHashHistory(),
 	routes: [
 		{ path: '/', component: VueHome },
+		{ path: '/color-picker-test', component: VueColorPickerTest },
 		{ path: '/room/:serverAddr/:userName', name: 'room', component: VueRoom, props: true },
 	],
 })
