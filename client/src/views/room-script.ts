@@ -84,6 +84,7 @@ export default defineComponent({
 				layerUpdated()
 			})
 		})
+
 		const canvasStyle = computed(() => ({
 			transform: `scale(${state.scale / 100}) rotate(${state.rotation}deg)`,
 		}))
@@ -97,14 +98,6 @@ export default defineComponent({
 			if (succeeded) {
 				state.selectedLayerId = id
 			}
-		}
-
-		const setSize = (value: number) => {
-			state.size = value
-		}
-
-		const setEraserSize = (value: number) => {
-			state.eraserSize = value
 		}
 
 		const removeLayerId = (id: LayerId) => {
@@ -173,8 +166,6 @@ export default defineComponent({
 			canvasStyle,
 			setLayerOrder,
 			selectLayerId,
-			setSize,
-			setEraserSize,
 			removeLayerId,
 			createLayer,
 			selectTool,
