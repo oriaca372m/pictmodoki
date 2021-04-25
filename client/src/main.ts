@@ -14,7 +14,7 @@ import {
 
 import { CommandSender, SocketCommandSender } from './event-sender'
 import { WebSocketApi } from './web-socket-api'
-import { PenTool, EraserTool } from './paint-tool'
+import { PenTool, EraserTool, MovingTool } from './paint-tool'
 import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
 import { LayerManager } from './layer-manager'
 import { TypedEvent } from './typed-event'
@@ -103,11 +103,17 @@ export class PaintApp {
 		this.toolManager = new ToolManager(this, this.app.canvasContainerElm)
 		this.toolManager.registerTool('pen', this.penTool)
 		this.toolManager.registerTool('eraser', this.eraserTool)
+		this.toolManager.registerTool('moving', new MovingTool(this.app))
 
 		this.renderLoop()
 
 		// TODO: 整理
 		window.addEventListener('keydown', (e) => {
+			// スペースキーでのスクロールを防ぐ
+			if (e.key === ' ') {
+				e.preventDefault()
+			}
+
 			if (e.repeat) {
 				return
 			}
@@ -115,10 +121,14 @@ export class PaintApp {
 			if (e.key === 'e') {
 				this.toolManager.pushTool('eraser')
 			}
+
+			if (e.key === ' ') {
+				this.toolManager.pushTool('moving')
+			}
 		})
 
 		window.addEventListener('keyup', (e) => {
-			if (e.key === 'e') {
+			if (e.key === 'e' || e.key === ' ') {
 				this.toolManager.popTool()
 			}
 		})
@@ -227,6 +237,7 @@ export class App {
 	}
 
 	constructor(
+		readonly canvasScrollContainerElm: HTMLDivElement,
 		readonly canvasContainerElm: HTMLDivElement,
 		readonly canvasElm: HTMLCanvasElement,
 		serverAddr: string,
@@ -273,16 +284,6 @@ export class App {
 
 		this._api.start()
 	}
-}
-
-export function main(
-	container: HTMLDivElement,
-	elm: HTMLCanvasElement,
-	serverAddr: string,
-	userName: string
-): App {
-	const app = new App(container, elm, serverAddr, userName)
-	return app
 }
 
 const vueApp = createApp(VueIndex)

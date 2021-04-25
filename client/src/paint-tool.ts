@@ -1,6 +1,6 @@
 import { LayerDrawCommand, Position, Color, LayerId } from 'common'
 
-import { PaintApp } from './main'
+import { PaintApp, App } from './main'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
 
 export interface PaintTool {
@@ -197,5 +197,56 @@ export class EraserTool implements PaintTool {
 			positions: this._pathPositions!,
 			width: this.width,
 		}
+	}
+}
+
+export class MovingTool implements PaintTool {
+	private _isEnabled = false
+
+	private _lastPos: Position | undefined
+	private _mouseMoveHandler: (e: MouseEvent) => void
+
+	constructor(private readonly _app: App) {
+		this._mouseMoveHandler = (e) => this._onScrollContainerMouseMoved({ x: e.x, y: e.y })
+	}
+
+	enable(): void {
+		this._isEnabled = true
+	}
+
+	disable(): void {
+		this.onMouseUp()
+		this._isEnabled = false
+	}
+
+	get isEnabled(): boolean {
+		return this._isEnabled
+	}
+
+	onMouseDown(_pos: Position): void {
+		this._app.canvasScrollContainerElm.addEventListener('mousemove', this._mouseMoveHandler)
+	}
+
+	onMouseMoved(_pos: Position): void {
+		// pass
+	}
+
+	private _onScrollContainerMouseMoved(pos: Position): void {
+		if (this._lastPos !== undefined) {
+			const dx = this._lastPos.x - pos.x
+			const dy = this._lastPos.y - pos.y
+			if (dx === 0 || dy === 0) {
+				return
+			}
+
+			this._app.canvasScrollContainerElm.scrollBy(dx, dy)
+		}
+
+		this._lastPos = pos
+	}
+
+	onMouseUp(): void {
+		this._app.canvasScrollContainerElm.removeEventListener('mousemove', this._mouseMoveHandler)
+		this._lastPos = undefined
 	}
 }

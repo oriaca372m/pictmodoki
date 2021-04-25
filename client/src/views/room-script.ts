@@ -3,7 +3,7 @@ import ColorPicker from '../components/color-picker/index.vue'
 import Draggable from 'vuedraggable'
 
 import { LayerId } from 'common'
-import { main, App } from '../main'
+import { App } from '../main'
 
 interface ChatMessage {
 	msgId: number
@@ -64,7 +64,13 @@ export default defineComponent({
 			canvasScrollContainer.value!.scrollTop = 5000
 			canvasScrollContainer.value!.scrollLeft = 5000
 
-			app = main(canvasContainer.value!, canvas.value!, props.serverAddr, props.userName)
+			app = new App(
+				canvasScrollContainer.value!,
+				canvasContainer.value!,
+				canvas.value!,
+				props.serverAddr,
+				props.userName
+			)
 			console.log(app)
 
 			app.ready.once(() => {

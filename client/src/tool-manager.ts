@@ -13,12 +13,12 @@ export class ToolManager {
 		private readonly _canvasContainerElm: HTMLDivElement
 	) {
 		this._canvasContainerElm.addEventListener('pointerdown', (e) => {
-			e.preventDefault()
+			// e.preventDefault()
 			this.onMouseDown(this._getPosFromEvent(e))
 		})
 
 		this._canvasContainerElm.addEventListener('pointermove', (e) => {
-			e.preventDefault()
+			// e.preventDefault()
 			const es = e.getCoalescedEvents()
 			for (const coalesced of es) {
 				this.onMouseMoved(this._getPosFromEvent(coalesced))
@@ -26,7 +26,7 @@ export class ToolManager {
 		})
 
 		this._canvasContainerElm.addEventListener('pointerup', (e) => {
-			e.preventDefault()
+			// e.preventDefault()
 			this.onMouseUp(this._getPosFromEvent(e))
 		})
 	}

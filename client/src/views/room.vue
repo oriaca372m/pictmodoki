@@ -14,6 +14,7 @@
 				<button @click="selectTool('pen')">ペン</button>
 				<button @click="selectTool('spuit')">スポイト</button>
 				<button @click="selectTool('eraser')">消しゴム</button>
+				<button @click="selectTool('moving')">移動</button>
 			</div>
 			<div>
 				<ColorPicker v-model="state.color"/>
