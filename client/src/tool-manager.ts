@@ -6,6 +6,7 @@ import { PaintTool } from './paint-tool'
 export class ToolManager {
 	private _selectedTool: PaintTool | undefined
 	private _tools = new Map<string, PaintTool>()
+	private _toolHistory: string[] = []
 
 	constructor(
 		private readonly _app: PaintApp,
@@ -34,15 +35,44 @@ export class ToolManager {
 		this._tools.set(name, tool)
 	}
 
-	selectTool(name: string): void {
-		console.log(name)
+	// 成功したら true
+	private _selectTool(name: string): boolean {
+		const tool = this._tools.get(name)
+		if (tool === undefined) {
+			return false
+		}
+
 		this._tools.forEach((x) => {
 			x.disable()
 		})
 
-		this._selectedTool = this._tools.get(name)
-		this._selectedTool?.enable()
-		console.log(this._selectedTool)
+		this._selectedTool = tool
+		this._selectedTool.enable()
+		console.log(tool)
+		return true
+	}
+
+	selectTool(name: string): void {
+		if (this._selectTool(name)) {
+			this._toolHistory = [name]
+		}
+	}
+
+	pushTool(name: string): void {
+		if (this._selectTool(name)) {
+			this._toolHistory.push(name)
+		}
+	}
+
+	popTool(): void {
+		if (this._toolHistory.length <= 1) {
+			return
+		}
+		this._toolHistory.pop()
+		const name = this._toolHistory[this._toolHistory.length - 1]
+		if (name) {
+			this._selectTool(name)
+		}
 	}
 
 	onMouseMoved(pos: Position): void {

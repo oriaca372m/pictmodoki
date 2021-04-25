@@ -105,6 +105,23 @@ export class PaintApp {
 		this.toolManager.registerTool('eraser', this.eraserTool)
 
 		this.renderLoop()
+
+		// TODO: 整理
+		window.addEventListener('keydown', (e) => {
+			if (e.repeat) {
+				return
+			}
+
+			if (e.key === 'e') {
+				this.toolManager.pushTool('eraser')
+			}
+		})
+
+		window.addEventListener('keyup', (e) => {
+			if (e.key === 'e') {
+				this.toolManager.popTool()
+			}
+		})
 	}
 
 	init(): void {
