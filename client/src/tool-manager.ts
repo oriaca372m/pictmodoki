@@ -1,6 +1,6 @@
 import { Position } from 'common'
 
-import { PaintApp } from './main'
+import { PaintApp } from './paint-app'
 import { PaintTool } from './paint-tool'
 
 export class ToolManager {

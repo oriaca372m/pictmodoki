@@ -3,7 +3,7 @@ import ColorPicker from '../components/color-picker/index.vue'
 import Draggable from 'vuedraggable'
 
 import { LayerId } from 'common'
-import { App } from '../main'
+import { App } from '../app'
 
 interface ChatMessage {
 	msgId: number

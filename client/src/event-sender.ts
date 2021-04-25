@@ -1,6 +1,6 @@
 import { ImageCanvasCommand, ImageCanvasEventType, ImageCanvasEventManager } from 'common'
 
-import { App } from './main'
+import { App } from './app'
 import { WebSocketApi } from './web-socket-api'
 
 export interface CommandSender {

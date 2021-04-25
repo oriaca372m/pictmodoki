@@ -1,5 +1,5 @@
 import { ImageCanvasDrawer, LayerCanvasModel, LayerId } from 'common'
-import { PaintApp } from './main'
+import { PaintApp } from './paint-app'
 import { TypedEvent } from './typed-event'
 
 export class LayerManager {

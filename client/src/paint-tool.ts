@@ -1,6 +1,7 @@
 import { LayerDrawCommand, Position, Color, LayerId } from 'common'
 
-import { PaintApp, App } from './main'
+import { App } from './app'
+import { PaintApp } from './paint-app'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
 
 export interface PaintTool {
