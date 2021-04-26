@@ -1,4 +1,3 @@
-import { Size } from './primitives'
 import { LayerId, LayerDrawCommand } from './layer'
 import { UserId } from './user'
 import { ImageCanvasModel, ImageCanvasDrawer } from './image-canvas'
@@ -6,7 +5,6 @@ import { ImageCanvasCommand } from './image-canvas-command'
 import { CanvasProxyFactory } from './canvas-proxy'
 
 export type ImageCanvasEventType =
-	| { kind: 'canvasInitialized'; size: Size }
 	| { kind: 'layerCreated'; layerId: LayerId }
 	| { kind: 'layerRemoved'; layerId: LayerId }
 	| { kind: 'eventRevoked'; eventId: ImageCanvasEventId }
