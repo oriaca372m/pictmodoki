@@ -310,7 +310,7 @@ function main() {
 				void (async () => {
 					// TODO: Eventの構築中に他のメッセージが送信されないようにする
 					const event: Event = {
-						kind: 'dataSent',
+						kind: 'canvasStateSet',
 						value: await app.undoMgr.getLastRenderedImageModel().serialize(),
 						log: app.eventMgr.history,
 					}
@@ -325,7 +325,7 @@ function main() {
 				void (async () => {
 					// TODO: Eventの構築中に他のメッセージが送信されないようにする
 					const event: Event = {
-						kind: 'dataSent',
+						kind: 'canvasStateSet',
 						value: await app.undoMgr.getLastRenderedImageModel().serialize(),
 						log: app.eventMgr.history,
 					}

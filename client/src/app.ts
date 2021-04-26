@@ -61,7 +61,7 @@ export class App {
 				return
 			}
 
-			if (event.kind === 'dataSent') {
+			if (event.kind === 'canvasStateSet') {
 				void (async () => {
 					if (this._paintApp === undefined) {
 						console.error('タイミングだめ')
