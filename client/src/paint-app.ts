@@ -53,7 +53,6 @@ export class PaintApp {
 	readonly commandSender: CommandSender
 	readonly eventManager: ImageCanvasEventManager
 	readonly undoManager: ImageCanvasUndoManager
-	readonly revoker: ImageCanvasEventRevoker
 	readonly layerManager: LayerManager
 
 	readonly toolManager: ToolManager
@@ -76,8 +75,6 @@ export class PaintApp {
 
 		this.undoManager = new ImageCanvasUndoManager(this.eventManager, this.factory, canvasModel)
 		this.eventManager.registerPlugin(this.undoManager)
-
-		this.revoker = new ImageCanvasEventRevoker(this.eventManager)
 
 		this.layerManager = new LayerManager(this)
 
@@ -141,7 +138,8 @@ export class PaintApp {
 			return
 		}
 
-		const event = this.revoker.createUndoCommand(this.app.userId)
+		const revoker = new ImageCanvasEventRevoker(this.eventManager)
+		const event = revoker.createUndoCommand(this.app.userId)
 		if (event === undefined) {
 			return
 		}
