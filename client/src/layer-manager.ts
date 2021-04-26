@@ -8,7 +8,7 @@ export class LayerManager {
 	readonly updated = new TypedEvent<void>()
 
 	constructor(private readonly _app: PaintApp) {
-		this._drawer = this._app.imageCanvas
+		this._drawer = this._app.drawer
 	}
 
 	update(): void {
@@ -25,7 +25,7 @@ export class LayerManager {
 
 	// 成功したらtrue
 	selectLayerId(layerId: LayerId): boolean {
-		const found = this._app.imageCanvas.findLayerModelById(layerId)
+		const found = this._app.drawer.findLayerModelById(layerId)
 		if (found === undefined) {
 			return false
 		}
@@ -48,7 +48,7 @@ export class LayerManager {
 	}
 
 	get layers(): readonly LayerCanvasModel[] {
-		return this._app.imageCanvas.model.layers
+		return this._app.drawer.model.layers
 	}
 
 	setLayerVisibility(id: LayerId, isVisible: boolean): void {

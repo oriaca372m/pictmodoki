@@ -20,7 +20,7 @@ import { App } from './app'
 class EventRenderer implements ImageCanvasEventManagerPlugin {
 	private readonly _player: ImageCanvasEventPlayer
 	constructor(private readonly _app: PaintApp) {
-		this._player = new ImageCanvasEventPlayer(_app.imageCanvas)
+		this._player = new ImageCanvasEventPlayer(_app.drawer)
 	}
 
 	onEvent(event: ImageCanvasEvent): void {
@@ -35,7 +35,7 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 
 	onHistoryChanged(): void {
 		const model = this._app.undoManager.createUndoedImageCanvasModel()
-		this._app.imageCanvas.setModel(model)
+		this._app.drawer.setModel(model)
 		this._app.layerManager.update()
 		this._app.render()
 	}
@@ -46,26 +46,30 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 }
 
 export class PaintApp {
-	canvasProxy: WebCanvasProxy
-	imageCanvas: ImageCanvasDrawerWithPreview
-	toolManager: ToolManager
+	factory: OffscreenCanvasProxyFactory
+	drawer: ImageCanvasDrawerWithPreview
+	private _renderedCanvas: WebCanvasProxy
+
 	commandSender!: CommandSender
 	eventManager: ImageCanvasEventManager
 	undoManager: ImageCanvasUndoManager
-	factory: OffscreenCanvasProxyFactory
 	revoker: ImageCanvasEventRevoker
 	layerManager: LayerManager
+
+	readonly toolManager: ToolManager
 	readonly penTool: PenTool
 	readonly eraserTool: EraserTool
-	shouldRender = false
+
 	canvasScale = 1.0
 	canvasRotation = 0.0
 
+	private _shouldRender = false
+
 	constructor(public app: App, public canvasElm: HTMLCanvasElement, public api: WebSocketApi) {
 		this.factory = new OffscreenCanvasProxyFactory()
-		this.canvasProxy = new WebCanvasProxy(this.canvasElm)
-		const canvasModel = new ImageCanvasModel(this.canvasProxy.size)
-		this.imageCanvas = new ImageCanvasDrawerWithPreview(canvasModel, this.factory)
+		this._renderedCanvas = new WebCanvasProxy(this.canvasElm)
+		const canvasModel = new ImageCanvasModel(this._renderedCanvas.size)
+		this.drawer = new ImageCanvasDrawerWithPreview(canvasModel, this.factory)
 
 		this.eventManager = new ImageCanvasEventManager()
 		this.eventManager.event({
@@ -75,7 +79,7 @@ export class PaintApp {
 			isVirtual: false,
 			eventType: {
 				kind: 'canvasInitialized',
-				size: this.canvasProxy.size,
+				size: this._renderedCanvas.size,
 			},
 		})
 
@@ -87,6 +91,7 @@ export class PaintApp {
 		this.revoker = new ImageCanvasEventRevoker(this.eventManager)
 
 		this.layerManager = new LayerManager(this)
+
 		this.penTool = new PenTool(this)
 		this.eraserTool = new EraserTool(this)
 		this.toolManager = new ToolManager(this, this.app.canvasContainerElm)
@@ -144,13 +149,13 @@ export class PaintApp {
 	}
 
 	render(): void {
-		this.shouldRender = true
+		this._shouldRender = true
 	}
 
 	renderLoop(): void {
-		if (this.shouldRender) {
-			this.imageCanvas.render(this.canvasProxy)
-			this.shouldRender = false
+		if (this._shouldRender) {
+			this.drawer.render(this._renderedCanvas)
+			this._shouldRender = false
 		}
 
 		window.requestAnimationFrame(() => {

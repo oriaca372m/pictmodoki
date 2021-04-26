@@ -48,7 +48,7 @@ abstract class DrawingToolBase extends PaintToolBase {
 
 	constructor(private readonly _app: PaintApp) {
 		super()
-		this._imageCanvas = _app.imageCanvas
+		this._imageCanvas = _app.drawer
 	}
 
 	disable(): void {

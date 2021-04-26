@@ -108,7 +108,7 @@ export class ToolManager {
 		}
 
 		// キャンバスの左上を0とした座標に変換
-		const canvasSize = this._app.imageCanvas.model.size
+		const canvasSize = this._app.drawer.model.size
 		x += canvasSize.width / 2
 		y += canvasSize.height / 2
 

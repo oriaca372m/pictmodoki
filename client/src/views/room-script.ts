@@ -79,8 +79,8 @@ export default defineComponent({
 				})
 
 				const layerUpdated = () => {
-					state.layers = app!.paintApp!.imageCanvas.model.order.map((x) => {
-						const layer = app!.paintApp!.imageCanvas.findLayerModelById(x)
+					state.layers = app!.paintApp!.drawer.model.order.map((x) => {
+						const layer = app!.paintApp!.drawer.findLayerModelById(x)
 						return { id: layer!.id, name: layer!.name }
 					})
 					state.selectedLayerId = app!.paintApp!.layerManager.selectedLayerId
