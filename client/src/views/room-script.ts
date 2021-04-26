@@ -1,4 +1,4 @@
-import { defineComponent, reactive, computed, ref, watch, onMounted } from 'vue'
+import { defineComponent, reactive, ref, watch, onMounted } from 'vue'
 import ColorPicker from '../components/color-picker/index.vue'
 import Draggable from 'vuedraggable'
 
@@ -89,10 +89,6 @@ export default defineComponent({
 			})
 		})
 
-		const canvasStyle = computed(() => ({
-			transform: `scale(${state.scale / 100}) rotate(${state.rotation}deg)`,
-		}))
-
 		const setLayerOrder = () => {
 			app!.paintApp!.layerManager.setLayerOrder(state.layers.map((x) => x.id))
 		}
@@ -166,7 +162,6 @@ export default defineComponent({
 			state,
 			canvasContainer,
 			canvasScrollContainer,
-			canvasStyle,
 			setLayerOrder,
 			selectLayerId,
 			removeLayerId,
