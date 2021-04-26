@@ -95,11 +95,12 @@ class App {
 	cmdInterpreter: CommandInterpreter
 
 	constructor() {
-		this.size = { width: 3000, height: 3000 }
+		this.size = { width: 2000, height: 2000 }
 		this.factory = new NodeCanvasProxyFactory()
 		this.targetCanvas = this.factory.createCanvasProxy(this.size)
 
-		const model = new ImageCanvasModel(this.size)
+		// 特に使用されないので小さめのサイズで作る
+		const model = new ImageCanvasModel({ width: 256, height: 256 })
 		this.drawer = new ImageCanvasDrawer(model, this.factory)
 
 		this.eventMgr = new ImageCanvasEventManager()

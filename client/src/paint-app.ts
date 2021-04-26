@@ -67,7 +67,8 @@ export class PaintApp {
 	constructor(public app: App, public api: WebSocketApi) {
 		this.factory = new OffscreenCanvasProxyFactory()
 
-		const canvasModel = new ImageCanvasModel({ width: 600, height: 600 })
+		// 特に使用されないので小さめのサイズで作る
+		const canvasModel = new ImageCanvasModel({ width: 256, height: 256 })
 		this.drawer = new ImageCanvasDrawerWithPreview(canvasModel, this.factory)
 
 		this.eventManager = new ImageCanvasEventManager()
