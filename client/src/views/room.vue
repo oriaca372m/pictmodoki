@@ -1,9 +1,7 @@
 <template>
 	<div class="app">
 		<div ref="canvasScrollContainer" class="canvas-area">
-			<div ref="canvasContainer" class="canvas-container">
-				<canvas :style="canvasStyle" ref="canvas" width="3000" height="3000"></canvas>
-			</div>
+			<div ref="canvasContainer" class="canvas-container"></div>
 		</div>
 		<div class="tool-area">
 			<div>

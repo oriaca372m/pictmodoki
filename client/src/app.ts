@@ -33,7 +33,6 @@ export class App {
 	constructor(
 		readonly canvasScrollContainerElm: HTMLDivElement,
 		readonly canvasContainerElm: HTMLDivElement,
-		readonly canvasElm: HTMLCanvasElement,
 		serverAddr: string,
 		userName: string
 	) {
@@ -42,9 +41,8 @@ export class App {
 		this._api.addOpenHandler(() => {
 			this._api.sendCommand({ kind: 'login', name: userName, reconnectionToken: undefined })
 
-			const app = new PaintApp(this, canvasElm, this._api)
+			const app = new PaintApp(this, this._api)
 			this._paintApp = app
-			app.init()
 			app.render()
 
 			this._api.sendCommand({ kind: 'requestData' })
@@ -70,10 +68,10 @@ export class App {
 						return
 					}
 					this._api.blockEvent()
-					this._paintApp.undoManager.setLastRenderedImageModel(
-						await deserializeImageCanvasModel(event.value, this._paintApp.factory)
+					this._paintApp.setCanvasState(
+						await deserializeImageCanvasModel(event.value, this._paintApp.factory),
+						event.log
 					)
-					this._paintApp.eventManager.setHistory(event.log)
 					this._api.resumeEvent()
 				})()
 				return

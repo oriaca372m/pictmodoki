@@ -55,7 +55,6 @@ export default defineComponent({
 			rotation: 0,
 		})
 
-		const canvas = ref<HTMLCanvasElement>()
 		const canvasContainer = ref<HTMLDivElement>()
 		const canvasScrollContainer = ref<HTMLDivElement>()
 
@@ -67,7 +66,6 @@ export default defineComponent({
 			app = new App(
 				canvasScrollContainer.value!,
 				canvasContainer.value!,
-				canvas.value!,
 				props.serverAddr,
 				props.userName
 			)
@@ -166,7 +164,6 @@ export default defineComponent({
 
 		return {
 			state,
-			canvas,
 			canvasContainer,
 			canvasScrollContainer,
 			canvasStyle,

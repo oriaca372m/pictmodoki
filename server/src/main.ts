@@ -98,27 +98,37 @@ class App {
 		this.size = { width: 3000, height: 3000 }
 		this.factory = new NodeCanvasProxyFactory()
 		this.targetCanvas = this.factory.createCanvasProxy(this.size)
+
 		const model = new ImageCanvasModel(this.size)
 		this.drawer = new ImageCanvasDrawer(model, this.factory)
 
 		this.eventMgr = new ImageCanvasEventManager()
-		this.eventMgr.event({
-			id: '-1',
-			userId: 'system',
-			isRevoked: false,
-			isVirtual: false,
-			eventType: {
-				kind: 'canvasInitialized',
-				size: this.size,
-			},
-		})
-
 		this.eventMgr.registerPlugin(new EventRenderer(this))
 
 		this.undoMgr = new ImageCanvasUndoManager(this.eventMgr, this.factory, model)
 		this.eventMgr.registerPlugin(this.undoMgr)
 
 		this.cmdInterpreter = new CommandInterpreter(this.drawer, this.eventMgr)
+		this.resetCanvas()
+	}
+
+	resetCanvas(): void {
+		const model = new ImageCanvasModel(this.size)
+		this.undoMgr.setLastRenderedImageModel(model)
+		const history: ImageCanvasEvent[] = [
+			{
+				id: '-1',
+				userId: 'system',
+				isRevoked: false,
+				isVirtual: false,
+				eventType: {
+					kind: 'canvasInitialized',
+					size: this.size,
+				},
+			},
+		]
+		this.eventMgr.setHistory(history)
+
 		this.cmdInterpreter.command('system', { kind: 'createLayer' })
 		this.cmdInterpreter.command('system', { kind: 'createLayer' })
 	}
@@ -302,6 +312,24 @@ function main() {
 				s.clients.forEach((client) => {
 					client.send(encoded)
 				})
+
+				if (cmd.message === '!reset') {
+					console.log('canvas reset!')
+					app.resetCanvas()
+				}
+
+				void (async () => {
+					// TODO: Eventの構築中に他のメッセージが送信されないようにする
+					const event: Event = {
+						kind: 'dataSent',
+						value: await app.undoMgr.getLastRenderedImageModel().serialize(),
+						log: app.eventMgr.history,
+					}
+					const encoded = encode(event)
+					s.clients.forEach((client) => {
+						client.send(encoded)
+					})
+				})()
 			}
 
 			if (cmd.kind === 'requestData') {

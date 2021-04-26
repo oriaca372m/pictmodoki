@@ -46,15 +46,15 @@ class EventRenderer implements ImageCanvasEventManagerPlugin {
 }
 
 export class PaintApp {
-	factory: OffscreenCanvasProxyFactory
-	drawer: ImageCanvasDrawerWithPreview
-	private _renderedCanvas: WebCanvasProxy
+	readonly factory: OffscreenCanvasProxyFactory
+	readonly drawer: ImageCanvasDrawerWithPreview
+	private _renderedCanvas: WebCanvasProxy | undefined
 
-	commandSender!: CommandSender
-	eventManager: ImageCanvasEventManager
-	undoManager: ImageCanvasUndoManager
-	revoker: ImageCanvasEventRevoker
-	layerManager: LayerManager
+	readonly commandSender: CommandSender
+	readonly eventManager: ImageCanvasEventManager
+	readonly undoManager: ImageCanvasUndoManager
+	readonly revoker: ImageCanvasEventRevoker
+	readonly layerManager: LayerManager
 
 	readonly toolManager: ToolManager
 	readonly penTool: PenTool
@@ -65,24 +65,13 @@ export class PaintApp {
 
 	private _shouldRender = false
 
-	constructor(public app: App, public canvasElm: HTMLCanvasElement, public api: WebSocketApi) {
+	constructor(public app: App, public api: WebSocketApi) {
 		this.factory = new OffscreenCanvasProxyFactory()
-		this._renderedCanvas = new WebCanvasProxy(this.canvasElm)
-		const canvasModel = new ImageCanvasModel(this._renderedCanvas.size)
+
+		const canvasModel = new ImageCanvasModel({ width: 600, height: 600 })
 		this.drawer = new ImageCanvasDrawerWithPreview(canvasModel, this.factory)
 
 		this.eventManager = new ImageCanvasEventManager()
-		this.eventManager.event({
-			id: '-1',
-			userId: 'system',
-			isRevoked: false,
-			isVirtual: false,
-			eventType: {
-				kind: 'canvasInitialized',
-				size: this._renderedCanvas.size,
-			},
-		})
-
 		this.eventManager.registerPlugin(new EventRenderer(this))
 
 		this.undoManager = new ImageCanvasUndoManager(this.eventManager, this.factory, canvasModel)
@@ -98,6 +87,11 @@ export class PaintApp {
 		this.toolManager.registerTool('pen', this.penTool)
 		this.toolManager.registerTool('eraser', this.eraserTool)
 		this.toolManager.registerTool('moving', new MovingTool(this.app))
+		this.toolManager.selectTool('pen')
+
+		const sender = new SocketCommandSender(this.app, this.eventManager, this.api)
+		sender.start()
+		this.commandSender = sender
 
 		this.renderLoop()
 
@@ -128,12 +122,18 @@ export class PaintApp {
 		})
 	}
 
-	init(): void {
-		const sender = new SocketCommandSender(this.app, this.eventManager, this.api)
-		sender.start()
+	setCanvasState(lastRendered: ImageCanvasModel, history: readonly ImageCanvasEvent[]): void {
+		const canvasElm = document.createElement('canvas')
+		canvasElm.width = lastRendered.size.width
+		canvasElm.height = lastRendered.size.height
 
-		this.commandSender = sender
-		this.toolManager.selectTool('pen')
+		this.app.canvasContainerElm.innerHTML = ''
+		this.app.canvasContainerElm.appendChild(canvasElm)
+
+		this._renderedCanvas = new WebCanvasProxy(canvasElm)
+
+		this.undoManager.setLastRenderedImageModel(lastRendered)
+		this.eventManager.setHistory(history)
 	}
 
 	undo(): void {
@@ -154,7 +154,9 @@ export class PaintApp {
 
 	renderLoop(): void {
 		if (this._shouldRender) {
-			this.drawer.render(this._renderedCanvas)
+			if (this._renderedCanvas !== undefined) {
+				this.drawer.render(this._renderedCanvas)
+			}
 			this._shouldRender = false
 		}
 
