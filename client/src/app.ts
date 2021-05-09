@@ -38,7 +38,7 @@ export class App {
 	) {
 		this._api = new WebSocketApi(serverAddr)
 
-		this._api.addOpenHandler(() => {
+		this._api.opened.on(() => {
 			this._api.sendCommand({ kind: 'login', name: userName, reconnectionToken: undefined })
 
 			const app = new PaintApp(this, this._api)
@@ -50,7 +50,7 @@ export class App {
 			this.ready.emit()
 		})
 
-		this._api.addEventHandler((event) => {
+		this._api.eventHappened.on((event) => {
 			if (event.kind === 'loginAccepted') {
 				this._userId = event.userId
 				return
@@ -110,7 +110,7 @@ class ChatManager {
 	private readonly _messageRecievedHandlers: ChatMessageRecievedHandler[] = []
 
 	constructor(private readonly _api: WebSocketApi) {
-		this._api.addEventHandler((event) => {
+		this._api.eventHappened.on((event) => {
 			if (event.kind === 'chatSent') {
 				this._messageRecievedHandlers.forEach((x) =>
 					x(event.userId, event.name, event.message)

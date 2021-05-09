@@ -15,7 +15,7 @@ export class SocketCommandSender implements CommandSender {
 	) {}
 
 	start(): void {
-		this._api.addEventHandler((event) => {
+		this._api.eventHappened.on((event) => {
 			if (event.kind !== 'imageCanvasEvent') {
 				return
 			}
