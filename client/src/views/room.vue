@@ -19,6 +19,8 @@
 				<button @click="selectColor('#000000')">黒</button>
 				<button @click="selectColor('#ff0000')">赤</button>
 				<button @click="selectColor('#0000ff')">青</button>
+				<button @click="selectColor('#6b503e')">茶</button>
+				<button @click="selectColor('#fff6e3')">肌</button>
 			</div>
 			<div>
 				<h1>ペンの太さ</h1>

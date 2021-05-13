@@ -116,6 +116,11 @@ export class PaintApp {
 			if (e.key === ' ') {
 				this.toolManager.pushTool('moving')
 			}
+
+			if (e.key === 'z' && e.ctrlKey) {
+				this.undo()
+				e.preventDefault()
+			}
 		})
 
 		window.addEventListener('keyup', (e) => {
