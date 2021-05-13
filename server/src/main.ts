@@ -273,7 +273,7 @@ class Room {
 		for (const user of this._users) {
 			const conn = user.conn
 			if (conn === undefined) {
-				return
+				continue
 			}
 
 			conn.send(encoded)
