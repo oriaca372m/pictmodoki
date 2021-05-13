@@ -46,7 +46,13 @@ export class App {
 		this._api = new WebSocketApi(serverAddr)
 
 		this._api.opened.on(() => {
-			this._api.sendCommand({ kind: 'login', name: userName, reconnectionToken: undefined })
+			const reconnectionToken = localStorage.getItem('reconnectionToken') ?? undefined
+
+			this._api.sendCommand({
+				kind: 'login',
+				name: userName,
+				reconnectionToken: reconnectionToken,
+			})
 
 			const app = new PaintApp(this, this._api)
 			this._paintApp = app
@@ -60,6 +66,7 @@ export class App {
 		this._api.eventHappened.on((event) => {
 			if (event.kind === 'loginAccepted') {
 				this._userId = event.userId
+				localStorage.setItem('reconnectionToken', event.reconnectionToken)
 				return
 			}
 

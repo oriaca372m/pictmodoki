@@ -240,6 +240,7 @@ class UserManager {
 
 	createUser(name: string): User {
 		const user = new User(this._currentUserId.toString(), name)
+		this._users.push(user)
 
 		this._currentUserId++
 		return user
@@ -264,6 +265,10 @@ class Room {
 	}
 
 	join(user: User) {
+		if (this._users.includes(user)) {
+			return
+		}
+
 		this._users.push(user)
 		user.setJoinedRoom(this)
 	}
