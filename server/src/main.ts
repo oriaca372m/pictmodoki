@@ -315,6 +315,17 @@ class Room {
 			return
 		}
 
+		if (msg === '!list') {
+			this._broadcastEvent({
+				kind: 'chatSent',
+				userId: 'system',
+				name: 'system',
+				message: '\n' + this._users.map((x) => `${x.userId}: ${x.name}`).join('\n'),
+			})
+
+			return
+		}
+
 		if (msg === '!reset') {
 			this._reset()
 

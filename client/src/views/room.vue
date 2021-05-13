@@ -58,7 +58,7 @@
 					</template>
 				</draggable>
 			</div>
-			<div>
+			<div class="chat-box">
 				<h1>チャット</h1>
 				<div>
 					<input v-model="state.messageToSend" @keyup.enter="sendChat">
@@ -110,6 +110,10 @@
 .tool-area h1 {
 	font-size: 1rem;
 	margin: 0;
+}
+
+.chat-box p {
+	white-space: pre-line;
 }
 </style>
 
