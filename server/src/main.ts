@@ -372,6 +372,13 @@ function main() {
 			userData: undefined,
 		}
 
+		conn.on('close', () => {
+			const userData = connectionData.userData
+			if (userData !== undefined) {
+				userData.conn = undefined
+			}
+		})
+
 		conn.on('message', (message: unknown) => {
 			const cmd = decode(message as Uint8Array) as Command
 			console.log(cmd)
