@@ -280,28 +280,58 @@ class Room {
 		}
 	}
 
-	handleRoomCommand(user: User, cmd: Command): void {
-		if (cmd.kind === 'sendChat') {
+	private _reset(): void {
+		console.log('canvas reset!')
+		this._app.resetCanvas()
+
+		void (async () => {
+			// TODO: Eventの構築中に他のメッセージが送信されないようにする
+			this._broadcastEvent({
+				kind: 'canvasStateSet',
+				value: await this._app.undoMgr.getLastRenderedImageModel().serialize(),
+				log: this._app.eventMgr.history,
+			})
+		})()
+	}
+
+	private _handleChat(user: User, msg: string): void {
+		this._broadcastEvent({
+			kind: 'chatSent',
+			userId: user.userId,
+			name: user.name,
+			message: msg,
+		})
+
+		if (msg.includes('チノ')) {
+			this._reset()
+
 			this._broadcastEvent({
 				kind: 'chatSent',
-				userId: user.userId,
-				name: user.name,
-				message: cmd.message,
+				userId: 'system',
+				name: 'system',
+				message: '正解! 次はチノちゃんを描いてください!',
 			})
 
-			if (cmd.message === '!reset') {
-				console.log('canvas reset!')
-				this._app.resetCanvas()
-			}
+			return
+		}
 
-			void (async () => {
-				// TODO: Eventの構築中に他のメッセージが送信されないようにする
-				this._broadcastEvent({
-					kind: 'canvasStateSet',
-					value: await this._app.undoMgr.getLastRenderedImageModel().serialize(),
-					log: this._app.eventMgr.history,
-				})
-			})()
+		if (msg === '!reset') {
+			this._reset()
+
+			this._broadcastEvent({
+				kind: 'chatSent',
+				userId: 'system',
+				name: 'system',
+				message: 'チノちゃんを描いてください!',
+			})
+
+			return
+		}
+	}
+
+	handleRoomCommand(user: User, cmd: Command): void {
+		if (cmd.kind === 'sendChat') {
+			this._handleChat(user, cmd.message)
 		}
 
 		if (cmd.kind === 'requestData') {
