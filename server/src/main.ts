@@ -1,4 +1,4 @@
-import * as ws from 'ws'
+import Ws from 'ws'
 import { createCanvas, Canvas } from 'canvas'
 import { decode, encode } from '@msgpack/msgpack'
 import Crypto from 'crypto'
@@ -204,49 +204,145 @@ export class CommandInterpreter {
 	}
 }
 
-interface UserData {
-	userId: UserId
-	name: string
-	reconnectionToken: string
+class User {
+	private readonly _reconnectionToken: string
+	private _joinedRoom: Room | undefined
+	conn: Ws | undefined
+
+	constructor(private readonly _userId: UserId, private readonly _name: string) {
+		this._reconnectionToken = Crypto.randomBytes(16).toString('hex')
+	}
+
+	get userId(): UserId {
+		return this._userId
+	}
+
+	get name(): string {
+		return this._name
+	}
+
+	get reconnectionToken(): string {
+		return this._reconnectionToken
+	}
+
+	setJoinedRoom(room: Room): void {
+		this._joinedRoom = room
+	}
+
+	get joinedRoom(): Room | undefined {
+		return this._joinedRoom
+	}
 }
 
 class UserManager {
 	private _currentUserId = 0
-	private readonly _users: UserData[] = []
+	private readonly _users: User[] = []
 
-	createUser(name: string): UserData {
-		const token = Crypto.randomBytes(16).toString('hex')
-
-		const data = {
-			userId: this._currentUserId.toString(),
-			name,
-			reconnectionToken: token,
-		}
+	createUser(name: string): User {
+		const user = new User(this._currentUserId.toString(), name)
 
 		this._currentUserId++
-		return data
+		return user
 	}
 
-	findByReconnectionToken(token: string): UserData | undefined {
+	findByReconnectionToken(token: string): User | undefined {
 		return this._users.find((x) => x.reconnectionToken === token)
 	}
 }
 
 interface ConnectionData {
-	userData: UserData | undefined
+	userData: User | undefined
+}
+
+class Room {
+	private readonly _users: User[] = []
+	private readonly _app = new App()
+	private readonly _wsServer: Ws.Server
+
+	constructor(s: Ws.Server) {
+		this._wsServer = s
+	}
+
+	join(user: User) {
+		this._users.push(user)
+		user.setJoinedRoom(this)
+	}
+
+	private _broadcastEvent(event: Event): void {
+		const encoded = encode(event)
+		for (const user of this._users) {
+			const conn = user.conn
+			if (conn === undefined) {
+				return
+			}
+
+			conn.send(encoded)
+		}
+	}
+
+	handleRoomCommand(user: User, cmd: Command): void {
+		if (cmd.kind === 'sendChat') {
+			this._broadcastEvent({
+				kind: 'chatSent',
+				userId: user.userId,
+				name: user.name,
+				message: cmd.message,
+			})
+
+			if (cmd.message === '!reset') {
+				console.log('canvas reset!')
+				this._app.resetCanvas()
+			}
+
+			void (async () => {
+				// TODO: Eventの構築中に他のメッセージが送信されないようにする
+				this._broadcastEvent({
+					kind: 'canvasStateSet',
+					value: await this._app.undoMgr.getLastRenderedImageModel().serialize(),
+					log: this._app.eventMgr.history,
+				})
+			})()
+		}
+
+		if (cmd.kind === 'requestData') {
+			void (async () => {
+				// TODO: Eventの構築中に他のメッセージが送信されないようにする
+				const event: Event = {
+					kind: 'canvasStateSet',
+					value: await this._app.undoMgr.getLastRenderedImageModel().serialize(),
+					log: this._app.eventMgr.history,
+				}
+				user.conn!.send(encode(event))
+			})()
+		}
+
+		if (cmd.kind === 'imageCanvasCommand') {
+			const canvasEvent = this._app.cmdInterpreter.command(user.userId, cmd.value)
+			if (canvasEvent === undefined) {
+				console.log('不正なコマンド')
+				console.log(cmd.value)
+				return
+			}
+
+			this._broadcastEvent({
+				kind: 'imageCanvasEvent',
+				value: canvasEvent,
+			})
+		}
+	}
 }
 
 function main() {
-	const s = new ws.Server({ port: 25567 })
-	const app = new App()
+	const s = new Ws.Server({ port: 25567 })
 	const userManager = new UserManager()
+	const room = new Room(s)
 
-	s.on('connection', (ws) => {
+	s.on('connection', (conn) => {
 		const connectionData: ConnectionData = {
 			userData: undefined,
 		}
 
-		ws.on('message', (message: unknown) => {
+		conn.on('message', (message: unknown) => {
 			const cmd = decode(message as Uint8Array) as Command
 			console.log(cmd)
 
@@ -260,14 +356,18 @@ function main() {
 					userData = userManager.createUser(cmd.name)
 				}
 
+				userData.conn = conn
 				connectionData.userData = userData
+
+				room.join(userData)
+
 				const acceptedEvent: Event = {
 					kind: 'loginAccepted',
 					userId: userData.userId,
 					name: userData.name,
 					reconnectionToken: userData.reconnectionToken,
 				}
-				ws.send(encode(acceptedEvent))
+				conn.send(encode(acceptedEvent))
 
 				const loggedInEvent: Event = {
 					kind: 'userLoggedIn',
@@ -289,68 +389,7 @@ function main() {
 				return
 			}
 
-			if (cmd.kind === 'sendChat') {
-				const event: Event = {
-					kind: 'chatSent',
-					userId: userData.userId,
-					name: userData.name,
-					message: cmd.message,
-				}
-				const encoded = encode(event)
-
-				s.clients.forEach((client) => {
-					client.send(encoded)
-				})
-
-				if (cmd.message === '!reset') {
-					console.log('canvas reset!')
-					app.resetCanvas()
-				}
-
-				void (async () => {
-					// TODO: Eventの構築中に他のメッセージが送信されないようにする
-					const event: Event = {
-						kind: 'canvasStateSet',
-						value: await app.undoMgr.getLastRenderedImageModel().serialize(),
-						log: app.eventMgr.history,
-					}
-					const encoded = encode(event)
-					s.clients.forEach((client) => {
-						client.send(encoded)
-					})
-				})()
-			}
-
-			if (cmd.kind === 'requestData') {
-				void (async () => {
-					// TODO: Eventの構築中に他のメッセージが送信されないようにする
-					const event: Event = {
-						kind: 'canvasStateSet',
-						value: await app.undoMgr.getLastRenderedImageModel().serialize(),
-						log: app.eventMgr.history,
-					}
-					ws.send(encode(event))
-				})()
-			}
-
-			if (cmd.kind === 'imageCanvasCommand') {
-				const canvasEvent = app.cmdInterpreter.command(userData.userId, cmd.value)
-				if (canvasEvent === undefined) {
-					console.log('不正なコマンド')
-					console.log(cmd.value)
-					return
-				}
-
-				const event: Event = {
-					kind: 'imageCanvasEvent',
-					value: canvasEvent,
-				}
-				const encodedEvent = encode(event)
-
-				s.clients.forEach((client) => {
-					client.send(encodedEvent)
-				})
-			}
+			room.handleRoomCommand(userData, cmd)
 		})
 	})
 }
