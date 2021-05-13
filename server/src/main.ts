@@ -2,6 +2,7 @@ import Ws from 'ws'
 import { createCanvas, Canvas } from 'canvas'
 import { decode, encode } from '@msgpack/msgpack'
 import Crypto from 'crypto'
+import lodash from 'lodash'
 
 import {
 	LayerId,
@@ -260,8 +261,16 @@ class Room {
 	private readonly _app = new App()
 	private readonly _wsServer: Ws.Server
 
+	private _dict: string[]
+	private _painter: User | undefined
+	private _answer: string | undefined
+
 	constructor(s: Ws.Server) {
 		this._wsServer = s
+
+		const text = fs.readFileSync('./jisyo.txt', { encoding: 'utf-8' })
+		this._dict = text.split('\n')
+		console.log(this._dict.filter((x) => x !== '' && !x.startsWith('#')))
 	}
 
 	join(user: User) {
@@ -285,6 +294,16 @@ class Room {
 		}
 	}
 
+	private _sendEventTo(user: User, event: Event): void {
+		const encoded = encode(event)
+		const conn = user.conn
+		if (conn === undefined) {
+			return
+		}
+
+		conn.send(encoded)
+	}
+
 	private _reset(): void {
 		console.log('canvas reset!')
 		this._app.resetCanvas()
@@ -299,6 +318,27 @@ class Room {
 		})()
 	}
 
+	private _startPainting(painter: User): void {
+		this._reset()
+
+		this._painter = painter
+		this._answer = lodash.sample(this._dict)
+
+		this._sendEventTo(this._painter, {
+			kind: 'chatSent',
+			userId: 'system',
+			name: 'system',
+			message: `あなたの番です! ${this._answer!} を描いてください!`,
+		})
+
+		this._broadcastEvent({
+			kind: 'chatSent',
+			userId: 'system',
+			name: 'system',
+			message: `${this._painter.name} さんが描き始めました!`,
+		})
+	}
+
 	private _handleChat(user: User, msg: string): void {
 		this._broadcastEvent({
 			kind: 'chatSent',
@@ -307,16 +347,19 @@ class Room {
 			message: msg,
 		})
 
-		if (msg.includes('チノ')) {
-			this._reset()
+		if (this._answer !== undefined && msg.includes(this._answer)) {
+			if (this._painter === undefined) {
+				throw 'unrechable!'
+			}
 
-			this._broadcastEvent({
-				kind: 'chatSent',
-				userId: 'system',
-				name: 'system',
-				message: '正解! 次はチノちゃんを描いてください!',
-			})
+			let nextPainterIdx = this._users.indexOf(this._painter)
+			nextPainterIdx++
 
+			if (!(nextPainterIdx < this._users.length)) {
+				nextPainterIdx = 0
+			}
+
+			this._startPainting(this._users[nextPainterIdx])
 			return
 		}
 
@@ -332,15 +375,7 @@ class Room {
 		}
 
 		if (msg === '!reset') {
-			this._reset()
-
-			this._broadcastEvent({
-				kind: 'chatSent',
-				userId: 'system',
-				name: 'system',
-				message: 'チノちゃんを描いてください!',
-			})
-
+			this._startPainting(this._users[0])
 			return
 		}
 	}
