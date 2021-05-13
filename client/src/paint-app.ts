@@ -59,10 +59,8 @@ export class PaintApp {
 	readonly penTool: PenTool
 	readonly eraserTool: EraserTool
 
-	canvasScale = 1.0
-	canvasRotation = 0.0
-
 	private _shouldRender = false
+	private _canvasElm: HTMLCanvasElement | undefined
 
 	constructor(public app: App, public api: WebSocketApi) {
 		this.factory = new OffscreenCanvasProxyFactory()
@@ -92,6 +90,13 @@ export class PaintApp {
 		this.commandSender = sender
 
 		this.renderLoop()
+
+		app.state.scale.valueChanged.on(() => {
+			this._setCanvasStyle()
+		})
+		app.state.rotation.valueChanged.on(() => {
+			this._setCanvasStyle()
+		})
 
 		// TODO: 整理
 		window.addEventListener('keydown', (e) => {
@@ -127,11 +132,24 @@ export class PaintApp {
 
 		this.app.canvasContainerElm.innerHTML = ''
 		this.app.canvasContainerElm.appendChild(canvasElm)
+		this._canvasElm = canvasElm
+		this._setCanvasStyle()
 
 		this._renderedCanvas = new WebCanvasProxy(canvasElm)
 
 		this.undoManager.setLastRenderedImageModel(lastRendered)
 		this.eventManager.setHistory(history)
+	}
+
+	private _setCanvasStyle() {
+		const canvasElm = this._canvasElm
+		if (canvasElm === undefined) {
+			return
+		}
+
+		const scale = this.app.state.scale.value
+		const rot = this.app.state.rotation.value
+		canvasElm.style.transform = `scale(${scale / 100}) rotate(${rot}deg)`
 	}
 
 	undo(): void {

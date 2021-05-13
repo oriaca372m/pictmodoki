@@ -10,6 +10,12 @@ import { OffscreenCanvasProxyFactory } from './canvas-proxy'
 import { WebSocketApi } from './web-socket-api'
 import { TypedEvent } from './typed-event'
 import { PaintApp } from './paint-app'
+import { Bindable } from './bindable'
+
+export class AppState {
+	rotation = new Bindable(0)
+	scale = new Bindable(100)
+}
 
 export class App {
 	private _api: WebSocketApi
@@ -31,6 +37,7 @@ export class App {
 	}
 
 	constructor(
+		public state: AppState,
 		readonly canvasScrollContainerElm: HTMLDivElement,
 		readonly canvasContainerElm: HTMLDivElement,
 		serverAddr: string,

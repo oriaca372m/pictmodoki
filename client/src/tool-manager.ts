@@ -94,12 +94,14 @@ export class ToolManager {
 		let x = e.clientX - rect.left - rect.width / 2
 		let y = e.clientY - rect.top - rect.height / 2
 
+		const scale = this._app.app.state.scale.value / 100
+
 		// 拡大率に合わせて座標変換
-		x /= this._app.canvasScale
-		y /= this._app.canvasScale
+		x /= scale
+		y /= scale
 
 		// 角度に応じて座標変換
-		const rot = -this._app.canvasRotation
+		const rot = -this._app.app.state.rotation.value * (Math.PI / 180)
 		if (rot !== 0) {
 			const nx = x * Math.cos(rot) - y * Math.sin(rot)
 			const ny = x * Math.sin(rot) + y * Math.cos(rot)

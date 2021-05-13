@@ -3,7 +3,7 @@ import ColorPicker from '../components/color-picker/index.vue'
 import Draggable from 'vuedraggable'
 
 import { LayerId } from 'common'
-import { App } from '../app'
+import { App, AppState } from '../app'
 
 interface ChatMessage {
 	msgId: number
@@ -25,8 +25,6 @@ interface State {
 	selectedLayerId: string | undefined
 	messageToSend: string
 	chatMessages: ChatMessage[]
-	scale: number
-	rotation: number
 }
 
 export default defineComponent({
@@ -42,6 +40,7 @@ export default defineComponent({
 
 	setup(props) {
 		let app: App | undefined
+		const appState = new AppState()
 
 		const state = reactive<State>({
 			layers: [],
@@ -51,8 +50,6 @@ export default defineComponent({
 			selectedLayerId: undefined,
 			messageToSend: '',
 			chatMessages: [],
-			scale: 100,
-			rotation: 0,
 		})
 
 		const canvasContainer = ref<HTMLDivElement>()
@@ -64,6 +61,7 @@ export default defineComponent({
 			canvasScrollContainer.value!.scrollLeft = 5000
 
 			app = new App(
+				appState,
 				canvasScrollContainer.value!,
 				canvasContainer.value!,
 				props.serverAddr,
@@ -152,8 +150,6 @@ export default defineComponent({
 
 				paintApp.penTool.width = state.size
 				paintApp.eraserTool.width = state.eraserSize
-				paintApp.canvasScale = state.scale / 100
-				paintApp.canvasRotation = (Math.PI * state.rotation) / 180
 			},
 			{ deep: true }
 		)
@@ -171,6 +167,8 @@ export default defineComponent({
 			undo,
 			setLayerVisibility,
 			sendChat,
+			rotation: appState.rotation.toComputed(),
+			scale: appState.scale.toComputed(),
 		}
 	},
 })

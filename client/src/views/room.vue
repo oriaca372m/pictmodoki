@@ -38,10 +38,10 @@
 			</div>
 			<div>
 				<div>
-					<label>拡大率</label><input type="number" v-model="state.scale">
+					<label>拡大率</label><input type="number" v-model="scale">
 				</div>
 				<div>
-					<label>角度</label><input type="number" v-model="state.rotation">
+					<label>角度</label><input type="number" v-model="rotation">
 				</div>
 			</div>
 			<div class="layer-selector">
