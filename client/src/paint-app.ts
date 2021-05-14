@@ -15,7 +15,7 @@ import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
 import { LayerManager } from './layer-manager'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
 import { ToolManager } from './tool-manager'
-import { App } from './app'
+import { App, AppState } from './app'
 
 class EventRenderer implements ImageCanvasEventManagerPlugin {
 	private readonly _player: ImageCanvasEventPlayer
@@ -192,6 +192,10 @@ export class PaintApp {
 
 		scrollElm.scrollLeft = (containerElm.clientWidth - vw) / 2
 		scrollElm.scrollTop = (containerElm.clientHeight - vh) / 2
+	}
+
+	get state(): AppState {
+		return this.app.state
 	}
 
 	render(): void {

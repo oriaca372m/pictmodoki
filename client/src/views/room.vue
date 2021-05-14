@@ -15,7 +15,7 @@
 				<button @click="selectTool('moving')">移動</button>
 			</div>
 			<div>
-				<ColorPicker v-model="state.color"/>
+				<ColorPicker v-model="color"/>
 				<button @click="selectColor('#000000')">黒</button>
 				<button @click="selectColor('#ff0000')">赤</button>
 				<button @click="selectColor('#0000ff')">青</button>

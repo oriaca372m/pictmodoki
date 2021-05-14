@@ -11,10 +11,12 @@ import { WebSocketApi } from './web-socket-api'
 import { TypedEvent } from './typed-event'
 import { PaintApp } from './paint-app'
 import { Bindable } from './bindable'
+import { HsvColor, toHsvColor } from './components/color-picker/color'
 
 export class AppState {
 	rotation = new Bindable(0)
 	scale = new Bindable(100)
+	color = new Bindable<HsvColor>(toHsvColor('#000000'))
 }
 
 export class App {

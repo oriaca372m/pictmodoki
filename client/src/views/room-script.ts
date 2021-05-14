@@ -1,11 +1,10 @@
 import { defineComponent, reactive, ref, watch, onMounted } from 'vue'
 import ColorPicker from '../components/color-picker/index.vue'
-import { HsvColor, toHsvColor, toRgbCode } from '../components/color-picker/color'
+import { toHsvColor } from '../components/color-picker/color'
 import Draggable from 'vuedraggable'
 
 import { LayerId } from 'common'
 import { App, AppState } from '../app'
-import { PaintApp } from 'Src/paint-app'
 
 interface ChatMessage {
 	msgId: number
@@ -23,7 +22,6 @@ interface State {
 	layers: LayerInfo[]
 	size: number
 	eraserSize: number
-	color: HsvColor
 	selectedLayerId: string | undefined
 	messageToSend: string
 	chatMessages: ChatMessage[]
@@ -48,7 +46,6 @@ export default defineComponent({
 			layers: [],
 			size: 10,
 			eraserSize: 20,
-			color: toHsvColor('#000000'),
 			selectedLayerId: undefined,
 			messageToSend: '',
 			chatMessages: [],
@@ -111,7 +108,7 @@ export default defineComponent({
 		}
 
 		const selectColor = (color: string) => {
-			state.color = toHsvColor(color)
+			appState.color.value = toHsvColor(color)
 			selectTool('pen')
 		}
 
@@ -143,8 +140,6 @@ export default defineComponent({
 					return
 				}
 
-				app.paintApp!.penTool.color = toRgbCode(state.color)
-
 				paintApp.penTool.width = state.size
 				paintApp.eraserTool.width = state.eraserSize
 			},
@@ -170,6 +165,7 @@ export default defineComponent({
 			sendChat,
 			rotation: appState.rotation.toComputed(),
 			scale: appState.scale.toComputed(),
+			color: appState.color.toComputed(),
 			setCanvasViewEntire,
 		}
 	},

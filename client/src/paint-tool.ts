@@ -1,8 +1,9 @@
-import { LayerDrawCommand, Position, Color, LayerId } from 'common'
+import { LayerDrawCommand, Position, LayerId } from 'common'
 
 import { App } from './app'
 import { PaintApp } from './paint-app'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
+import { toRgbCode } from './components/color-picker/color'
 
 export interface PaintTool {
 	enable(): void
@@ -46,7 +47,7 @@ abstract class DrawingToolBase extends PaintToolBase {
 	private readonly _imageCanvas: ImageCanvasDrawerWithPreview
 	private _targetLayerId: LayerId | undefined
 
-	constructor(private readonly _app: PaintApp) {
+	constructor(protected readonly _app: PaintApp) {
 		super()
 		this._imageCanvas = _app.drawer
 	}
@@ -118,14 +119,13 @@ abstract class DrawingToolBase extends PaintToolBase {
 }
 
 export class PenTool extends DrawingToolBase {
-	color: Color = '#ff0000'
 	width = 10
 
 	protected _constructCommand(): LayerDrawCommand {
 		return {
 			kind: 'stroke',
 			positions: this._pathPositions!,
-			color: this.color,
+			color: toRgbCode(this._app.state.color.value),
 			width: this.width,
 		}
 	}
