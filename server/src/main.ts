@@ -21,6 +21,7 @@ import {
 	ImageCanvasEventManagerPlugin,
 	ImageCanvasUndoManager,
 	ImageCanvasEventRevoker,
+	ImageCanvasCommandValidator,
 	UserId,
 } from 'common'
 
@@ -128,12 +129,14 @@ export class CommandInterpreter {
 	private _eventId = 0
 	private _layerId = 0
 	private readonly _revoker: ImageCanvasEventRevoker
+	private readonly _validator: ImageCanvasCommandValidator
 
 	constructor(
 		private readonly _drawer: ImageCanvasDrawer,
 		private readonly _manager: ImageCanvasEventManager
 	) {
 		this._revoker = new ImageCanvasEventRevoker(this._manager)
+		this._validator = new ImageCanvasCommandValidator(_drawer, this._revoker)
 	}
 
 	private _isLayerFound(layerId: LayerId): boolean {
@@ -141,11 +144,11 @@ export class CommandInterpreter {
 	}
 
 	command(userId: UserId, cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {
-		if (cmd.kind === 'drawLayer') {
-			if (!this._isLayerFound(cmd.layer)) {
-				return
-			}
+		if (!this._validator.validate(userId, cmd)) {
+			return
+		}
 
+		if (cmd.kind === 'drawLayer') {
 			return this._pushEvent(
 				this._genEvent(userId, {
 					kind: 'layerDrawn',
@@ -162,10 +165,6 @@ export class CommandInterpreter {
 			this._layerId++
 			return event
 		} else if (cmd.kind === 'removeLayer') {
-			if (!this._isLayerFound(cmd.layer)) {
-				return
-			}
-
 			return this._pushEvent(
 				this._genEvent(userId, {
 					kind: 'layerRemoved',
@@ -173,11 +172,9 @@ export class CommandInterpreter {
 				})
 			)
 		} else if (cmd.kind === 'revokeEvent') {
-			if (this._revoker.isRevokable(userId, cmd.eventId)) {
-				return this._pushEvent(
-					this._genEvent(userId, { kind: 'eventRevoked', eventId: cmd.eventId })
-				)
-			}
+			return this._pushEvent(
+				this._genEvent(userId, { kind: 'eventRevoked', eventId: cmd.eventId })
+			)
 		} else if (cmd.kind === 'setLayerOrder') {
 			return this._pushEvent(
 				this._genEvent(userId, {

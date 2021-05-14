@@ -54,6 +54,7 @@ export class PaintApp {
 	readonly eventManager: ImageCanvasEventManager
 	readonly undoManager: ImageCanvasUndoManager
 	readonly layerManager: LayerManager
+	private readonly _revoker: ImageCanvasEventRevoker
 
 	readonly toolManager: ToolManager
 	readonly penTool: PenTool
@@ -74,6 +75,7 @@ export class PaintApp {
 
 		this.undoManager = new ImageCanvasUndoManager(this.eventManager, this.factory, canvasModel)
 		this.eventManager.registerPlugin(this.undoManager)
+		this._revoker = new ImageCanvasEventRevoker(this.eventManager)
 
 		this.layerManager = new LayerManager(this)
 
@@ -85,7 +87,13 @@ export class PaintApp {
 		this.toolManager.registerTool('moving', new MovingTool(this.app))
 		this.toolManager.selectTool('pen')
 
-		const sender = new SocketCommandSender(this.app, this.eventManager, this.api)
+		const sender = new SocketCommandSender(
+			this.app,
+			this.eventManager,
+			this.drawer,
+			this._revoker,
+			this.api
+		)
 		sender.start()
 		this.commandSender = sender
 
@@ -162,8 +170,7 @@ export class PaintApp {
 			return
 		}
 
-		const revoker = new ImageCanvasEventRevoker(this.eventManager)
-		const event = revoker.createUndoCommand(this.app.userId)
+		const event = this._revoker.createUndoCommand(this.app.userId)
 		if (event === undefined) {
 			return
 		}
