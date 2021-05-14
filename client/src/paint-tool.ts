@@ -119,26 +119,22 @@ abstract class DrawingToolBase extends PaintToolBase {
 }
 
 export class PenTool extends DrawingToolBase {
-	width = 10
-
 	protected _constructCommand(): LayerDrawCommand {
 		return {
 			kind: 'stroke',
 			positions: this._pathPositions!,
 			color: toRgbCode(this._app.state.color.value),
-			width: this.width,
+			width: this._app.state.penSize.value,
 		}
 	}
 }
 
 export class EraserTool extends DrawingToolBase {
-	width = 10
-
 	protected _constructCommand(): LayerDrawCommand {
 		return {
 			kind: 'erase',
 			positions: this._pathPositions!,
-			width: this.width,
+			width: this._app.state.eraserSize.value,
 		}
 	}
 }

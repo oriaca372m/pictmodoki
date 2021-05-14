@@ -25,17 +25,21 @@
 			<div>
 				<h1>ペンの太さ</h1>
 				<div>
-					<button @click="state.size = 3">3</button>
-					<button @click="state.size = 20">20</button>
-					<input type="number" v-model="state.size">
+					<button @click="penSize = 3">3</button>
+					<button @click="penSize = 10">10</button>
+					<button @click="penSize = 20">20</button>
+					<button @click="penSize = 50">50</button>
+					<input type="number" v-model="penSize">
 				</div>
 			</div>
 			<div>
 				<h1>消しゴムの太さ</h1>
 				<div>
-					<button @click="state.eraserSize = 3">3</button>
-					<button @click="state.eraserSize = 20">20</button>
-					<input type="number" v-model="state.eraserSize">
+					<button @click="eraserSize = 3">3</button>
+					<button @click="eraserSize = 10">10</button>
+					<button @click="eraserSize = 20">20</button>
+					<button @click="eraserSize = 50">50</button>
+					<input type="number" v-model="eraserSize">
 				</div>
 			</div>
 			<div>

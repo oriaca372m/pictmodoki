@@ -20,8 +20,6 @@ interface LayerInfo {
 
 interface State {
 	layers: LayerInfo[]
-	size: number
-	eraserSize: number
 	selectedLayerId: string | undefined
 	messageToSend: string
 	chatMessages: ChatMessage[]
@@ -44,8 +42,6 @@ export default defineComponent({
 
 		const state = reactive<State>({
 			layers: [],
-			size: 10,
-			eraserSize: 20,
 			selectedLayerId: undefined,
 			messageToSend: '',
 			chatMessages: [],
@@ -128,24 +124,6 @@ export default defineComponent({
 			state.messageToSend = ''
 		}
 
-		watch(
-			state,
-			() => {
-				if (app === undefined) {
-					return
-				}
-
-				const paintApp = app.paintApp
-				if (paintApp === undefined) {
-					return
-				}
-
-				paintApp.penTool.width = state.size
-				paintApp.eraserTool.width = state.eraserSize
-			},
-			{ deep: true }
-		)
-
 		function setCanvasViewEntire() {
 			app?.paintApp?.setCanvasViewEntire()
 		}
@@ -163,10 +141,12 @@ export default defineComponent({
 			undo,
 			setLayerVisibility,
 			sendChat,
+			setCanvasViewEntire,
 			rotation: appState.rotation.toComputed(),
 			scale: appState.scale.toComputed(),
 			color: appState.color.toComputed(),
-			setCanvasViewEntire,
+			penSize: appState.penSize.toComputed(),
+			eraserSize: appState.eraserSize.toComputed(),
 		}
 	},
 })
