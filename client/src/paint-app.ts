@@ -8,7 +8,7 @@ import {
 	ImageCanvasEventRevoker,
 } from 'common'
 
-import { CommandSender, SocketCommandSender } from './event-sender'
+import { CommandSender, SocketCommandSender } from './command-sender'
 import { WebSocketApi } from './web-socket-api'
 import { PenTool, EraserTool, MovingTool } from './paint-tool'
 import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
