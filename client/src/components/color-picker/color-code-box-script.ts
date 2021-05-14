@@ -1,4 +1,4 @@
-import { defineComponent, computed, ref } from 'vue'
+import { defineComponent, computed } from 'vue'
 import { HsvColor, toRgbCode } from './color'
 
 export default defineComponent({
@@ -7,8 +7,6 @@ export default defineComponent({
 	},
 
 	setup(props, { emit }) {
-		const bar = ref<HTMLDivElement>()
-
 		const value = computed<HsvColor>({
 			get: () => props.modelValue as HsvColor,
 			set: (v) => {
@@ -21,7 +19,6 @@ export default defineComponent({
 		const rgbCode = computed(() => toRgbCode(value.value))
 
 		return {
-			bar,
 			value,
 			rgbCode,
 		}
