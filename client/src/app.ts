@@ -14,11 +14,12 @@ import { Bindable } from './bindable'
 import { toHsvColor } from './components/color-picker/color'
 
 export class AppState {
-	rotation = new Bindable(0)
-	scale = new Bindable(100)
-	color = new Bindable(toHsvColor('#000000'))
-	penSize = new Bindable(10)
-	eraserSize = new Bindable(20)
+	readonly rotation = new Bindable(0)
+	readonly scale = new Bindable(100)
+	readonly color = new Bindable(toHsvColor('#000000'))
+	readonly penSize = new Bindable(10)
+	readonly eraserSize = new Bindable(20)
+	readonly shouldSaveCanvas = new Bindable(false)
 }
 
 export class App {

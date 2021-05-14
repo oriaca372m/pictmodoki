@@ -6,6 +6,7 @@
 		<div class="tool-area">
 			<div>
 				<button @click="undo">一つ戻す</button>
+				<input type="checkbox" v-model="shouldSaveCanvas"><label>リセット時にキャンバスを保存</label>
 			</div>
 			<div>
 				<h1>ツール選択</h1>

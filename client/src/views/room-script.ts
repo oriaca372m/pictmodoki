@@ -155,6 +155,7 @@ export default defineComponent({
 			color: appState.color.toComputed(),
 			penSize: appState.penSize.toComputed(),
 			eraserSize: appState.eraserSize.toComputed(),
+			shouldSaveCanvas: appState.shouldSaveCanvas.toComputed(),
 		}
 	},
 })

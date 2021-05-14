@@ -142,6 +142,13 @@ export class PaintApp {
 	}
 
 	setCanvasState(lastRendered: ImageCanvasModel, history: readonly ImageCanvasEvent[]): void {
+		if (this.state.shouldSaveCanvas.value && this._canvasElm !== undefined) {
+			const link = document.createElement('a')
+			link.href = this._canvasElm.toDataURL('image/png')
+			link.download = 'canvas.png'
+			link.click()
+		}
+
 		const canvasElm = document.createElement('canvas')
 		canvasElm.width = lastRendered.size.width
 		canvasElm.height = lastRendered.size.height
