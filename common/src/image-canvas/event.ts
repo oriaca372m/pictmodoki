@@ -1,8 +1,8 @@
 import { LayerId, LayerDrawCommand } from './layer'
-import { UserId } from './user'
+import { UserId } from '../user'
 import { ImageCanvasModel, ImageCanvasDrawer } from './image-canvas'
-import { ImageCanvasCommand } from './image-canvas-command'
-import { CanvasProxyFactory } from './canvas-proxy'
+import { ImageCanvasCommand } from './command'
+import { CanvasProxyFactory } from '../canvas-proxy'
 
 export type ImageCanvasEventType =
 	| { kind: 'layerCreated'; layerId: LayerId }

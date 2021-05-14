@@ -1,5 +1,5 @@
-import { ImageCanvasEvent } from './image-canvas-event'
-import { SerializedImageCanvasModel } from './image-canvas'
+import { ImageCanvasEvent } from './image-canvas/event'
+import { SerializedImageCanvasModel } from './image-canvas/image-canvas'
 import { UserId } from './user'
 
 export type Event =

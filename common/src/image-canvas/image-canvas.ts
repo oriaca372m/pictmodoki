@@ -1,5 +1,5 @@
-import { Size } from './primitives'
-import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from './canvas-proxy'
+import { Size } from '../primitives'
+import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from '../canvas-proxy'
 import {
 	LayerId,
 	LayerDrawCommand,
