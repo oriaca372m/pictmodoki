@@ -141,12 +141,18 @@ export class PaintApp {
 		})
 	}
 
-	setCanvasState(lastRendered: ImageCanvasModel, history: readonly ImageCanvasEvent[]): void {
-		if (this.state.shouldSaveCanvas.value && this._canvasElm !== undefined) {
+	saveCanvas(): void {
+		if (this._canvasElm !== undefined) {
 			const link = document.createElement('a')
 			link.href = this._canvasElm.toDataURL('image/png')
 			link.download = 'canvas.png'
 			link.click()
+		}
+	}
+
+	setCanvasState(lastRendered: ImageCanvasModel, history: readonly ImageCanvasEvent[]): void {
+		if (this.state.shouldSaveCanvas.value) {
+			this.saveCanvas()
 		}
 
 		const canvasElm = document.createElement('canvas')

@@ -6,7 +6,6 @@
 		<div class="tool-area">
 			<div>
 				<button @click="undo">一つ戻す</button>
-				<input type="checkbox" v-model="shouldSaveCanvas"><label>リセット時にキャンバスを保存</label>
 			</div>
 			<div>
 				<h1>ツール選択</h1>
@@ -60,6 +59,7 @@
 				</div>
 			</div>
 			<div class="layer-selector">
+				<h1>レイヤー</h1>
 				<button @click="createLayer">レイヤー作成</button>
 				<draggable v-model="state.layers" item-key="id" @end="setLayerOrder">
 					<template #item="{ element: layer }">
@@ -72,6 +72,11 @@
 						</div>
 					</template>
 				</draggable>
+			</div>
+			<div>
+				<h1>保存</h1>
+				<button @click="saveCanvas">今のキャンバスをpngで保存</button>
+				<input type="checkbox" v-model="shouldSaveCanvas"><label>自動保存</label>
 			</div>
 			<div class="chat-box">
 				<h1>チャット</h1>

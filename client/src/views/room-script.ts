@@ -136,6 +136,10 @@ export default defineComponent({
 			app?.paintApp?.setCanvasViewEntire()
 		}
 
+		function saveCanvas() {
+			app?.paintApp?.saveCanvas()
+		}
+
 		return {
 			state,
 			canvasContainer,
@@ -150,6 +154,7 @@ export default defineComponent({
 			setLayerVisibility,
 			sendChat,
 			setCanvasViewEntire,
+			saveCanvas,
 			rotation: appState.rotation.toComputed(),
 			scale: appState.scale.toComputed(),
 			color: appState.color.toComputed(),
