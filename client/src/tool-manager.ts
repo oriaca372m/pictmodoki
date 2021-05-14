@@ -115,8 +115,8 @@ export class ToolManager {
 		y += canvasSize.height / 2
 
 		// はみ出し防止
-		x = Math.max(0, Math.min(x, Math.floor(canvasSize.width)))
-		y = Math.max(0, Math.min(y, Math.floor(canvasSize.height)))
+		x = Math.max(0, Math.min(x, canvasSize.width))
+		y = Math.max(0, Math.min(y, canvasSize.height))
 
 		return { x, y }
 	}

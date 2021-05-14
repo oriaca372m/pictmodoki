@@ -51,6 +51,7 @@ export default defineComponent({
 		}
 
 		function keydown(ev: KeyboardEvent) {
+			ev.preventDefault()
 			if (ev.key === 'ArrowDown') {
 				value.value += 0.005
 			} else if (ev.key === 'ArrowUp') {
