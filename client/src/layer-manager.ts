@@ -12,13 +12,8 @@ export class LayerManager {
 	}
 
 	update(): void {
-		if (this._selectedLayerId === undefined) {
-			this.updated.emit()
-			return
-		}
-
-		if (!this.selectLayerId(this._selectedLayerId)) {
-			this._selectedLayerId = undefined
+		if (this._selectedLayerId === undefined || !this.selectLayerId(this._selectedLayerId)) {
+			this._selectedLayerId = this._app.drawer.model.order[0]
 		}
 		this.updated.emit()
 	}
