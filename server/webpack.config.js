@@ -4,7 +4,11 @@ const nodeExternals = require('webpack-node-externals')
 module.exports = {
 	mode: 'development',
 	target: 'node',
-	externals: [nodeExternals()],
+	externals: [
+		nodeExternals({
+			additionalModuleDirs: ['../node_modules'],
+		}),
+	],
 	entry: './src/main.ts',
 	output: {
 		filename: 'main.js',
@@ -15,14 +19,14 @@ module.exports = {
 		rules: [
 			{
 				test: /\.ts$/,
-				loader: 'ts-loader'
-			}
-		]
+				loader: 'ts-loader',
+			},
+		],
 	},
 	resolve: {
 		extensions: ['.wasm', '.ts', '.mjs', '.js', '.json'],
 		alias: {
-			Src: path.resolve(__dirname, 'src/')
-		}
-	}
+			Src: path.resolve(__dirname, 'src/'),
+		},
+	},
 }
