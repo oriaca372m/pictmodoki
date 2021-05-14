@@ -12,7 +12,8 @@ import { App } from './app'
 import { WebSocketApi } from './web-socket-api'
 
 export interface CommandSender {
-	command(cmd: ImageCanvasCommand): void
+	// コマンドが受容されればtrue
+	command(cmd: ImageCanvasCommand): boolean
 }
 
 export class SocketCommandSender implements CommandSender {
@@ -37,7 +38,7 @@ export class SocketCommandSender implements CommandSender {
 		})
 	}
 
-	command(cmd: ImageCanvasCommand): void {
+	command(cmd: ImageCanvasCommand): boolean {
 		const userId = this._app.userId
 		if (userId === undefined) {
 			throw new Error('コマンド早すぎ')
@@ -45,11 +46,12 @@ export class SocketCommandSender implements CommandSender {
 
 		if (!this._validator.validate(userId, cmd)) {
 			console.warn('不正なコマンド: ', cmd)
-			return
+			return false
 		}
 
 		this._api.sendCommand({ kind: 'imageCanvasCommand', value: cmd })
 		this._pushVirtualEvent(userId, cmd)
+		return true
 	}
 
 	private _pushVirtualEvent(userId: UserId, cmd: ImageCanvasCommand): void {
