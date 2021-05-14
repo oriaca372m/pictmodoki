@@ -152,6 +152,7 @@ export class PaintApp {
 
 		this.undoManager.setLastRenderedImageModel(lastRendered)
 		this.eventManager.setHistory(history)
+		this.setCanvasViewEntire()
 	}
 
 	private _setCanvasStyle() {
@@ -175,6 +176,22 @@ export class PaintApp {
 			return
 		}
 		this.commandSender.command(event)
+	}
+
+	setCanvasViewEntire(): void {
+		const scrollElm = this.app.canvasScrollContainerElm
+		const containerElm = this.app.canvasContainerElm
+
+		const vw = scrollElm.clientWidth
+		const vh = scrollElm.clientHeight
+		const { width: cw, height: ch } = this.drawer.model.size
+
+		const ratio = Math.floor(Math.min(vw / cw, vh / ch) * 100)
+		this.app.state.scale.value = ratio
+		this.app.state.rotation.value = 0
+
+		scrollElm.scrollLeft = (containerElm.clientWidth - vw) / 2
+		scrollElm.scrollTop = (containerElm.clientHeight - vh) / 2
 	}
 
 	render(): void {

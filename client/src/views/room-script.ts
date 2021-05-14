@@ -5,6 +5,7 @@ import Draggable from 'vuedraggable'
 
 import { LayerId } from 'common'
 import { App, AppState } from '../app'
+import { PaintApp } from 'Src/paint-app'
 
 interface ChatMessage {
 	msgId: number
@@ -57,33 +58,31 @@ export default defineComponent({
 		const canvasScrollContainer = ref<HTMLDivElement>()
 
 		onMounted(() => {
-			console.log('test')
-			canvasScrollContainer.value!.scrollTop = 5000
-			canvasScrollContainer.value!.scrollLeft = 5000
-
-			app = new App(
+			const vapp = new App(
 				appState,
 				canvasScrollContainer.value!,
 				canvasContainer.value!,
 				props.serverAddr,
 				props.userName
 			)
-			console.log(app)
+			app = vapp
 
-			app.ready.once(() => {
-				app!.chatManager!.addMessageRecievedHandler((id, name, msg) => {
+			vapp.ready.once(() => {
+				vapp.chatManager!.addMessageRecievedHandler((id, name, msg) => {
 					state.chatMessages.push({ msgId: state.chatMessages.length, id, name, msg })
 				})
 
+				const paintApp = vapp.paintApp!
+
 				const layerUpdated = () => {
-					state.layers = app!.paintApp!.drawer.model.order.map((x) => {
-						const layer = app!.paintApp!.drawer.findLayerModelById(x)
+					state.layers = paintApp.drawer.model.order.map((x) => {
+						const layer = paintApp.drawer.findLayerModelById(x)
 						return { id: layer!.id, name: layer!.name }
 					})
-					state.selectedLayerId = app!.paintApp!.layerManager.selectedLayerId
+					state.selectedLayerId = paintApp.layerManager.selectedLayerId
 				}
 
-				app!.paintApp!.layerManager.updated.on(layerUpdated)
+				paintApp.layerManager.updated.on(layerUpdated)
 				layerUpdated()
 			})
 		})
@@ -152,6 +151,10 @@ export default defineComponent({
 			{ deep: true }
 		)
 
+		function setCanvasViewEntire() {
+			app?.paintApp?.setCanvasViewEntire()
+		}
+
 		return {
 			state,
 			canvasContainer,
@@ -167,6 +170,7 @@ export default defineComponent({
 			sendChat,
 			rotation: appState.rotation.toComputed(),
 			scale: appState.scale.toComputed(),
+			setCanvasViewEntire,
 		}
 	},
 })

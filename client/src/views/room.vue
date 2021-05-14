@@ -39,6 +39,9 @@
 				</div>
 			</div>
 			<div>
+				<h1>キャンバスの表示</h1>
+				<button @click="scale = 100; rotation = 0">原寸大</button>
+				<button @click="setCanvasViewEntire">全体を表示</button>
 				<div>
 					<label>拡大率</label><input type="number" v-model="scale">
 				</div>
