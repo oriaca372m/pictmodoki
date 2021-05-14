@@ -1,19 +1,14 @@
 import { defineComponent, reactive, computed, ref, watch } from 'vue'
 import ColorBar from './color-bar.vue'
 import ColorCodeBox from './color-code-box.vue'
-import { HsvColor, hsvToRgb, rgbToHsv, toRgbCode } from './color'
-import l from 'lodash'
-
-interface ColorValue {
-	raw: HsvColor
-	rgbCode: string
-}
+import { HsvColor, hsvToRgb } from './color'
+import lodash from 'lodash'
 
 export default defineComponent({
 	components: { ColorBar, ColorCodeBox },
 
 	props: {
-		modelValue: { required: true },
+		modelValue: { required: true, type: Object },
 	},
 
 	setup(props, { emit }) {
@@ -31,65 +26,28 @@ export default defineComponent({
 			value: 0,
 		})
 
-		let lastEmittedValue: ColorValue | undefined
-
-		const updateModelValue = (value: HsvColor, shouldUpdateSelf = false) => {
-			lastEmittedValue = {
-				raw: value,
-				rgbCode: toRgbCode(value),
-			}
-
-			if (shouldUpdateSelf) {
-				rawColor.hue = value.hue
-				rawColor.saturation = value.saturation
-				rawColor.value = value.value
-				rawColor.opacity = value.opacity
-			}
-
-			emit('update:modelValue', lastEmittedValue)
-		}
-
 		watch(
-			() => props.modelValue,
+			() => props.modelValue as HsvColor,
 			(mv) => {
-				if (l.isEqual(mv, lastEmittedValue)) {
+				if (lodash.isEqual(mv, rawColor)) {
 					return
 				}
 
-				if (typeof mv === 'string') {
-					if (!mv.startsWith('#')) {
-						return
-					}
-
-					const [r, g, b, a] = l
-						.chunk([...mv.substring(1)], 2)
-						.map((x) => parseInt(x.join(''), 16))
-
-					if (r === undefined || g === undefined || b === undefined) {
-						return
-					}
-
-					const [h, s, v] = rgbToHsv(r, g, b)
-					updateModelValue({ hue: h, saturation: s, value: v, opacity: a ?? 0 }, true)
-					return
-				}
-
-				if (typeof mv === 'object') {
-					if (mv === null) {
-						return
-					}
-
-					if ('raw' in mv) {
-						const mv2 = mv as { raw: HsvColor }
-						updateModelValue(mv2.raw, true)
-						return
-					}
-				}
+				rawColor.hue = mv.hue
+				rawColor.saturation = mv.saturation
+				rawColor.value = mv.value
+				rawColor.opacity = mv.opacity
 			},
 			{ deep: true, immediate: true, flush: 'post' }
 		)
 
-		watch(rawColor, (v) => updateModelValue(v), { deep: true, immediate: true })
+		watch(
+			rawColor,
+			(v) => {
+				emit('update:modelValue', v)
+			},
+			{ deep: true, immediate: true }
+		)
 
 		function svMouseMove(ev: MouseEvent) {
 			const clicked = (ev.buttons & 1) !== 0

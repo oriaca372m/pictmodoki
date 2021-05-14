@@ -1,3 +1,5 @@
+import lodash from 'lodash'
+
 export interface HsvColor {
 	hue: number
 	opacity: number
@@ -81,4 +83,25 @@ export function toRgbCode(color: HsvColor): string {
 		a = toBinaryString(Math.floor(color.opacity * 255))
 	}
 	return `#${toBinaryString(r)}${toBinaryString(g)}${toBinaryString(b)}${a}`
+}
+
+export function toHsvColor(color: string | HsvColor): HsvColor {
+	if (typeof color === 'string') {
+		if (!color.startsWith('#')) {
+			throw 'not color'
+		}
+
+		const [r, g, b, a] = lodash
+			.chunk([...color.substring(1)], 2)
+			.map((x) => parseInt(x.join(''), 16))
+
+		if (r === undefined || g === undefined || b === undefined) {
+			throw 'not color'
+		}
+
+		const [h, s, v] = rgbToHsv(r, g, b)
+		return { hue: h, saturation: s, value: v, opacity: a ?? 0 }
+	}
+
+	return color
 }
