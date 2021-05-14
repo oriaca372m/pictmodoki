@@ -16,6 +16,7 @@ import { LayerManager } from './layer-manager'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
 import { ToolManager } from './tool-manager'
 import { App, AppState } from './app'
+import { ColorHistory } from './color-history'
 
 class EventRenderer implements ImageCanvasEventManagerPlugin {
 	private readonly _player: ImageCanvasEventPlayer
@@ -59,6 +60,8 @@ export class PaintApp {
 	readonly toolManager: ToolManager
 	readonly penTool: PenTool
 	readonly eraserTool: EraserTool
+
+	readonly colorHistory = new ColorHistory()
 
 	private _shouldRender = false
 	private _canvasElm: HTMLCanvasElement | undefined

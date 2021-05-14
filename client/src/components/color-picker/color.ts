@@ -80,7 +80,7 @@ export function toRgbCode(color: HsvColor): string {
 
 	let a = ''
 	if (color.opacity !== 0) {
-		a = toBinaryString(Math.floor(color.opacity * 255))
+		a = toBinaryString(255 - Math.floor(color.opacity * 255))
 	}
 	return `#${toBinaryString(r)}${toBinaryString(g)}${toBinaryString(b)}${a}`
 }

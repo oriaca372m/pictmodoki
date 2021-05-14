@@ -1,6 +1,7 @@
-import { defineComponent, reactive, ref, watch, onMounted } from 'vue'
+import { defineComponent, reactive, ref, onMounted } from 'vue'
 import ColorPicker from '../components/color-picker/index.vue'
-import { toHsvColor } from '../components/color-picker/color'
+import ColorPreview from '../components/color-picker/color-preview.vue'
+import { HsvColor, toHsvColor } from '../components/color-picker/color'
 import Draggable from 'vuedraggable'
 
 import { LayerId } from 'common'
@@ -23,6 +24,7 @@ interface State {
 	selectedLayerId: string | undefined
 	messageToSend: string
 	chatMessages: ChatMessage[]
+	colorHistory: readonly HsvColor[]
 }
 
 export default defineComponent({
@@ -34,6 +36,7 @@ export default defineComponent({
 	components: {
 		ColorPicker,
 		Draggable,
+		ColorPreview,
 	},
 
 	setup(props) {
@@ -45,6 +48,7 @@ export default defineComponent({
 			selectedLayerId: undefined,
 			messageToSend: '',
 			chatMessages: [],
+			colorHistory: [],
 		})
 
 		const canvasContainer = ref<HTMLDivElement>()
@@ -77,6 +81,10 @@ export default defineComponent({
 
 				paintApp.layerManager.updated.on(layerUpdated)
 				layerUpdated()
+
+				paintApp.colorHistory.updated.on(() => {
+					state.colorHistory = paintApp.colorHistory.history
+				})
 			})
 		})
 
@@ -103,7 +111,7 @@ export default defineComponent({
 			app!.paintApp!.toolManager.selectTool(name)
 		}
 
-		const selectColor = (color: string) => {
+		const selectColor = (color: HsvColor | string) => {
 			appState.color.value = toHsvColor(color)
 			selectTool('pen')
 		}

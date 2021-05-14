@@ -98,21 +98,22 @@ abstract class DrawingToolBase extends PaintToolBase {
 		this._app.render()
 	}
 
-	private _finishStroke() {
+	protected _finishStroke(): boolean {
 		if (this._pathPositions === undefined) {
-			return
+			return false
 		}
 
 		this._imageCanvas.endPreview()
 		this._app.render()
 
-		this._app.commandSender.command({
+		const res = this._app.commandSender.command({
 			kind: 'drawLayer',
 			layer: this._targetLayerId!,
 			drawCommand: this._constructCommand(),
 		})
 
 		this._pathPositions = undefined
+		return res
 	}
 
 	protected abstract _constructCommand(): LayerDrawCommand
@@ -126,6 +127,15 @@ export class PenTool extends DrawingToolBase {
 			color: toRgbCode(this._app.state.color.value),
 			width: this._app.state.penSize.value,
 		}
+	}
+
+	protected _finishStroke(): boolean {
+		if (super._finishStroke()) {
+			this._app.colorHistory.addColor(this._app.state.color.value)
+			return true
+		}
+
+		return false
 	}
 }
 

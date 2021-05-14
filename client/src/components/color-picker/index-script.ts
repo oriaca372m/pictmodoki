@@ -1,11 +1,12 @@
 import { defineComponent, reactive, computed, ref, watch } from 'vue'
 import ColorBar from './color-bar.vue'
 import ColorCodeBox from './color-code-box.vue'
+import ColorPreview from './color-preview.vue'
 import { HsvColor, hsvToRgb } from './color'
 import lodash from 'lodash'
 
 export default defineComponent({
-	components: { ColorBar, ColorCodeBox },
+	components: { ColorBar, ColorCodeBox, ColorPreview },
 
 	props: {
 		modelValue: { required: true, type: Object },

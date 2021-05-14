@@ -36,7 +36,7 @@ export class Bindable<T> {
 				return this._value
 			},
 			set: (val) => {
-				this.value = val
+				this.value = lodash.cloneDeep(val)
 			},
 		})
 	}

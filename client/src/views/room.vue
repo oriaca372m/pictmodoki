@@ -21,6 +21,11 @@
 				<button @click="selectColor('#0000ff')">青</button>
 				<button @click="selectColor('#6b503e')">茶</button>
 				<button @click="selectColor('#fff6e3')">肌</button>
+				<div class="color-history">
+					<template  v-for="color in state.colorHistory">
+						<ColorPreview :value="color" class="color-preview" @click="selectColor(color)"/>
+					</template>
+				</div>
 			</div>
 			<div>
 				<h1>ペンの太さ</h1>
@@ -123,6 +128,20 @@
 
 .chat-box p {
 	white-space: pre-line;
+}
+</style>
+
+<style scoped>
+.color-history {
+	display: flex;
+	flex-wrap: wrap;
+	margin: 0 5px;
+}
+
+.color-preview {
+	width: 30px;
+	height: 30px;
+	margin: 2px;
 }
 </style>
 

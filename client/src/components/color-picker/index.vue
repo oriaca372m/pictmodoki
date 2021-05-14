@@ -13,7 +13,7 @@
 			<ColorBar class='opacity-bar' type="opacity" v-model="rawColor.opacity" />
 		</div>
 		<div class="color-picker-sub">
-			<div class="color-preview" :style="{ 'background-color': previewColor }"></div>
+			<ColorPreview class="color-preview" :value="rawColor" />
 			<ColorCodeBox v-model="rawColor" />
 		</div>
 	</div>

@@ -29,11 +29,9 @@
 }
 
 .opacity-color-bar {
-	background-image: linear-gradient(
-		to bottom,
-		#000000,
-		transparent
-	);
+	background-image:
+		linear-gradient(to bottom, #000000, transparent),
+		url("data:image/svg+xml;charset=utf-8,%3csvg version='1.1' xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 2 2' preserveAspectRatio='none'%3e%3cpath fill='%23FFFFFF' d='M-1-1v4h4v-4z'/%3e%3cpath fill='%23DCDCDC' d='M0 0H1V1H0zM1 1H2V2H1z'/%3e%3c/svg%3e");
 }
 
 .color-bar-cursor {
