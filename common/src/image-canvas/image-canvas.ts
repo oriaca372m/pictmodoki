@@ -150,6 +150,11 @@ export class ImageCanvasDrawer {
 		}
 	}
 
+	getLayerVisibility(layerId: LayerId): boolean {
+		const layer = this._findLayerById(layerId)
+		return layer.isVisible
+	}
+
 	createLayer(id: LayerId): LayerController {
 		const foundLayer = this._idToControllerMap.get(id)
 		if (foundLayer !== undefined) {

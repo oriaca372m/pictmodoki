@@ -27,35 +27,43 @@
 					</template>
 				</div>
 			</div>
-			<div>
-				<h1>ペンの太さ</h1>
+			<div class="width-selector">
 				<div>
-					<button @click="penSize = 3">3</button>
-					<button @click="penSize = 10">10</button>
-					<button @click="penSize = 20">20</button>
-					<button @click="penSize = 50">50</button>
-					<input type="number" v-model="penSize">
+					<h1>ペンの太さ</h1>
+					<div>
+						<div>
+							<button @click="penSize = 3">3</button>
+							<button @click="penSize = 10">10</button>
+							<button @click="penSize = 20">20</button>
+							<button @click="penSize = 50">50</button>
+						</div>
+						<div><input type="number" v-model="penSize"></div>
+					</div>
 				</div>
-			</div>
-			<div>
-				<h1>消しゴムの太さ</h1>
 				<div>
-					<button @click="eraserSize = 3">3</button>
-					<button @click="eraserSize = 10">10</button>
-					<button @click="eraserSize = 20">20</button>
-					<button @click="eraserSize = 50">50</button>
-					<input type="number" v-model="eraserSize">
+					<h1>消しゴムの太さ</h1>
+					<div>
+						<div>
+							<button @click="eraserSize = 3">3</button>
+							<button @click="eraserSize = 10">10</button>
+							<button @click="eraserSize = 20">20</button>
+							<button @click="eraserSize = 50">50</button>
+						</div>
+						<div><input type="number" v-model="eraserSize"></div>
+					</div>
 				</div>
 			</div>
 			<div>
 				<h1>キャンバスの表示</h1>
 				<button @click="scale = 100; rotation = 0">原寸大</button>
 				<button @click="setCanvasViewEntire">全体を表示</button>
-				<div>
-					<label>拡大率</label><input type="number" v-model="scale">
-				</div>
-				<div>
-					<label>角度</label><input type="number" v-model="rotation">
+				<div class="canvas-view-inner">
+					<div>
+						<label>拡大率</label><input type="number" v-model="scale">
+					</div>
+					<div>
+						<label>角度</label><input type="number" v-model="rotation">
+					</div>
 				</div>
 			</div>
 			<div class="layer-selector">
@@ -65,8 +73,12 @@
 					<template #item="{ element: layer }">
 						<div>
 							<button @click="selectLayerId(layer.id)">選択</button>
-							<button @click="setLayerVisibility(layer.id, true)">表示</button>
-							<button @click="setLayerVisibility(layer.id, false)">非表示</button>
+							<template v-if="layer.isVisible">
+								<button @click="setLayerVisibility(layer.id, false)">隠す</button>
+							</template>
+							<template v-else>
+								<button @click="setLayerVisibility(layer.id, true)">表示</button>
+							</template>
 							<button @click="removeLayerId(layer.id)">削除</button>
 							<label><template v-if="layer.id === state.selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
 						</div>
@@ -148,6 +160,30 @@
 	width: 30px;
 	height: 30px;
 	margin: 2px;
+}
+
+.width-selector {
+	display: flex;
+}
+
+.width-selector > * {
+	width: 100%;
+}
+
+.width-selector input {
+	width: 100px;
+}
+
+.canvas-view-inner {
+	display: flex;
+}
+
+.canvas-view-inner > * {
+	width: 100%;
+}
+
+.canvas-view-inner input {
+	width: 100px;
 }
 </style>
 

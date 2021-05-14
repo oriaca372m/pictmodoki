@@ -17,6 +17,7 @@ interface ChatMessage {
 interface LayerInfo {
 	id: LayerId
 	name: string
+	isVisible: boolean
 }
 
 interface State {
@@ -74,7 +75,11 @@ export default defineComponent({
 				const layerUpdated = () => {
 					state.layers = paintApp.drawer.model.order.map((x) => {
 						const layer = paintApp.drawer.findLayerModelById(x)
-						return { id: layer!.id, name: layer!.name }
+						return {
+							id: layer!.id,
+							name: layer!.name,
+							isVisible: paintApp.drawer.getLayerVisibility(layer!.id),
+						}
 					})
 					state.selectedLayerId = paintApp.layerManager.selectedLayerId
 				}
