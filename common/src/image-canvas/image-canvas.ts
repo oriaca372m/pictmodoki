@@ -7,6 +7,7 @@ import {
 	LayerDrawer,
 	SerializedLayerCanvasModel,
 } from './layer'
+import * as u from '../utils'
 
 export interface SerializedImageCanvasModel {
 	size: Size
@@ -29,19 +30,8 @@ export class ImageCanvasModel {
 	}
 
 	private _validateOrder(layer: readonly LayerCanvasModel[], order: readonly LayerId[]): void {
-		const layerSet = new Set(layer.map((x) => x.id))
-		const orderSet = new Set(order)
-
-		for (const id of layerSet) {
-			if (!orderSet.has(id)) {
-				throw new Error('orderがlayersが持っているIDを持っていない')
-			}
-		}
-
-		for (const id of orderSet) {
-			if (!layerSet.has(id)) {
-				throw new Error('orderがlayersが持っていないIDを持っている')
-			}
+		if (!u.isSetsEqual(new Set(layer.map((x) => x.id)), new Set(order))) {
+			throw new Error('orderとlayersのIDの集合が違う')
 		}
 	}
 

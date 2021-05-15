@@ -25,8 +25,7 @@ export class ImageCanvasCommandValidator {
 		} else if (cmd.kind === 'revokeEvent') {
 			return this._revoker.isRevokable(userId, cmd.eventId)
 		} else if (cmd.kind === 'setLayerOrder') {
-			// TODO: 実装
-			return true
+			return u.isSetsEqual(new Set(this._drawer.layers.map((x) => x.id)), new Set(cmd.order))
 		}
 
 		u.unreachable()
