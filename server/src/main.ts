@@ -310,8 +310,6 @@ class Game {
 	}
 
 	onMessage(msgUser: User, msg: string): void {
-		console.log(this._state)
-		console.log(msg)
 		if (this._state !== 'painting') {
 			return
 		}
@@ -484,7 +482,6 @@ class Room {
 	}
 
 	resetCanvas(): void {
-		console.log('canvas reset!')
 		this._app.resetCanvas()
 
 		void (async () => {
@@ -544,8 +541,7 @@ class Room {
 		if (cmd.kind === 'imageCanvasCommand') {
 			const canvasEvent = this._app.cmdInterpreter.command(user.userId, cmd.value)
 			if (canvasEvent === undefined) {
-				console.log('不正なコマンド')
-				console.log(cmd.value)
+				console.log('不正なコマンド', cmd.value)
 				return
 			}
 
