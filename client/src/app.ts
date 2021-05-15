@@ -80,6 +80,33 @@ export class App {
 				return
 			}
 
+			if (event.kind === 'gameStateChanged') {
+				const s = event.value
+				console.log(s)
+				const idToName = (userId: string) =>
+					s.userData.find((x) => x.userId === userId)!.name
+
+				if (s.state.kind === 'painting') {
+					const answer = s.state.value.answer
+					if (answer === null) {
+						this._chatManager!.sendSystemMessage(
+							`${idToName(s.state.value.painter)}さんが描く絵を当ててください!`
+						)
+					} else {
+						this._chatManager!.sendSystemMessage(
+							`あなたの番です! 「${answer!}」を描いてください!`
+						)
+					}
+				} else if (s.state.kind === 'waitingNext') {
+					this._chatManager!.sendSystemMessage(
+						`正解は「${s.state.value.currentPainting.answer!}」でした! ${idToName(
+							s.state.value.respondent
+						)}さんが正解しました!`
+					)
+				}
+				return
+			}
+
 			if (event.kind === 'canvasStateSet') {
 				void (async () => {
 					if (this._paintApp === undefined) {
@@ -136,6 +163,12 @@ class ChatManager {
 				)
 				return
 			}
+		})
+	}
+
+	sendSystemMessage(msg: string) {
+		this._messageRecievedHandlers.forEach((x) => {
+			x('system', 'system', msg)
 		})
 	}
 

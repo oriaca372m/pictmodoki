@@ -1,6 +1,7 @@
 import { ImageCanvasEvent } from './image-canvas/event'
 import { SerializedImageCanvasModel } from './image-canvas/image-canvas'
 import { UserId } from './user'
+import { GameState } from './game-state'
 
 export type Event =
 	| { kind: 'imageCanvasEvent'; value: ImageCanvasEvent }
@@ -12,3 +13,4 @@ export type Event =
 	| { kind: 'userLoggedIn'; userId: UserId; name: string }
 	| { kind: 'loginAccepted'; userId: UserId; name: string; reconnectionToken: string }
 	| { kind: 'chatSent'; userId: UserId; name: string; message: string }
+	| { kind: 'gameStateChanged'; value: GameState }
