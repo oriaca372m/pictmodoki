@@ -1,4 +1,4 @@
-import { App } from './main'
+import { App } from './app'
 import { User } from './user'
 import { Game } from './game'
 
