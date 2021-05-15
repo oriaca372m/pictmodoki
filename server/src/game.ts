@@ -1,4 +1,4 @@
-import { User } from './main'
+import { User } from './user'
 import { Room } from './room'
 
 import { UserId, GameState, GameUserData, PaintingData } from 'common'

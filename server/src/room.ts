@@ -1,4 +1,5 @@
-import { User, App } from './main'
+import { App } from './main'
+import { User } from './user'
 import { Game } from './game'
 
 import { Command, Event } from 'common'

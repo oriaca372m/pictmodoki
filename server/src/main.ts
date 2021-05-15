@@ -1,9 +1,8 @@
 import { Room } from './room'
+import { NodeCanvasProxy, NodeCanvasProxyFactory } from './canvas-proxy'
+import { User, UserManager } from './user'
 
 import {
-	LayerId,
-	CanvasProxy,
-	CanvasProxyFactory,
 	Size,
 	Command,
 	Event,
@@ -21,47 +20,8 @@ import {
 	UserId,
 } from 'common'
 
-import * as fs from 'fs'
 import Ws from 'ws'
-import { createCanvas, Canvas } from 'canvas'
 import { decode, encode } from '@msgpack/msgpack'
-import Crypto from 'crypto'
-
-class NodeCanvasProxy implements CanvasProxy {
-	private readonly _canvas: Canvas
-	constructor(size: Size) {
-		this._canvas = createCanvas(size.height, size.width)
-	}
-
-	getContext(): CanvasRenderingContext2D {
-		return this._canvas.getContext('2d')
-	}
-
-	drawSelfTo(ctx: CanvasRenderingContext2D): void {
-		ctx.drawImage((this._canvas as unknown) as OffscreenCanvas, 0, 0)
-	}
-
-	get size(): Size {
-		return { width: this._canvas.width, height: this._canvas.height }
-	}
-
-	serialize(): Promise<Uint8Array> {
-		const buf = this._canvas.toBuffer()
-		return Promise.resolve(new Uint8Array(buf))
-	}
-
-	saveFile(path: string): void {
-		const out = fs.createWriteStream(path)
-		const stream = this._canvas.createPNGStream()
-		stream.pipe(out)
-	}
-}
-
-class NodeCanvasProxyFactory implements CanvasProxyFactory {
-	createCanvasProxy(size: Size): NodeCanvasProxy {
-		return new NodeCanvasProxy(size)
-	}
-}
 
 class EventRenderer implements ImageCanvasEventManagerPlugin {
 	private readonly _player: ImageCanvasEventPlayer
@@ -139,10 +99,6 @@ export class CommandInterpreter {
 		this._validator = new ImageCanvasCommandValidator(_drawer, this._revoker)
 	}
 
-	private _isLayerFound(layerId: LayerId): boolean {
-		return this._drawer.findLayerModelById(layerId) !== undefined
-	}
-
 	command(userId: UserId, cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {
 		if (!this._validator.validate(userId, cmd)) {
 			return
@@ -199,53 +155,6 @@ export class CommandInterpreter {
 		this._manager.event(event)
 		this._eventId++
 		return event
-	}
-}
-
-export class User {
-	private readonly _reconnectionToken: string
-	private _joinedRoom: Room | undefined
-	conn: Ws | undefined
-
-	constructor(private readonly _userId: UserId, private readonly _name: string) {
-		this._reconnectionToken = Crypto.randomBytes(16).toString('hex')
-	}
-
-	get userId(): UserId {
-		return this._userId
-	}
-
-	get name(): string {
-		return this._name
-	}
-
-	get reconnectionToken(): string {
-		return this._reconnectionToken
-	}
-
-	setJoinedRoom(room: Room): void {
-		this._joinedRoom = room
-	}
-
-	get joinedRoom(): Room | undefined {
-		return this._joinedRoom
-	}
-}
-
-class UserManager {
-	private _currentUserId = 0
-	private readonly _users: User[] = []
-
-	createUser(name: string): User {
-		const user = new User(this._currentUserId.toString(), name)
-		this._users.push(user)
-
-		this._currentUserId++
-		return user
-	}
-
-	findByReconnectionToken(token: string): User | undefined {
-		return this._users.find((x) => x.reconnectionToken === token)
 	}
 }
 
