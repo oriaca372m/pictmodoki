@@ -269,7 +269,7 @@ class Game {
 	start() {
 		this._nextPaintingData = {
 			painter: this._room.users[0].userId,
-			answer: lodash.sample(this._dict),
+			answer: lodash.sample(this._dict) ?? null,
 			timeLeft: 1800,
 			timeLimit: 1800,
 		}
@@ -292,7 +292,7 @@ class Game {
 
 	private _maskSecretPaintingData(original: PaintingData): PaintingData {
 		const clone = lodash.cloneDeep(original)
-		clone.answer = undefined
+		clone.answer = null
 		return clone
 	}
 
@@ -325,7 +325,7 @@ class Game {
 
 			this._nextPaintingData = {
 				painter: nextPainter.userId,
-				answer: lodash.sample(this._dict),
+				answer: lodash.sample(this._dict) ?? null,
 				timeLeft: 1800,
 				timeLimit: 1800,
 			}
@@ -580,7 +580,7 @@ function main() {
 
 			if (cmd.kind === 'login') {
 				let userData
-				if (cmd.reconnectionToken !== undefined) {
+				if (cmd.reconnectionToken !== null) {
 					userData = userManager.findByReconnectionToken(cmd.reconnectionToken)
 				}
 

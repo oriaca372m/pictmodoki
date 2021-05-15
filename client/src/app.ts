@@ -51,7 +51,7 @@ export class App {
 		this._api = new WebSocketApi(serverAddr)
 
 		this._api.opened.on(() => {
-			const reconnectionToken = localStorage.getItem('reconnectionToken') ?? undefined
+			const reconnectionToken = localStorage.getItem('reconnectionToken') ?? null
 
 			this._api.sendCommand({
 				kind: 'login',
@@ -94,7 +94,7 @@ export class App {
 						)
 					} else {
 						this._chatManager!.sendSystemMessage(
-							`あなたの番です! 「${answer!}」を描いてください!`
+							`あなたの番です! 「${answer}」を描いてください!`
 						)
 					}
 				} else if (s.state.kind === 'waitingNext') {

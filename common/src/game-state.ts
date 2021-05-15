@@ -14,7 +14,7 @@ export interface GameState {
 
 export interface PaintingData {
 	painter: UserId
-	answer: string | undefined
+	answer: string | null
 
 	timeLeft: number
 	timeLimit: number
@@ -31,5 +31,5 @@ export interface WaitingNextData {
 export interface GameUserData {
 	userId: UserId
 	name: string
-	point: number | undefined
+	point: number | null
 }
