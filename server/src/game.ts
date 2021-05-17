@@ -9,6 +9,8 @@ export class Game {
 	private _respondent: string | undefined
 	private _respondentScore: number | undefined
 
+	private readonly _score = new Map<UserId, number>()
+
 	private _paintingData!: PaintingData
 	private _nextPaintingData: PaintingData | undefined
 	private _state: 'painting' | 'waitingNext' | 'finished' = 'painting'
@@ -58,6 +60,11 @@ export class Game {
 		this._room.resetCanvas()
 	}
 
+	private _addScore(user: UserId, amount: number): void {
+		const score = this._score.get(user) ?? 0
+		this._score.set(user, score + amount)
+	}
+
 	onMessage(msgUser: User, msg: string): void {
 		if (this._state !== 'painting') {
 			return
@@ -67,6 +74,9 @@ export class Game {
 			this._respondent = msgUser.userId
 			this._respondentScore = 100
 			this._state = 'waitingNext'
+
+			this._addScore(msgUser.userId, this._respondentScore)
+			this._addScore(this._paintingData.painter, this._respondentScore * 2)
 
 			const nextPainter = this._findNextPainter(this._paintingData.painter)
 
@@ -139,7 +149,7 @@ export class Game {
 		return this._room.users.map((x) => ({
 			userId: x.userId,
 			name: x.name,
-			point: 0,
+			point: this._score.get(x.userId) ?? null,
 		}))
 	}
 
