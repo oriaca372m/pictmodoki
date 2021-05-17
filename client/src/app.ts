@@ -110,11 +110,25 @@ export class App {
 						)
 					}
 				} else if (s.state.kind === 'waitingNext') {
-					const name = this.userManager.getUserById(s.state.value.respondent)!.name
-					this._chatManager!.sendSystemMessage(
-						`正解は「${s.state.value.currentPainting
-							.answer!}」でした! ${name}さんが正解しました!`
-					)
+					const answer = s.state.value.currentPainting.answer!
+
+					if (s.state.value.respondent !== null) {
+						const name = this.userManager.getUserById(s.state.value.respondent)!.name
+						this._chatManager!.sendSystemMessage(
+							`正解は「${answer}」でした! ${name}さんが正解しました!`
+						)
+					} else {
+						this._chatManager!.sendSystemMessage(
+							`時間切れです… 正解は「${answer}」でした`
+						)
+					}
+
+					const nextAnswer = s.state.value.nextPainting.answer
+					if (nextAnswer) {
+						this._chatManager!.sendSystemMessage(
+							`次はあなたの番です! 「${nextAnswer}」を描く準備をしてください!`
+						)
+					}
 				}
 				return
 			}

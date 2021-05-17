@@ -15,17 +15,48 @@ export class Game {
 	private _nextPaintingData: PaintingData | undefined
 	private _state: 'painting' | 'waitingNext' | 'finished' = 'painting'
 
+	private readonly _timeLimit = 300
+	private _time = 0
+	private _intervalId: NodeJS.Timeout | undefined
+
 	constructor(private readonly _dict: string[], private readonly _room: Room) {}
 
 	start(): void {
-		this._nextPaintingData = {
-			painter: this._room.users[0].userId,
-			answer: lodash.sample(this._dict) ?? null,
-			timeLeft: 1800,
-			timeLimit: 1800,
+		this._intervalId = setInterval(() => {
+			this._tick()
+		}, 1000)
+
+		this._setNextPaintingData(this._room.users[0].userId)
+		this._startNextPainting()
+	}
+
+	stop(): void {
+		if (this._intervalId !== undefined) {
+			clearInterval(this._intervalId)
+		}
+	}
+
+	private _tick(): void {
+		if (this._state !== 'painting') {
+			return
 		}
 
-		this._startNextPainting()
+		if (this._paintingData.timeLimit <= this._time) {
+			this._finishCurrentPainting(undefined)
+			return
+		}
+
+		this._paintingData.timeLeft = this._paintingData.timeLimit - this._time
+		this._time++
+	}
+
+	private _setNextPaintingData(painter: UserId): void {
+		this._nextPaintingData = {
+			painter: painter,
+			answer: lodash.sample(this._dict)!,
+			timeLeft: this._timeLimit,
+			timeLimit: this._timeLimit,
+		}
 	}
 
 	private _findNextPainter(current: UserId): User {
@@ -52,12 +83,33 @@ export class Game {
 			throw 'unrechable!'
 		}
 
+		this._time = 0
 		this._state = 'painting'
 		this._paintingData = this._nextPaintingData!
 		this._nextPaintingData = undefined
 
 		this._room.onGameStateChanged()
 		this._room.resetCanvas()
+	}
+
+	private _finishCurrentPainting(respondent: UserId | undefined): void {
+		this._respondent = respondent
+		this._respondentScore = this._paintingData.timeLeft
+		this._state = 'waitingNext'
+
+		if (respondent !== undefined) {
+			this._addScore(respondent, this._respondentScore)
+			this._addScore(this._paintingData.painter, this._respondentScore * 2)
+		}
+
+		const nextPainter = this._findNextPainter(this._paintingData.painter)
+		this._setNextPaintingData(nextPainter.userId)
+
+		this._room.onGameStateChanged()
+
+		setTimeout(() => {
+			this._startNextPainting()
+		}, 10000)
 	}
 
 	private _addScore(user: UserId, amount: number): void {
@@ -71,27 +123,7 @@ export class Game {
 		}
 
 		if (this._paintingData.answer === msg) {
-			this._respondent = msgUser.userId
-			this._respondentScore = 100
-			this._state = 'waitingNext'
-
-			this._addScore(msgUser.userId, this._respondentScore)
-			this._addScore(this._paintingData.painter, this._respondentScore * 2)
-
-			const nextPainter = this._findNextPainter(this._paintingData.painter)
-
-			this._nextPaintingData = {
-				painter: nextPainter.userId,
-				answer: lodash.sample(this._dict) ?? null,
-				timeLeft: 1800,
-				timeLimit: 1800,
-			}
-
-			this._room.onGameStateChanged()
-
-			setTimeout(() => {
-				this._startNextPainting()
-			}, 10000)
+			this._finishCurrentPainting(msgUser.userId)
 		}
 	}
 
@@ -124,8 +156,8 @@ export class Game {
 				state: {
 					kind: 'waitingNext',
 					value: {
-						respondent: this._respondent!,
-						score: this._respondentScore!,
+						respondent: this._respondent ?? null,
+						score: this._respondentScore ?? null,
 						currentPainting: this._paintingData,
 						nextPainting: user.userId === next.painter ? next : maskedNext,
 					},

@@ -122,6 +122,7 @@ export class Room {
 		}
 
 		if (msg === '!reset') {
+			this._game?.stop()
 			this._game = new Game(this._dict, this)
 			this._game.start()
 			return

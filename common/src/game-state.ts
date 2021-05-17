@@ -21,8 +21,8 @@ export interface PaintingData {
 }
 
 export interface WaitingNextData {
-	respondent: UserId
-	score: number
+	respondent: UserId | null
+	score: number | null
 
 	currentPainting: PaintingData
 	nextPainting: PaintingData
