@@ -12,6 +12,7 @@ import { TypedEvent } from './typed-event'
 import { PaintApp } from './paint-app'
 import { Bindable } from './bindable'
 import { AudioPlayer } from './audio-player'
+import { UserManager } from './user-manager'
 import { toHsvColor } from './components/color-picker/color'
 
 export class AppState {
@@ -29,6 +30,7 @@ export class App {
 	private _userId: UserId | undefined
 	private _chatManager: ChatManager | undefined
 	readonly audioPlayer = new AudioPlayer()
+	readonly userManager = new UserManager()
 
 	readonly ready = new TypedEvent<void>()
 
@@ -85,27 +87,33 @@ export class App {
 
 			if (event.kind === 'gameStateChanged') {
 				const s = event.value
+
+				this.userManager.update(
+					s.userData.map((x) => ({
+						id: x.userId,
+						name: x.name,
+						score: x.point ?? 0,
+					}))
+				)
+
 				console.log(s)
-				const idToName = (userId: string) =>
-					s.userData.find((x) => x.userId === userId)!.name
 
 				if (s.state.kind === 'painting') {
 					const answer = s.state.value.answer
 					this.audioPlayer.playAudio('/assets/audio/start_painting.wav')
 					if (answer === null) {
-						this._chatManager!.sendSystemMessage(
-							`${idToName(s.state.value.painter)}さんが描く絵を当ててください!`
-						)
+						const name = this.userManager.getUserById(s.state.value.painter)!.name
+						this._chatManager!.sendSystemMessage(`${name}さんが描く絵を当ててください!`)
 					} else {
 						this._chatManager!.sendSystemMessage(
 							`あなたの番です! 「${answer}」を描いてください!`
 						)
 					}
 				} else if (s.state.kind === 'waitingNext') {
+					const name = this.userManager.getUserById(s.state.value.respondent)!.name
 					this._chatManager!.sendSystemMessage(
-						`正解は「${s.state.value.currentPainting.answer!}」でした! ${idToName(
-							s.state.value.respondent
-						)}さんが正解しました!`
+						`正解は「${s.state.value.currentPainting
+							.answer!}」でした! ${name}さんが正解しました!`
 					)
 				}
 				return

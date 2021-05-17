@@ -7,6 +7,7 @@ import Draggable from 'vuedraggable'
 import { LayerId } from 'common'
 import { App, AppState } from '../app'
 import { Bindable } from '../bindable'
+import { UserInfo } from '../user-manager'
 
 interface ChatMessage {
 	msgId: number
@@ -23,6 +24,7 @@ interface LayerInfo {
 
 interface State {
 	layers: LayerInfo[]
+	users: readonly UserInfo[]
 	selectedLayerId: string | undefined
 	messageToSend: string
 	chatMessages: ChatMessage[]
@@ -47,6 +49,7 @@ export default defineComponent({
 
 		const state = reactive<State>({
 			layers: [],
+			users: [],
 			selectedLayerId: undefined,
 			messageToSend: '',
 			chatMessages: [],
@@ -56,7 +59,7 @@ export default defineComponent({
 		const canvasContainer = ref<HTMLDivElement>()
 		const canvasScrollContainer = ref<HTMLDivElement>()
 
-		const volume = new Bindable(30)
+		const volume = new Bindable(10)
 
 		onMounted(() => {
 			const vapp = new App(
@@ -76,7 +79,7 @@ export default defineComponent({
 
 				const paintApp = vapp.paintApp!
 
-				const layerUpdated = () => {
+				paintApp.layerManager.updated.on(() => {
 					state.layers = paintApp.drawer.model.order.map((x) => {
 						const layer = paintApp.drawer.findLayerModelById(x)
 						return {
@@ -86,10 +89,11 @@ export default defineComponent({
 						}
 					})
 					state.selectedLayerId = paintApp.layerManager.selectedLayerId
-				}
+				}, true)
 
-				paintApp.layerManager.updated.on(layerUpdated)
-				layerUpdated()
+				vapp.userManager.updated.on(() => {
+					state.users = vapp.userManager.users
+				}, true)
 
 				paintApp.colorHistory.updated.on(() => {
 					state.colorHistory = paintApp.colorHistory.history

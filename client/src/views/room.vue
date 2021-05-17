@@ -116,6 +116,25 @@
 						<button @click="saveCanvas">今のキャンバスをpngで保存</button>
 						<input type="checkbox" v-model="shouldSaveCanvas"><label>自動保存</label>
 					</div>
+					<div>
+						<h1>ユーザー情報</h1>
+						<table>
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>名前</th>
+									<th>スコア</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="user in state.users" :key="user.id">
+									<td>{{ user.id }}</td>
+									<td>{{ user.name }}</td>
+									<td>{{ user.score }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 		</div>
