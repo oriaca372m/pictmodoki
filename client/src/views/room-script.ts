@@ -6,6 +6,7 @@ import Draggable from 'vuedraggable'
 
 import { LayerId } from 'common'
 import { App, AppState } from '../app'
+import { Bindable } from '../bindable'
 
 interface ChatMessage {
 	msgId: number
@@ -55,6 +56,8 @@ export default defineComponent({
 		const canvasContainer = ref<HTMLDivElement>()
 		const canvasScrollContainer = ref<HTMLDivElement>()
 
+		const volume = new Bindable(30)
+
 		onMounted(() => {
 			const vapp = new App(
 				appState,
@@ -64,6 +67,7 @@ export default defineComponent({
 				props.userName
 			)
 			app = vapp
+			volume.bindTo(vapp.audioPlayer.volume, true)
 
 			vapp.ready.once(() => {
 				vapp.chatManager!.addMessageRecievedHandler((id, name, msg) => {
@@ -166,6 +170,7 @@ export default defineComponent({
 			penSize: appState.penSize.toComputed(),
 			eraserSize: appState.eraserSize.toComputed(),
 			shouldSaveCanvas: appState.shouldSaveCanvas.toComputed(),
+			volume: volume.toComputed(),
 		}
 	},
 })

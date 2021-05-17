@@ -65,6 +65,9 @@
 						<label>角度</label><input type="number" v-model="rotation">
 					</div>
 				</div>
+				<div>
+					<label>音量</label><input type="number" v-model="volume">
+				</div>
 			</div>
 			<div class="layer-selector">
 				<h1>レイヤー</h1>

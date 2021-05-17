@@ -11,6 +11,7 @@ import { WebSocketApi } from './web-socket-api'
 import { TypedEvent } from './typed-event'
 import { PaintApp } from './paint-app'
 import { Bindable } from './bindable'
+import { AudioPlayer } from './audio-player'
 import { toHsvColor } from './components/color-picker/color'
 
 export class AppState {
@@ -27,6 +28,8 @@ export class App {
 	private _paintApp: PaintApp | undefined
 	private _userId: UserId | undefined
 	private _chatManager: ChatManager | undefined
+	readonly audioPlayer = new AudioPlayer()
+
 	readonly ready = new TypedEvent<void>()
 
 	get paintApp(): PaintApp | undefined {
@@ -88,6 +91,7 @@ export class App {
 
 				if (s.state.kind === 'painting') {
 					const answer = s.state.value.answer
+					this.audioPlayer.playAudio('/assets/audio/start_painting.wav')
 					if (answer === null) {
 						this._chatManager!.sendSystemMessage(
 							`${idToName(s.state.value.painter)}さんが描く絵を当ててください!`
