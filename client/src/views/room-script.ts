@@ -171,6 +171,7 @@ export default defineComponent({
 			eraserSize: appState.eraserSize.toComputed(),
 			shouldSaveCanvas: appState.shouldSaveCanvas.toComputed(),
 			volume: volume.toComputed(),
+			activeTab: ref(1),
 		}
 	},
 })
