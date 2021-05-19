@@ -122,7 +122,6 @@ export class ImageCanvasEventExecutor {
 		} catch (e) {
 			console.log('Could not handle the event: ', e)
 			if (transaction !== undefined) {
-				console.log('event restored!')
 				this._drawer.setModel(transaction.model)
 				this._manager.setMergedHistory(transaction.history)
 			}
@@ -136,6 +135,9 @@ export class ImageCanvasEventExecutor {
 			this._reExecutor.applyWipedEvents(events)
 		} catch (e) {
 			console.error('Failed to applyWipedEvents: ', e)
+			console.error(
+				'これはバグです。上のエラーメッセージを付けて開発者に報告してください。https://github.com/oriaca372m/pictmodoki/issues'
+			)
 
 			this._manager.breakHistory()
 			this._reExecutor = new EventReExecutor(
