@@ -1,12 +1,10 @@
+import { ImageCanvasModel, ImageCanvasEvent } from 'common'
+
 import {
-	ImageCanvasModel,
-	ImageCanvasEvent,
-	ImageCanvasEventManager,
-	ImageCanvasEventManagerPlugin,
-	ImageCanvasEventPlayer,
-	ImageCanvasUndoManager,
 	ImageCanvasEventRevoker,
-} from 'common'
+	ImageCanvasEventExecutor,
+} from 'common/dist/image-canvas/event-manager'
+import { VirtualEventManager } from 'common/dist/image-canvas/virtual-event-manager'
 
 import { CommandSender, SocketCommandSender } from './command-sender'
 import { WebSocketApi } from './web-socket-api'
@@ -18,42 +16,14 @@ import { ToolManager } from './tool-manager'
 import { App, AppState } from './app'
 import { ColorHistory } from './color-history'
 
-class EventRenderer implements ImageCanvasEventManagerPlugin {
-	private readonly _player: ImageCanvasEventPlayer
-	constructor(private readonly _app: PaintApp) {
-		this._player = new ImageCanvasEventPlayer(_app.drawer)
-	}
-
-	onEvent(event: ImageCanvasEvent): void {
-		if (event.eventType.kind === 'eventRevoked') {
-			return
-		}
-
-		this._player.playSingleEvent(event)
-		this._app.layerManager.update()
-		this._app.render()
-	}
-
-	onHistoryChanged(): void {
-		const model = this._app.undoManager.createUndoedImageCanvasModel()
-		this._app.drawer.setModel(model)
-		this._app.layerManager.update()
-		this._app.render()
-	}
-
-	onHistoryWiped(): void {
-		// pass
-	}
-}
-
 export class PaintApp {
 	readonly factory: OffscreenCanvasProxyFactory
 	readonly drawer: ImageCanvasDrawerWithPreview
 	private _renderedCanvas: WebCanvasProxy | undefined
 
 	readonly commandSender: CommandSender
-	readonly eventManager: ImageCanvasEventManager
-	readonly undoManager: ImageCanvasUndoManager
+	readonly eventManager: VirtualEventManager
+	eventExecutor: ImageCanvasEventExecutor
 	readonly layerManager: LayerManager
 	private readonly _revoker: ImageCanvasEventRevoker
 
@@ -73,11 +43,14 @@ export class PaintApp {
 		const canvasModel = new ImageCanvasModel({ width: 256, height: 256 })
 		this.drawer = new ImageCanvasDrawerWithPreview(canvasModel, this.factory)
 
-		this.eventManager = new ImageCanvasEventManager()
-		this.eventManager.registerPlugin(new EventRenderer(this))
+		this.eventManager = new VirtualEventManager()
 
-		this.undoManager = new ImageCanvasUndoManager(this.eventManager, this.factory, canvasModel)
-		this.eventManager.registerPlugin(this.undoManager)
+		this.eventExecutor = new ImageCanvasEventExecutor(
+			this.eventManager,
+			this.drawer,
+			this.factory
+		)
+		this.eventManager.setExecutor(this.eventExecutor)
 		this._revoker = new ImageCanvasEventRevoker(this.eventManager)
 
 		this.layerManager = new LayerManager(this)
@@ -90,13 +63,7 @@ export class PaintApp {
 		this.toolManager.registerTool('moving', new MovingTool(this.app))
 		this.toolManager.selectTool('pen')
 
-		const sender = new SocketCommandSender(
-			this.app,
-			this.eventManager,
-			this.drawer,
-			this._revoker,
-			this.api
-		)
+		const sender = new SocketCommandSender(this.app, this.eventManager, this.api)
 		sender.start()
 		this.commandSender = sender
 
@@ -166,8 +133,21 @@ export class PaintApp {
 
 		this._renderedCanvas = new WebCanvasProxy(canvasElm)
 
-		this.undoManager.setLastRenderedImageModel(lastRendered)
-		this.eventManager.setHistory(history)
+		this.eventManager.breakHistory()
+		this.drawer.setModel(lastRendered)
+		this.eventExecutor = new ImageCanvasEventExecutor(
+			this.eventManager,
+			this.drawer,
+			this.factory
+		)
+		this.eventManager.setExecutor(this.eventExecutor)
+
+		for (const event of history) {
+			this.eventManager.event(event)
+		}
+
+		this.render()
+		this.layerManager.update()
 		this.setCanvasViewEntire()
 	}
 

@@ -100,7 +100,7 @@ export class Room {
 				value: await this._app.eventExecutor.reExecutor
 					.getLastRenderedImageModel()
 					.serialize(),
-				log: this._app.eventMgr.history,
+				log: this._app.eventMgr.mergedHistory,
 			})
 		})()
 	}
@@ -146,7 +146,7 @@ export class Room {
 					value: await this._app.eventExecutor.reExecutor
 						.getLastRenderedImageModel()
 						.serialize(),
-					log: this._app.eventMgr.history,
+					log: this._app.eventMgr.mergedHistory,
 				}
 				user.conn!.send(encode(event))
 			})()

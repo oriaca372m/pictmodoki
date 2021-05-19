@@ -76,14 +76,14 @@ class EventReExecutor {
 	createReExecutedImageCanvasModel(): ImageCanvasModel {
 		const model = this._lastRenderedDrawer.model.clone(this._canvasProxyFactory)
 		const drawer = new ImageCanvasDrawer(model, this._canvasProxyFactory)
-		this._playEvents(drawer, this._manager.history)
+		this._playEvents(drawer, this._manager.mergedHistory)
 		return model
 	}
 }
 
 interface TransactionData {
 	model: ImageCanvasModel
-	history: ImageCanvasEvent[]
+	history: ImageCanvasEvent[][]
 }
 
 export class ImageCanvasEventExecutor {
@@ -101,6 +101,10 @@ export class ImageCanvasEventExecutor {
 		return this._reExecutor
 	}
 
+	get drawer(): ImageCanvasDrawer {
+		return this._drawer
+	}
+
 	executeEvent(event: ImageCanvasEvent): boolean {
 		let transaction: TransactionData | undefined
 		const player = new EventPlayer(event)
@@ -108,7 +112,7 @@ export class ImageCanvasEventExecutor {
 		if (!player.isAtomic()) {
 			transaction = {
 				model: this._drawer.cloneModel(),
-				history: this._manager.cloneHistory(),
+				history: this._manager.cloneMergedHistory(),
 			}
 		}
 
@@ -125,7 +129,7 @@ export class ImageCanvasEventExecutor {
 			if (transaction !== undefined) {
 				console.log('event restored!')
 				this._drawer.setModel(transaction.model)
-				this._manager.setHistory(transaction.history)
+				this._manager.setMergedHistory(transaction.history)
 			}
 
 			return false
@@ -153,7 +157,7 @@ export class ImageCanvasEventExecutor {
 		}
 
 		const revokedId = event.eventType.eventId
-		const target = this._manager.history.find((x) => x.id === revokedId)
+		const target = this._manager.mergedHistory.find((x) => x.id === revokedId)
 		if (target === undefined) {
 			throw new Error('There is no target event!')
 		}
@@ -166,8 +170,12 @@ export class ImageCanvasEventExecutor {
 
 export class ImageCanvasEventManager {
 	private _history: ImageCanvasEvent[] = []
-	private _numEventsToPreserve = 50
+	private readonly _numEventsToPreserve = 50
 	private _executor!: ImageCanvasEventExecutor
+
+	get executor(): ImageCanvasEventExecutor {
+		return this._executor
+	}
 
 	setExecutor(executor: ImageCanvasEventExecutor): void {
 		this._executor = executor
@@ -181,7 +189,7 @@ export class ImageCanvasEventManager {
 		this._history = []
 	}
 
-	private _wipeHistoryIfnecessary(): void {
+	protected _wipeHistoryIfnecessary(): void {
 		const numToWipe = this._history.length - this._numEventsToPreserve
 		if (numToWipe < 1) {
 			return
@@ -196,21 +204,25 @@ export class ImageCanvasEventManager {
 			return false
 		}
 
-		this._history.push(event)
-		this._wipeHistoryIfnecessary()
+		this._determineEvent(event)
 		return true
 	}
 
-	get history(): readonly ImageCanvasEvent[] {
-		return this._history
+	protected _determineEvent(event: ImageCanvasEvent): void {
+		this._history.push(event)
+		this._wipeHistoryIfnecessary()
 	}
 
-	cloneHistory(): ImageCanvasEvent[] {
-		return lodash.cloneDeep(this._history)
+	get mergedHistory(): ImageCanvasEvent[] {
+		return Array.from(this._history)
 	}
 
-	getReversedHistory(): ImageCanvasEvent[] {
-		return Array.from(this._history).reverse()
+	setMergedHistory(source: ImageCanvasEvent[][]): void {
+		this._history = source.pop()!
+	}
+
+	cloneMergedHistory(): ImageCanvasEvent[][] {
+		return [lodash.cloneDeep(this._history)]
 	}
 }
 
@@ -223,7 +235,7 @@ export class ImageCanvasEventRevoker {
 	constructor(private readonly _eventManager: ImageCanvasEventManager) {}
 
 	isRevokable(userId: UserId, eventId: ImageCanvasEventId): boolean {
-		const event = this._eventManager.history.find((x) => x.id === eventId)
+		const event = this._eventManager.mergedHistory.find((x) => x.id === eventId)
 		if (event === undefined) {
 			return false
 		}
@@ -251,8 +263,8 @@ export class ImageCanvasEventRevoker {
 		if (!this._canCreateUndoCommand()) {
 			return
 		}
-		const event = this._eventManager
-			.getReversedHistory()
+		const event = this._eventManager.mergedHistory
+			.reverse()
 			.find(
 				(x) =>
 					!x.isVirtual &&

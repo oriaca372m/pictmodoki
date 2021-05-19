@@ -1,12 +1,5 @@
-import {
-	ImageCanvasCommand,
-	ImageCanvasEventType,
-	ImageCanvasEventManager,
-	ImageCanvasDrawer,
-	ImageCanvasEventRevoker,
-	ImageCanvasCommandValidator,
-	UserId,
-} from 'common'
+import { ImageCanvasCommand, ImageCanvasEventType, UserId } from 'common'
+import { VirtualEventManager } from 'common/dist/image-canvas/virtual-event-manager'
 
 import { App } from './app'
 import { WebSocketApi } from './web-socket-api'
@@ -17,16 +10,11 @@ export interface CommandSender {
 }
 
 export class SocketCommandSender implements CommandSender {
-	private readonly _validator: ImageCanvasCommandValidator
 	constructor(
 		private readonly _app: App,
-		private readonly _manager: ImageCanvasEventManager,
-		drawer: ImageCanvasDrawer,
-		revoker: ImageCanvasEventRevoker,
+		private readonly _manager: VirtualEventManager,
 		private readonly _api: WebSocketApi
-	) {
-		this._validator = new ImageCanvasCommandValidator(drawer, revoker)
-	}
+	) {}
 
 	start(): void {
 		this._api.eventHappened.on((event) => {
@@ -35,6 +23,8 @@ export class SocketCommandSender implements CommandSender {
 			}
 
 			this._manager.event(event.value)
+			this._app.paintApp?.render()
+			this._app.paintApp?.layerManager.update()
 		})
 	}
 
@@ -42,11 +32,6 @@ export class SocketCommandSender implements CommandSender {
 		const userId = this._app.userId
 		if (userId === undefined) {
 			throw new Error('コマンド早すぎ')
-		}
-
-		if (!this._validator.validate(userId, cmd)) {
-			console.warn('不正なコマンド: ', cmd)
-			return false
 		}
 
 		this._api.sendCommand({ kind: 'imageCanvasCommand', value: cmd })
@@ -67,12 +52,15 @@ export class SocketCommandSender implements CommandSender {
 	}
 
 	private _pushEvent(userId: UserId, eventType: ImageCanvasEventType) {
-		this._manager.event({
+		this._manager.virtualEvent({
 			id: 'virtual',
 			userId: userId,
 			isRevoked: false,
 			isVirtual: true,
 			eventType,
 		})
+
+		this._app.paintApp?.render()
+		this._app.paintApp?.layerManager.update()
 	}
 }
