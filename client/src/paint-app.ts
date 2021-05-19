@@ -140,7 +140,15 @@ export class PaintApp {
 			this.factory
 		)
 		this.eventManager.setExecutor(this.eventExecutor)
-		this.eventManager.setRealHistory(Array.from(history))
+
+		try {
+			this.eventManager.setRealHistory(Array.from(history))
+		} catch (e) {
+			console.error("Failed to set canavs's state: ", e)
+			console.error(
+				'これはバグです。上のエラーメッセージを付けて開発者に報告してください。https://github.com/oriaca372m/pictmodoki/issues'
+			)
+		}
 
 		this.render()
 		this.layerManager.update()
