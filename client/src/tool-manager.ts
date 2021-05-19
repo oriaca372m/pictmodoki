@@ -48,7 +48,6 @@ export class ToolManager {
 
 		this._selectedTool = tool
 		this._selectedTool.enable()
-		console.log(tool)
 		return true
 	}
 

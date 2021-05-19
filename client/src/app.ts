@@ -81,7 +81,9 @@ export class App {
 			}
 
 			if (event.kind === 'userLoggedIn') {
-				console.log(`${event.name} さん(id: ${event.userId})がログインしました`)
+				this._chatManager!.sendSystemMessage(
+					`${event.name} さん(id: ${event.userId})がログインしました`
+				)
 				return
 			}
 
@@ -95,8 +97,6 @@ export class App {
 						score: x.point ?? 0,
 					}))
 				)
-
-				console.log(s)
 
 				if (s.state.kind === 'painting') {
 					const answer = s.state.value.answer
