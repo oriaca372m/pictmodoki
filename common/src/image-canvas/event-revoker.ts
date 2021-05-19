@@ -12,7 +12,7 @@ export class ImageCanvasEventRevoker {
 	constructor(private readonly _eventManager: ImageCanvasEventManager) {}
 
 	isRevokable(userId: UserId, eventId: ImageCanvasEventId): boolean {
-		const event = this._eventManager.mergedHistory.find((x) => x.id === eventId)
+		const event = this._eventManager.realHistory.find((x) => x.id === eventId)
 		if (event === undefined) {
 			return false
 		}
@@ -32,14 +32,7 @@ export class ImageCanvasEventRevoker {
 		return true
 	}
 
-	private _canCreateUndoCommand(): boolean {
-		return true
-	}
-
 	createUndoCommand(userId: UserId): ImageCanvasCommand | undefined {
-		if (!this._canCreateUndoCommand()) {
-			return
-		}
 		const event = Array.from(this._eventManager.realHistory)
 			.reverse()
 			.find((x) => x.eventType.kind !== 'eventRevoked' && x.userId === userId && !x.isRevoked)
