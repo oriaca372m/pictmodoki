@@ -185,6 +185,10 @@ export class ImageCanvasEventManager {
 		this._history = Array.from(events)
 	}
 
+	get realHistory(): readonly ImageCanvasEvent[] {
+		return this._history
+	}
+
 	breakHistory(): void {
 		this._history = []
 	}
@@ -263,15 +267,9 @@ export class ImageCanvasEventRevoker {
 		if (!this._canCreateUndoCommand()) {
 			return
 		}
-		const event = this._eventManager.mergedHistory
+		const event = Array.from(this._eventManager.realHistory)
 			.reverse()
-			.find(
-				(x) =>
-					!x.isVirtual &&
-					x.eventType.kind !== 'eventRevoked' &&
-					x.userId === userId &&
-					!x.isRevoked
-			)
+			.find((x) => x.eventType.kind !== 'eventRevoked' && x.userId === userId && !x.isRevoked)
 		if (event === undefined || !this.isRevokable(userId, event.id)) {
 			return
 		}

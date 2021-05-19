@@ -15,6 +15,5 @@ export interface ImageCanvasEvent {
 	id: ImageCanvasEventId
 	userId: UserId
 	isRevoked: boolean
-	isVirtual: boolean
 	eventType: ImageCanvasEventType
 }

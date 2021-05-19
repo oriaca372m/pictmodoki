@@ -59,7 +59,6 @@ export class CommandInterpreter {
 			id: this._eventId.toString(),
 			userId,
 			isRevoked: false,
-			isVirtual: false,
 			eventType,
 		}
 	}

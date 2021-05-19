@@ -56,7 +56,6 @@ export class SocketCommandSender implements CommandSender {
 			id: 'virtual',
 			userId: userId,
 			isRevoked: false,
-			isVirtual: true,
 			eventType,
 		})
 
