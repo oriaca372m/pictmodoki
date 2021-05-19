@@ -1,5 +1,9 @@
-import { ImageCanvasCommand, ImageCanvasEventType, UserId } from 'common'
-import { VirtualEventManager } from 'common/dist/image-canvas/virtual-event-manager'
+import { UserId } from 'common'
+import {
+	ImageCanvasCommand,
+	ImageCanvasEventType,
+	VirtualEventManager,
+} from 'common/dist/image-canvas'
 
 import { App } from './app'
 import { WebSocketApi } from './web-socket-api'

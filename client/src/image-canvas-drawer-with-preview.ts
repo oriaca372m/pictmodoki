@@ -1,3 +1,4 @@
+import { CanvasProxy, CanvasDrawer } from 'common'
 import {
 	LayerCanvasModel,
 	LayerDrawer,
@@ -5,9 +6,7 @@ import {
 	ImageCanvasDrawer,
 	ImageCanvasModel,
 	LayerId,
-	CanvasProxy,
-	CanvasDrawer,
-} from 'common'
+} from 'common/dist/image-canvas'
 
 interface PreviewInfo {
 	originalLayer: LayerCanvasModel

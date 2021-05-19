@@ -1,10 +1,10 @@
-import { ImageCanvasModel, ImageCanvasEvent } from 'common'
-
 import {
+	ImageCanvasModel,
+	ImageCanvasEvent,
 	ImageCanvasEventRevoker,
 	ImageCanvasEventExecutor,
-} from 'common/dist/image-canvas/event-manager'
-import { VirtualEventManager } from 'common/dist/image-canvas/virtual-event-manager'
+	VirtualEventManager,
+} from 'common/dist/image-canvas'
 
 import { CommandSender, SocketCommandSender } from './command-sender'
 import { WebSocketApi } from './web-socket-api'

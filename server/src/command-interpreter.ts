@@ -1,9 +1,11 @@
-import { ImageCanvasEvent, ImageCanvasEventType, ImageCanvasCommand, UserId } from 'common'
-
+import { UserId } from 'common'
 import {
+	ImageCanvasEvent,
+	ImageCanvasEventType,
+	ImageCanvasCommand,
 	ImageCanvasEventManager,
 	ImageCanvasEventRevoker,
-} from 'common/dist/image-canvas/event-manager'
+} from 'common/dist/image-canvas'
 
 export class CommandInterpreter {
 	private _eventId = 0

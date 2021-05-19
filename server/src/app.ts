@@ -1,12 +1,13 @@
 import { NodeCanvasProxy, NodeCanvasProxyFactory } from './canvas-proxy'
 import { CommandInterpreter } from './command-interpreter'
 
-import { Size, ImageCanvasModel, ImageCanvasDrawer } from 'common'
-
+import { Size } from 'common'
 import {
+	ImageCanvasModel,
+	ImageCanvasDrawer,
 	ImageCanvasEventManager,
 	ImageCanvasEventExecutor,
-} from 'common/dist/image-canvas/event-manager'
+} from 'common/dist/image-canvas'
 
 export class App {
 	size: Size
