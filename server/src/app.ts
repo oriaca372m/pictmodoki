@@ -36,7 +36,7 @@ export class App {
 
 	resetCanvas(): void {
 		this.drawer.setModel(new ImageCanvasModel({ width: 2000, height: 2000 }))
-		this.eventMgr.setHistory([])
+		this.eventMgr.breakHistory()
 		this.eventExecutor = new ImageCanvasEventExecutor(this.eventMgr, this.drawer, this.factory)
 		this.eventMgr.setExecutor(this.eventExecutor)
 

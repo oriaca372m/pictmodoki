@@ -181,10 +181,6 @@ export class ImageCanvasEventManager {
 		this._executor = executor
 	}
 
-	setHistory(events: readonly ImageCanvasEvent[]): void {
-		this._history = Array.from(events)
-	}
-
 	get realHistory(): readonly ImageCanvasEvent[] {
 		return this._history
 	}

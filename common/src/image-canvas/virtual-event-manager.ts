@@ -14,11 +14,6 @@ function isEqualVirtualRealEvent(real: ImageCanvasEvent, virtual: ImageCanvasEve
 export class VirtualEventManager extends ImageCanvasEventManager {
 	private _virtualHistory: ImageCanvasEvent[] = []
 
-	setHistory(events: readonly ImageCanvasEvent[]): void {
-		super.setHistory(events)
-		this._virtualHistory = []
-	}
-
 	breakHistory(): void {
 		super.breakHistory()
 		this._virtualHistory = []
