@@ -59,13 +59,13 @@ export default defineComponent({
 				const y = Math.max(0, Math.min(rect.height, ev.clientY - rect.top))
 
 				rawColor.saturation = x / rect.width
-				rawColor.value = y / rect.height
+				rawColor.value = -(y / rect.height) + 1
 				ev.preventDefault()
 			}
 		}
 
 		const cursorX = computed(() => Math.floor(rawColor.saturation * 200))
-		const cursorY = computed(() => Math.floor(rawColor.value * 150))
+		const cursorY = computed(() => Math.floor((-rawColor.value + 1) * 150))
 
 		function svMouseDown(ev: MouseEvent) {
 			window.addEventListener('mousemove', svMouseMove)

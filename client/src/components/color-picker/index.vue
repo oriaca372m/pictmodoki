@@ -46,7 +46,7 @@
 	width: 200px;
 	height: 150px;
 	background-image:
-		linear-gradient(to bottom, rgb(0, 0, 0), transparent),
+		linear-gradient(to bottom, transparent, rgb(0, 0, 0)),
 		linear-gradient(to right, rgb(255, 255, 255), rgba(255, 255, 255, 0));
 }
 

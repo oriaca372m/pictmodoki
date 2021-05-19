@@ -13,12 +13,17 @@ import { PaintApp } from './paint-app'
 import { Bindable } from './bindable'
 import { AudioPlayer } from './audio-player'
 import { UserManager } from './user-manager'
-import { toHsvColor } from './components/color-picker/color'
+import { HsvColor } from './components/color-picker/color'
 
 export class AppState {
 	readonly rotation = new Bindable(0)
 	readonly scale = new Bindable(100)
-	readonly color = new Bindable(toHsvColor('#000000'))
+	readonly color = new Bindable<HsvColor>({
+		hue: 0,
+		saturation: 1,
+		value: 0,
+		opacity: 0,
+	})
 	readonly penSize = new Bindable(10)
 	readonly eraserSize = new Bindable(20)
 	readonly shouldSaveCanvas = new Bindable(false)
