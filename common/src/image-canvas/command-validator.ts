@@ -1,5 +1,5 @@
 import { LayerId } from './layer'
-import { ImageCanvasEventRevoker } from './event-manager'
+import { ImageCanvasEventRevoker } from './event-revoker'
 import { ImageCanvasCommand } from './command'
 import { ImageCanvasDrawer } from './image-canvas'
 import { UserId } from '../user'
