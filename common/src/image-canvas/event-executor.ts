@@ -160,6 +160,10 @@ export class ImageCanvasEventExecutor {
 		}
 
 		target.isRevoked = true
+		this.forceReExecute()
+	}
+
+	forceReExecute(): void {
 		const model = this._reExecutor.createReExecutedImageCanvasModel()
 		this._drawer.setModel(model)
 	}

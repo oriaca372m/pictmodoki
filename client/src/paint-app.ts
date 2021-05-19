@@ -133,7 +133,6 @@ export class PaintApp {
 
 		this._renderedCanvas = new WebCanvasProxy(canvasElm)
 
-		this.eventManager.breakHistory()
 		this.drawer.setModel(lastRendered)
 		this.eventExecutor = new ImageCanvasEventExecutor(
 			this.eventManager,
@@ -141,10 +140,7 @@ export class PaintApp {
 			this.factory
 		)
 		this.eventManager.setExecutor(this.eventExecutor)
-
-		for (const event of history) {
-			this.eventManager.event(event)
-		}
+		this.eventManager.setRealHistory(Array.from(history))
 
 		this.render()
 		this.layerManager.update()
