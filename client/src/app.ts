@@ -113,11 +113,13 @@ export class App {
 					const answer = s.state.value.currentPainting.answer!
 
 					if (s.state.value.respondent !== null) {
+						this.audioPlayer.playAudio('/assets/audio/correct.wav')
 						const name = this.userManager.getUserById(s.state.value.respondent)!.name
 						this._chatManager!.sendSystemMessage(
 							`正解は「${answer}」でした! ${name}さんが正解しました!`
 						)
 					} else {
+						this.audioPlayer.playAudio('/assets/audio/timeup.wav')
 						this._chatManager!.sendSystemMessage(
 							`時間切れです… 正解は「${answer}」でした`
 						)
