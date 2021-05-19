@@ -3,7 +3,6 @@ import {
 	ImageCanvasEvent,
 	ImageCanvasEventRevoker,
 	ImageCanvasEventExecutor,
-	VirtualEventManager,
 } from 'common/dist/image-canvas'
 
 import { CommandSender, SocketCommandSender } from './command-sender'
@@ -12,6 +11,7 @@ import { PenTool, EraserTool, MovingTool } from './paint-tool'
 import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
 import { LayerManager } from './layer-manager'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
+import { VirtualEventManager } from './virtual-event-manager'
 import { ToolManager } from './tool-manager'
 import { App, AppState } from './app'
 import { ColorHistory } from './color-history'

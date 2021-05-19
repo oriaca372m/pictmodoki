@@ -1,5 +1,4 @@
-import { ImageCanvasEvent } from './event'
-import { ImageCanvasEventManager } from './event-manager'
+import { ImageCanvasEvent, ImageCanvasEventManager } from 'common/dist/image-canvas'
 import lodash from 'lodash'
 
 // virtual eventとreal eventの等価性を確認する

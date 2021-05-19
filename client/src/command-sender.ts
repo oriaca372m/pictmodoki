@@ -1,12 +1,9 @@
 import { UserId } from 'common'
-import {
-	ImageCanvasCommand,
-	ImageCanvasEventType,
-	VirtualEventManager,
-} from 'common/dist/image-canvas'
+import { ImageCanvasCommand, ImageCanvasEventType } from 'common/dist/image-canvas'
 
 import { App } from './app'
 import { WebSocketApi } from './web-socket-api'
+import { VirtualEventManager } from './virtual-event-manager'
 
 export interface CommandSender {
 	// コマンドが受容されればtrue
