@@ -4,7 +4,7 @@ import ColorPreview from '../components/color-picker/color-preview.vue'
 import { HsvColor, toHsvColor } from '../components/color-picker/color'
 import Draggable from 'vuedraggable'
 
-import { LayerId } from 'common'
+import { LayerId } from 'common/dist/image-canvas'
 import { App, AppState } from '../app'
 import { Bindable } from '../bindable'
 import { UserInfo } from '../user-manager'

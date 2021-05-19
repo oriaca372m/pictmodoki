@@ -97,8 +97,10 @@ export class Room {
 			// TODO: Eventの構築中に他のメッセージが送信されないようにする
 			this._broadcastEvent({
 				kind: 'canvasStateSet',
-				value: await this._app.undoMgr.getLastRenderedImageModel().serialize(),
-				log: this._app.eventMgr.history,
+				value: await this._app.eventExecutor.reExecutor
+					.getLastRenderedImageModel()
+					.serialize(),
+				log: this._app.eventMgr.mergedHistory,
 			})
 		})()
 	}
@@ -141,8 +143,10 @@ export class Room {
 				// TODO: Eventの構築中に他のメッセージが送信されないようにする
 				const event: Event = {
 					kind: 'canvasStateSet',
-					value: await this._app.undoMgr.getLastRenderedImageModel().serialize(),
-					log: this._app.eventMgr.history,
+					value: await this._app.eventExecutor.reExecutor
+						.getLastRenderedImageModel()
+						.serialize(),
+					log: this._app.eventMgr.mergedHistory,
 				}
 				user.conn!.send(encode(event))
 			})()

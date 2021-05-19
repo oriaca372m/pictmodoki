@@ -1,4 +1,4 @@
-import { ImageCanvasDrawer, LayerCanvasModel, LayerId } from 'common'
+import { ImageCanvasDrawer, LayerCanvasModel, LayerId } from 'common/dist/image-canvas'
 import { PaintApp } from './paint-app'
 import { TypedEvent } from './typed-event'
 

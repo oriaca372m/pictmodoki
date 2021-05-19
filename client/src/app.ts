@@ -1,10 +1,10 @@
+import { UserId } from 'common'
 import {
 	ImageCanvasModel,
 	SerializedImageCanvasModel,
 	LayerCanvasModel,
 	SerializedLayerCanvasModel,
-	UserId,
-} from 'common'
+} from 'common/dist/image-canvas'
 import { OffscreenCanvasProxyFactory } from './canvas-proxy'
 
 import { WebSocketApi } from './web-socket-api'

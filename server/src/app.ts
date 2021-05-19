@@ -1,47 +1,20 @@
 import { NodeCanvasProxy, NodeCanvasProxyFactory } from './canvas-proxy'
 import { CommandInterpreter } from './command-interpreter'
 
+import { Size } from 'common'
 import {
-	Size,
-	ImageCanvasEvent,
 	ImageCanvasModel,
 	ImageCanvasDrawer,
-	ImageCanvasEventPlayer,
 	ImageCanvasEventManager,
-	ImageCanvasEventManagerPlugin,
-	ImageCanvasUndoManager,
-} from 'common'
-
-class EventRenderer implements ImageCanvasEventManagerPlugin {
-	private readonly _player: ImageCanvasEventPlayer
-	constructor(private readonly _app: App) {
-		this._player = new ImageCanvasEventPlayer(_app.drawer)
-	}
-
-	onEvent(event: ImageCanvasEvent): void {
-		if (event.eventType.kind === 'eventRevoked') {
-			return
-		}
-
-		this._player.playSingleEvent(event)
-	}
-
-	onHistoryChanged(): void {
-		const model = this._app.undoMgr.createUndoedImageCanvasModel()
-		this._app.drawer.setModel(model)
-	}
-
-	onHistoryWiped(): void {
-		// pass
-	}
-}
+	ImageCanvasEventExecutor,
+} from 'common/dist/image-canvas'
 
 export class App {
 	size: Size
 	factory: NodeCanvasProxyFactory
 	drawer: ImageCanvasDrawer
 	eventMgr: ImageCanvasEventManager
-	undoMgr: ImageCanvasUndoManager
+	eventExecutor: ImageCanvasEventExecutor
 	targetCanvas: NodeCanvasProxy
 	cmdInterpreter: CommandInterpreter
 
@@ -55,19 +28,18 @@ export class App {
 		this.drawer = new ImageCanvasDrawer(model, this.factory)
 
 		this.eventMgr = new ImageCanvasEventManager()
-		this.eventMgr.registerPlugin(new EventRenderer(this))
+		this.eventExecutor = new ImageCanvasEventExecutor(this.eventMgr, this.drawer, this.factory)
+		this.eventMgr.setExecutor(this.eventExecutor)
 
-		this.undoMgr = new ImageCanvasUndoManager(this.eventMgr, this.factory, model)
-		this.eventMgr.registerPlugin(this.undoMgr)
-
-		this.cmdInterpreter = new CommandInterpreter(this.drawer, this.eventMgr)
+		this.cmdInterpreter = new CommandInterpreter(this.eventMgr)
 		this.resetCanvas()
 	}
 
 	resetCanvas(): void {
-		const model = new ImageCanvasModel(this.size)
-		this.undoMgr.setLastRenderedImageModel(model)
-		this.eventMgr.setHistory([])
+		this.drawer.setModel(new ImageCanvasModel({ width: 2000, height: 2000 }))
+		this.eventMgr.breakHistory()
+		this.eventExecutor = new ImageCanvasEventExecutor(this.eventMgr, this.drawer, this.factory)
+		this.eventMgr.setExecutor(this.eventExecutor)
 
 		this.cmdInterpreter.command('system', { kind: 'createLayer' })
 		this.cmdInterpreter.command('system', { kind: 'createLayer' })

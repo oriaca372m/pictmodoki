@@ -1,10 +1,5 @@
 export * from './canvas-proxy'
 export * from './primitives'
-export * from './image-canvas/layer'
-export * from './image-canvas/image-canvas'
-export * from './image-canvas/command'
-export * from './image-canvas/event'
-export * from './image-canvas/command-validator'
 
 export * from './command'
 export * from './event'

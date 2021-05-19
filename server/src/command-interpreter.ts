@@ -1,33 +1,22 @@
+import { UserId } from 'common'
 import {
 	ImageCanvasEvent,
 	ImageCanvasEventType,
 	ImageCanvasCommand,
-	ImageCanvasDrawer,
 	ImageCanvasEventManager,
 	ImageCanvasEventRevoker,
-	ImageCanvasCommandValidator,
-	UserId,
-} from 'common'
+} from 'common/dist/image-canvas'
 
 export class CommandInterpreter {
 	private _eventId = 0
 	private _layerId = 0
 	private readonly _revoker: ImageCanvasEventRevoker
-	private readonly _validator: ImageCanvasCommandValidator
 
-	constructor(
-		private readonly _drawer: ImageCanvasDrawer,
-		private readonly _manager: ImageCanvasEventManager
-	) {
+	constructor(private readonly _manager: ImageCanvasEventManager) {
 		this._revoker = new ImageCanvasEventRevoker(this._manager)
-		this._validator = new ImageCanvasCommandValidator(_drawer, this._revoker)
 	}
 
 	command(userId: UserId, cmd: ImageCanvasCommand): ImageCanvasEvent | undefined {
-		if (!this._validator.validate(userId, cmd)) {
-			return
-		}
-
 		if (cmd.kind === 'drawLayer') {
 			return this._pushEvent(
 				this._genEvent(userId, {
@@ -41,9 +30,11 @@ export class CommandInterpreter {
 				kind: 'layerCreated',
 				layerId: this._layerId.toString(),
 			})
-			this._pushEvent(event)
-			this._layerId++
-			return event
+			const ret = this._pushEvent(event)
+			if (ret) {
+				this._layerId++
+			}
+			return ret
 		} else if (cmd.kind === 'removeLayer') {
 			return this._pushEvent(
 				this._genEvent(userId, {
@@ -70,14 +61,14 @@ export class CommandInterpreter {
 			id: this._eventId.toString(),
 			userId,
 			isRevoked: false,
-			isVirtual: false,
 			eventType,
 		}
 	}
 
-	private _pushEvent(event: ImageCanvasEvent): ImageCanvasEvent {
-		this._manager.event(event)
-		this._eventId++
-		return event
+	private _pushEvent(event: ImageCanvasEvent): ImageCanvasEvent | undefined {
+		if (this._manager.event(event)) {
+			this._eventId++
+			return event
+		}
 	}
 }

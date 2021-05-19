@@ -1,4 +1,5 @@
-import { LayerDrawCommand, Position, LayerId } from 'common'
+import { Position } from 'common'
+import { LayerDrawCommand, LayerId } from 'common/dist/image-canvas'
 
 import { App } from './app'
 import { PaintApp } from './paint-app'
