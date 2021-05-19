@@ -35,32 +35,41 @@ export class SocketCommandSender implements CommandSender {
 			throw new Error('コマンド早すぎ')
 		}
 
+		const vev = this._genVirtualEvent(cmd)
+		if (vev !== undefined) {
+			if (!this._pushVirtualEvent(userId, vev)) {
+				return false
+			}
+		}
+
 		this._api.sendCommand({ kind: 'imageCanvasCommand', value: cmd })
-		this._pushVirtualEvent(userId, cmd)
 		return true
 	}
 
-	private _pushVirtualEvent(userId: UserId, cmd: ImageCanvasCommand): void {
+	private _genVirtualEvent(cmd: ImageCanvasCommand): ImageCanvasEventType | undefined {
 		if (cmd.kind === 'drawLayer') {
-			this._pushEvent(userId, {
+			return {
 				kind: 'layerDrawn',
 				layerId: cmd.layer,
 				drawCommand: cmd.drawCommand,
-			})
+			}
 		} else if (cmd.kind === 'revokeEvent') {
-			this._pushEvent(userId, { kind: 'eventRevoked', eventId: cmd.eventId })
+			return { kind: 'eventRevoked', eventId: cmd.eventId }
 		}
 	}
 
-	private _pushEvent(userId: UserId, eventType: ImageCanvasEventType) {
-		this._manager.virtualEvent({
+	private _pushVirtualEvent(userId: UserId, eventType: ImageCanvasEventType): boolean {
+		const res = this._manager.virtualEvent({
 			id: 'virtual',
 			userId: userId,
 			isRevoked: false,
 			eventType,
 		})
 
-		this._app.paintApp?.render()
-		this._app.paintApp?.layerManager.update()
+		if (res) {
+			this._app.paintApp?.render()
+			this._app.paintApp?.layerManager.update()
+		}
+		return res
 	}
 }
