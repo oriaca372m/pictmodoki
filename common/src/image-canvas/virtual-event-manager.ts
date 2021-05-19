@@ -4,7 +4,7 @@ import lodash from 'lodash'
 
 // virtual eventとreal eventの等価性を確認する
 function isEqualVirtualRealEvent(real: ImageCanvasEvent, virtual: ImageCanvasEvent): boolean {
-	if (real.userId !== virtual.userId) {
+	if (real.userId !== virtual.userId || real.isRevoked !== virtual.isRevoked) {
 		return false
 	}
 
