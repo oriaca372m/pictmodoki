@@ -34,14 +34,16 @@ export class CanvasDrawer {
 
 	stroke(positions: Position[], color: Color, width: number): void {
 		this._ctx.globalCompositeOperation = 'source-over'
+		this._ctx.globalAlpha = 1
 		this._ctx.strokeStyle = color
 		this._ctx.lineWidth = width
 
 		this._stroke(positions)
 	}
 
-	erase(positions: Position[], width: number): void {
+	erase(positions: Position[], alpha: number, width: number): void {
 		this._ctx.globalCompositeOperation = 'destination-out'
+		this._ctx.globalAlpha = alpha
 		this._ctx.strokeStyle = '#ffffff'
 		this._ctx.lineWidth = width
 
@@ -64,11 +66,14 @@ export class CanvasDrawer {
 
 	clear(): void {
 		const { width, height } = this._canvasProxy.size
+		this._ctx.globalCompositeOperation = 'source-over'
+		this._ctx.globalAlpha = 1
 		this._ctx.clearRect(0, 0, width, height)
 	}
 
 	drawCanvasProxy(canvas: CanvasProxy): void {
 		this._ctx.globalCompositeOperation = 'source-over'
+		this._ctx.globalAlpha = 1
 		canvas.drawSelfTo(this._ctx)
 	}
 }

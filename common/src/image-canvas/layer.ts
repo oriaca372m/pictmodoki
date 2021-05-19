@@ -4,7 +4,7 @@ import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from '../canvas-proxy'
 export type LayerId = string
 export type LayerDrawCommand =
 	| { kind: 'stroke'; positions: Position[]; color: Color; width: number }
-	| { kind: 'erase'; positions: Position[]; width: number }
+	| { kind: 'erase'; positions: Position[]; opacity: number; width: number }
 	| { kind: 'clear' }
 
 export interface SerializedLayerCanvasModel {
@@ -57,7 +57,7 @@ export class LayerDrawer {
 		if (cmd.kind === 'stroke') {
 			this._drawer.stroke(cmd.positions, cmd.color, cmd.width)
 		} else if (cmd.kind === 'erase') {
-			this._drawer.erase(cmd.positions, cmd.width)
+			this._drawer.erase(cmd.positions, -cmd.opacity + 1, cmd.width)
 		} else if (cmd.kind === 'clear') {
 			this._drawer.clear()
 		}

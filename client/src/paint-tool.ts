@@ -145,6 +145,7 @@ export class EraserTool extends DrawingToolBase {
 		return {
 			kind: 'erase',
 			positions: this._pathPositions!,
+			opacity: this._app.state.color.value.opacity,
 			width: this._app.state.eraserSize.value,
 		}
 	}
