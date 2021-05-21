@@ -36,6 +36,15 @@ export class Room {
 		}
 	}
 
+	broadcastSystemMessage(msg: string): void {
+		this._broadcastEvent({
+			kind: 'chatSent',
+			userId: 'system',
+			name: 'system',
+			message: msg,
+		})
+	}
+
 	private _sendEventTo(user: User, event: Event): void {
 		const encoded = encode(event)
 		const conn = user.conn

@@ -15,7 +15,7 @@ export class Game {
 	private _nextPaintingData: PaintingData | undefined
 	private _state: 'painting' | 'waitingNext' | 'finished' = 'painting'
 
-	private readonly _timeLimit = 300
+	private readonly _timeLimit = 600
 	private _time = 0
 	private _intervalId: NodeJS.Timeout | undefined
 
@@ -46,8 +46,12 @@ export class Game {
 			return
 		}
 
-		this._paintingData.timeLeft = this._paintingData.timeLimit - this._time
+		if (this._paintingData.timeLeft % 60 == 0) {
+			this._room.broadcastSystemMessage(`残り${this._paintingData.timeLeft / 60}分です`)
+		}
+
 		this._time++
+		this._paintingData.timeLeft = this._paintingData.timeLimit - this._time
 	}
 
 	private _setNextPaintingData(painter: UserId): void {
@@ -122,8 +126,20 @@ export class Game {
 			return
 		}
 
+		if (msg === '!stop') {
+			this._state = 'finished'
+			this._room.onGameStateChanged()
+			return
+		}
+
 		if (this._paintingData.answer === msg) {
 			this._finishCurrentPainting(msgUser.userId)
+			return
+		}
+
+		if (msg.includes(this._paintingData.answer!)) {
+			this._room.broadcastSystemMessage(`「${msg}」… 惜しいかも`)
+			return
 		}
 	}
 
