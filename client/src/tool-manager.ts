@@ -7,18 +7,32 @@ export class ToolManager {
 	private _selectedTool: PaintTool | undefined
 	private _tools = new Map<string, PaintTool>()
 	private _toolHistory: string[] = []
+	private _isMouseDown = false
 
 	constructor(
 		private readonly _app: PaintApp,
 		private readonly _canvasContainerElm: HTMLDivElement
 	) {
 		this._canvasContainerElm.addEventListener('pointerdown', (e) => {
-			// e.preventDefault()
+			if (this._isMouseDown) {
+				return
+			}
+
+			this._isMouseDown = true
 			this.onMouseDown(this._getPosFromEvent(e))
 		})
 
 		this._canvasContainerElm.addEventListener('pointermove', (e) => {
-			// e.preventDefault()
+			if (!this._isMouseDown) {
+				return
+			}
+
+			if (e.buttons === 0) {
+				this._isMouseDown = false
+				this.onMouseUp(this._getPosFromEvent(e))
+				return
+			}
+
 			const es = e.getCoalescedEvents()
 			for (const coalesced of es) {
 				this.onMouseMoved(this._getPosFromEvent(coalesced))
@@ -26,7 +40,11 @@ export class ToolManager {
 		})
 
 		this._canvasContainerElm.addEventListener('pointerup', (e) => {
-			// e.preventDefault()
+			if (!this._isMouseDown) {
+				return
+			}
+
+			this._isMouseDown = false
 			this.onMouseUp(this._getPosFromEvent(e))
 		})
 	}
