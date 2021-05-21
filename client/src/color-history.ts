@@ -5,7 +5,7 @@ import lodash from 'lodash'
 export class ColorHistory {
 	private readonly _history: HsvColor[] = []
 	readonly updated = new TypedEvent<void>()
-	private readonly _max = 20
+	private readonly _max = 18
 
 	addColor(color: HsvColor): void {
 		const idx = this._history.findIndex((x) => lodash.isEqual(x, color))
