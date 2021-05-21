@@ -166,8 +166,8 @@ export class ImageCanvasDrawer {
 		this._idToControllerMap.delete(id)
 	}
 
-	setLayerOrder(order: LayerId[]): void {
-		this._model.setOrder(order)
+	setLayerOrder(order: readonly LayerId[]): void {
+		this._model.setOrder(Array.from(order))
 	}
 
 	drawLayer(id: LayerId, drawCmd: LayerDrawCommand): void {
