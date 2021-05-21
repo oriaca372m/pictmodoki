@@ -6,6 +6,8 @@ import { PaintApp } from './paint-app'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
 import { toRgbCode } from './components/color-picker/color'
 
+import lodash from 'lodash'
+
 export interface PaintTool {
 	enable(): void
 	disable(): void
@@ -127,6 +129,7 @@ export class PenTool extends DrawingToolBase {
 			positions: this._pathPositions!,
 			color: toRgbCode(this._app.state.color.value),
 			width: this._app.state.penSize.value,
+			curve: false,
 		}
 	}
 
@@ -147,6 +150,125 @@ export class EraserTool extends DrawingToolBase {
 			positions: this._pathPositions!,
 			opacity: this._app.state.color.value.opacity,
 			width: this._app.state.eraserSize.value,
+			curve: false,
+		}
+	}
+}
+
+function midPointBtw(p1: Position, p2: Position): Position {
+	return {
+		x: p1.x + (p2.x - p1.x) / 2,
+		y: p1.y + (p2.y - p1.y) / 2,
+	}
+}
+
+export class SmoothPenTool extends PaintToolBase {
+	protected _pathPositions: Position[] | undefined
+	private readonly _imageCanvas: ImageCanvasDrawerWithPreview
+	private _targetLayerId: LayerId | undefined
+
+	constructor(protected readonly _app: PaintApp) {
+		super()
+		this._imageCanvas = _app.drawer
+	}
+
+	disable(): void {
+		this._finishStroke()
+		super.disable()
+	}
+
+	onMouseDown(pos: Position): void {
+		this._startStroke(pos)
+	}
+
+	onMouseMoved(pos: Position): void {
+		this._continueStroke(pos)
+	}
+
+	onMouseUp(_pos: Position): void {
+		this._finishStroke()
+	}
+
+	private _startStroke(pos: Position) {
+		if (this._pathPositions !== undefined) {
+			return
+		}
+
+		this._targetLayerId = this._app.layerManager.selectedLayerId
+		if (this._targetLayerId === undefined) {
+			return
+		}
+
+		this._pathPositions = [pos]
+		this._imageCanvas.startPreview(this._targetLayerId)
+	}
+
+	private _continueStroke({ x, y }: Position) {
+		if (this._pathPositions === undefined) {
+			return
+		}
+
+		const lastPosition = this._pathPositions[this._pathPositions.length - 1]
+		if (lastPosition.x === x && lastPosition.y === y) {
+			return
+		}
+
+		this._pathPositions.push({ x, y })
+		this._imageCanvas.drawPreview(this._constructCommand())
+		this._app.render()
+	}
+
+	protected _finishStroke(): boolean {
+		if (this._pathPositions === undefined) {
+			return false
+		}
+
+		this._imageCanvas.endPreview()
+		this._app.render()
+
+		const res = this._app.commandSender.command({
+			kind: 'drawLayer',
+			layer: this._targetLayerId!,
+			drawCommand: this._constructCommand(),
+		})
+
+		this._pathPositions = undefined
+		this._app.colorHistory.addColor(this._app.state.color.value)
+		return res
+	}
+
+	protected _constructCommand(): LayerDrawCommand {
+		const cmds = []
+		const points = lodash.chunk(this._pathPositions, 5).map((chunk) => {
+			let x = 0
+			let y = 0
+			for (const p of chunk) {
+				x += p.x
+				y += p.y
+			}
+
+			return { x: x / chunk.length, y: y / chunk.length }
+		})
+
+		let p1 = points[0]
+		let p2 = points[1]
+
+		cmds.push(p1)
+
+		for (let i = 1; i < points.length; i++) {
+			cmds.push(p1, midPointBtw(p1, p2))
+			p1 = points[i]
+			p2 = points[i + 1]
+		}
+
+		cmds.push(p1)
+
+		return {
+			kind: 'stroke',
+			positions: cmds,
+			color: toRgbCode(this._app.state.color.value),
+			width: this._app.state.penSize.value,
+			curve: true,
 		}
 	}
 }

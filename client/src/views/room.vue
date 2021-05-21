@@ -17,6 +17,7 @@
 						<h1>ツール</h1>
 						<button @click="undo">一つ戻す</button>
 						<button @click="selectTool('pen')">ペン</button>
+						<button @click="selectTool('smooth-pen')">ペン(手ブレ補正)</button>
 						<button @click="selectTool('spuit')">スポイト</button>
 						<button @click="selectTool('eraser')">消しゴム</button>
 						<button @click="selectTool('moving')">移動</button>
