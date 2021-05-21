@@ -1,4 +1,4 @@
-import { NodeCanvasProxy, NodeCanvasProxyFactory } from './canvas-proxy'
+import { NodeCanvasProxyFactory } from './canvas-proxy'
 import { CommandInterpreter } from './command-interpreter'
 
 import { Size } from 'common'
@@ -10,38 +10,31 @@ import {
 } from 'common/dist/image-canvas'
 
 export class App {
-	size: Size
-	factory: NodeCanvasProxyFactory
-	drawer: ImageCanvasDrawer
+	private readonly _size: Size = { width: 2000, height: 2000 }
+	private readonly _factory: NodeCanvasProxyFactory
 	eventMgr: ImageCanvasEventManager
-	eventExecutor: ImageCanvasEventExecutor
-	targetCanvas: NodeCanvasProxy
+	private _drawer!: ImageCanvasDrawer
+	eventExecutor!: ImageCanvasEventExecutor
 	cmdInterpreter: CommandInterpreter
 
 	constructor() {
-		this.size = { width: 2000, height: 2000 }
-		this.factory = new NodeCanvasProxyFactory()
-		this.targetCanvas = this.factory.createCanvasProxy(this.size)
-
-		// 特に使用されないので小さめのサイズで作る
-		const model = new ImageCanvasModel({ width: 256, height: 256 })
-		this.drawer = new ImageCanvasDrawer(model, this.factory)
+		this._factory = new NodeCanvasProxyFactory()
 
 		this.eventMgr = new ImageCanvasEventManager()
-		this.eventExecutor = new ImageCanvasEventExecutor(this.eventMgr, this.drawer, this.factory)
-		this.eventMgr.setExecutor(this.eventExecutor)
-
 		this.cmdInterpreter = new CommandInterpreter(this.eventMgr)
 		this.resetCanvas()
 	}
 
 	resetCanvas(): void {
-		this.drawer.setModel(new ImageCanvasModel({ width: 2000, height: 2000 }))
 		this.eventMgr.breakHistory()
-		this.eventExecutor = new ImageCanvasEventExecutor(this.eventMgr, this.drawer, this.factory)
+		this._drawer = new ImageCanvasDrawer(new ImageCanvasModel(this._size), this._factory)
+		this.eventExecutor = new ImageCanvasEventExecutor(
+			this.eventMgr,
+			this._drawer,
+			this._factory
+		)
 		this.eventMgr.setExecutor(this.eventExecutor)
 
-		this.cmdInterpreter.command('system', { kind: 'createLayer' })
 		this.cmdInterpreter.command('system', { kind: 'createLayer' })
 	}
 }
