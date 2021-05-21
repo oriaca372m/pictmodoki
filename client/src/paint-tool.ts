@@ -239,16 +239,18 @@ export class SmoothPenTool extends PaintToolBase {
 
 	protected _constructCommand(): LayerDrawCommand {
 		const cmds = []
-		const points = lodash.chunk(this._pathPositions, 5).map((chunk) => {
-			let x = 0
-			let y = 0
-			for (const p of chunk) {
-				x += p.x
-				y += p.y
-			}
+		const points = lodash
+			.chunk(this._pathPositions, this._app.state.smoothingLevel.value)
+			.map((chunk) => {
+				let x = 0
+				let y = 0
+				for (const p of chunk) {
+					x += p.x
+					y += p.y
+				}
 
-			return { x: x / chunk.length, y: y / chunk.length }
-		})
+				return { x: x / chunk.length, y: y / chunk.length }
+			})
 
 		let p1 = points[0]
 		let p2 = points[1]
