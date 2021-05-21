@@ -4,10 +4,7 @@ import { ImageCanvasEventType, ImageCanvasEventId } from './event'
 import { ImageCanvasEventManager } from './event-manager'
 
 export class ImageCanvasEventRevoker {
-	static readonly unrevokableEvents: ImageCanvasEventType['kind'][] = [
-		'eventRevoked',
-		'layerCreated',
-	]
+	static readonly unrevokableEvents: ImageCanvasEventType['kind'][] = ['eventRevoked']
 
 	constructor(private readonly _eventManager: ImageCanvasEventManager) {}
 
