@@ -127,6 +127,10 @@
 				</div>
 				<div v-else-if="activeTab === 2">
 					<div>
+						<h1>手ブレ補正</h1>
+						<label>強さ</label><input type="number" v-model="smoothingLevel">
+					</div>
+					<div>
 						<h1>音</h1>
 						<div><label>音量</label><input type="number" v-model="volume" /></div>
 					</div>

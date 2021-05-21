@@ -26,6 +26,7 @@ export class AppState {
 	})
 	readonly penSize = new Bindable(10)
 	readonly eraserSize = new Bindable(20)
+	readonly smoothingLevel = new Bindable(5)
 	readonly shouldSaveCanvas = new Bindable(false)
 }
 
