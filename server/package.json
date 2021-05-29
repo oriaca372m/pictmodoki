@@ -27,6 +27,6 @@
   "dependencies": {
     "@msgpack/msgpack": "^2.5.1",
     "canvas": "^2.7.0",
-    "ws": "^7.4.4"
+    "ws": "^7.4.6"
   }
 }
