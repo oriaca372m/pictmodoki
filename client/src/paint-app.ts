@@ -7,7 +7,7 @@ import {
 
 import { CommandSender, SocketCommandSender } from './command-sender'
 import { WebSocketApi } from './web-socket-api'
-import { PenTool, EraserTool, MovingTool } from './paint-tool'
+import { PenTool, EraserTool, MovingTool, SmoothPenTool } from './paint-tool'
 import { OffscreenCanvasProxyFactory, WebCanvasProxy } from './canvas-proxy'
 import { LayerManager } from './layer-manager'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
@@ -57,8 +57,10 @@ export class PaintApp {
 
 		this.penTool = new PenTool(this)
 		this.eraserTool = new EraserTool(this)
+
 		this.toolManager = new ToolManager(this, this.app.canvasContainerElm)
 		this.toolManager.registerTool('pen', this.penTool)
+		this.toolManager.registerTool('smooth-pen', new SmoothPenTool(this))
 		this.toolManager.registerTool('eraser', this.eraserTool)
 		this.toolManager.registerTool('moving', new MovingTool(this.app))
 		this.toolManager.selectTool('pen')
