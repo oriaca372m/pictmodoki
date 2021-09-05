@@ -14,7 +14,7 @@ export class NodeCanvasProxy implements CanvasProxy {
 	}
 
 	drawSelfTo(ctx: CanvasRenderingContext2D): void {
-		ctx.drawImage((this._canvas as unknown) as OffscreenCanvas, 0, 0)
+		ctx.drawImage(this._canvas as unknown as CanvasImageSource, 0, 0)
 	}
 
 	get size(): Size {

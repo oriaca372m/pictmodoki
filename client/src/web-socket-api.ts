@@ -30,7 +30,9 @@ export class WebSocketApi {
 		void (async () => {
 			const blob = msg.data as Blob
 			// TODO: デコードにかかる時間によっては到着順が保証されなくなる?
-			const event = (await decodeAsync(blob.stream())) as Event
+			const event = (await decodeAsync(
+				blob.stream() as unknown as ReadableStream<number[]>
+			)) as Event
 			console.log(event)
 
 			this.eventHappened.emit(event)
