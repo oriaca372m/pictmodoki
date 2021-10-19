@@ -1,4 +1,4 @@
-import { ref, computed, ComputedRef } from 'vue'
+import { ref, computed, WritableComputedRef } from 'vue'
 import lodash from 'lodash'
 
 import { TypedEvent, Listener } from './typed-event'
@@ -65,7 +65,7 @@ export class Bindable<T> {
 		this._boundListener = undefined
 	}
 
-	toComputed(): ComputedRef<T> {
+	toComputed(): WritableComputedRef<T> {
 		const updater = ref(0)
 		this.valueChanged.on(() => {
 			updater.value += 1
