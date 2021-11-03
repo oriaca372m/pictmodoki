@@ -1,6 +1,8 @@
 import { App } from './app'
 import { User } from './user'
 import { Game } from './game'
+import { DrawingRecorder } from './drawing-recorder'
+import { NodeCanvasProxy } from './canvas-proxy'
 
 import { Command, Event } from 'common'
 
@@ -13,11 +15,24 @@ export class Room {
 	private readonly _app = new App()
 	private _game: Game | undefined
 
+	#resetCounter = 0
+	#recorder!: DrawingRecorder
+	readonly #canvas: NodeCanvasProxy
+
 	private _dict: string[]
+
+	#resetRecorder(): void {
+		this.#recorder = new DrawingRecorder(
+			`./test${this.#resetCounter}.mp4`,
+			this._app.canvasSize
+		)
+	}
 
 	constructor(_s: Ws.Server) {
 		const text = fs.readFileSync('./jisyo.txt', { encoding: 'utf-8' })
 		this._dict = text.split('\n')
+		this.#canvas = this._app.canvasFactory.createCanvasProxy(this._app.canvasSize)
+		this.#resetRecorder()
 	}
 
 	get users(): readonly User[] {
@@ -100,6 +115,9 @@ export class Room {
 	}
 
 	resetCanvas(): void {
+		++this.#resetCounter
+		this.#recorder.finish().catch((e) => console.error(e))
+		this.#resetRecorder()
 		this._app.resetCanvas()
 
 		void (async () => {
@@ -130,6 +148,10 @@ export class Room {
 				message: '\n' + this._users.map((x) => `${x.userId}: ${x.name}`).join('\n'),
 			})
 			return
+		}
+
+		if (msg === '!clear') {
+			this.resetCanvas()
 		}
 
 		if (msg === '!reset') {
@@ -167,6 +189,9 @@ export class Room {
 				console.log('不正なコマンド', cmd.value)
 				return
 			}
+
+			this._app.drawer.render(this.#canvas)
+			this.#recorder.addFrame(this.#canvas.toRawBuffer())
 
 			this._broadcastEvent({
 				kind: 'imageCanvasEvent',
