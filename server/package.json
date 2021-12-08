@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@types/node": "^16.7.10",
+    "@types/uuid": "^8.3.3",
     "@types/ws": "^8.2.0",
     "@typescript-eslint/eslint-plugin": "^5.1.0",
     "@typescript-eslint/parser": "^5.1.0",
@@ -27,8 +28,9 @@
   "dependencies": {
     "@msgpack/msgpack": "^2.5.1",
     "canvas": "^2.7.0",
-    "ws": "^8.2.1",
     "common": "*",
-    "encoder": "*"
+    "encoder": "*",
+    "uuid": "^8.3.2",
+    "ws": "^8.2.1"
   }
 }

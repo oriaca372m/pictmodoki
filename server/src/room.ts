@@ -15,7 +15,6 @@ export class Room {
 	private readonly _app = new App()
 	private _game: Game | undefined
 
-	#resetCounter = 0
 	#recorder!: DrawingRecorder
 	readonly #canvas: NodeCanvasProxy
 
@@ -23,7 +22,7 @@ export class Room {
 
 	#resetRecorder(): void {
 		this.#recorder = new DrawingRecorder(
-			`./test${this.#resetCounter}.mp4`,
+			'../user_generated/drawing_records',
 			this._app.canvasSize
 		)
 	}
@@ -115,8 +114,8 @@ export class Room {
 	}
 
 	resetCanvas(): void {
-		++this.#resetCounter
 		this.#recorder.finish().catch((e) => console.error(e))
+		this.broadcastSystemMessage(`録画のIDは rec#${this.#recorder.id} です。`)
 		this.#resetRecorder()
 		this._app.resetCanvas()
 
@@ -141,12 +140,9 @@ export class Room {
 		})
 
 		if (msg === '!list') {
-			this._broadcastEvent({
-				kind: 'chatSent',
-				userId: 'system',
-				name: 'system',
-				message: '\n' + this._users.map((x) => `${x.userId}: ${x.name}`).join('\n'),
-			})
+			this.broadcastSystemMessage(
+				'\n' + this._users.map((x) => `${x.userId}: ${x.name}`).join('\n')
+			)
 			return
 		}
 
