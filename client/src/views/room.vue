@@ -6,14 +6,13 @@
 		<div class="tool-area">
 			<div class="tab-selector">
 				<ul>
-					<li @click="activeTab = 1" :class="{ 'active': activeTab === 1 }">メイン</li>
-					<li @click="activeTab = 2" :class="{ 'active': activeTab === 2 }">その他</li>
+					<li @click="activeTab = 1" :class="{ active: activeTab === 1 }">メイン</li>
+					<li @click="activeTab = 2" :class="{ active: activeTab === 2 }">その他</li>
 				</ul>
 			</div>
 			<div>
 				<div v-if="activeTab === 1">
-					<div>
-					</div>
+					<div></div>
 					<div>
 						<h1>ツール</h1>
 						<button @click="undo">一つ戻す</button>
@@ -23,15 +22,19 @@
 						<button @click="selectTool('moving')">移動</button>
 					</div>
 					<div>
-						<ColorPicker v-model="color"/>
+						<ColorPicker v-model="color" />
 						<button @click="selectColor('#000000')">黒</button>
 						<button @click="selectColor('#ff0000')">赤</button>
 						<button @click="selectColor('#0000ff')">青</button>
 						<button @click="selectColor('#6b503e')">茶</button>
 						<button @click="selectColor('#fff6e3')">肌</button>
 						<div class="color-history">
-							<template  v-for="color in state.colorHistory">
-								<ColorPreview :value="color" class="color-preview" @click="selectColor(color)"/>
+							<template v-for="color in state.colorHistory">
+								<ColorPreview
+									:value="color"
+									class="color-preview"
+									@click="selectColor(color)"
+								/>
 							</template>
 						</div>
 					</div>
@@ -45,7 +48,7 @@
 									<button @click="penSize = 20">20</button>
 									<button @click="penSize = 50">50</button>
 								</div>
-								<div><input type="number" v-model="penSize"></div>
+								<div><input type="number" v-model="penSize" /></div>
 							</div>
 						</div>
 						<div>
@@ -57,21 +60,17 @@
 									<button @click="eraserSize = 20">20</button>
 									<button @click="eraserSize = 50">50</button>
 								</div>
-								<div><input type="number" v-model="eraserSize"></div>
+								<div><input type="number" v-model="eraserSize" /></div>
 							</div>
 						</div>
 					</div>
 					<div>
 						<h1>キャンバスの表示</h1>
-						<button @click="scale = 100; rotation = 0">原寸大</button>
+						<button @click="setCanvasViewOriginal">原寸大</button>
 						<button @click="setCanvasViewEntire">全体を表示</button>
 						<div class="canvas-view-inner">
-							<div>
-								<label>拡大率</label><input type="number" v-model="scale">
-							</div>
-							<div>
-								<label>角度</label><input type="number" v-model="rotation">
-							</div>
+							<div><label>拡大率</label><input type="number" v-model="scale" /></div>
+							<div><label>角度</label><input type="number" v-model="rotation" /></div>
 						</div>
 					</div>
 					<div class="layer-selector">
@@ -82,13 +81,21 @@
 								<div>
 									<button @click="selectLayerId(layer.id)">選択</button>
 									<template v-if="layer.isVisible">
-										<button @click="setLayerVisibility(layer.id, false)">隠す</button>
+										<button @click="setLayerVisibility(layer.id, false)">
+											隠す
+										</button>
 									</template>
 									<template v-else>
-										<button @click="setLayerVisibility(layer.id, true)">表示</button>
+										<button @click="setLayerVisibility(layer.id, true)">
+											表示
+										</button>
 									</template>
 									<button @click="removeLayerId(layer.id)">削除</button>
-									<label><template v-if="layer.id === state.selectedLayerId">* </template>{{ layer.id }} {{ layer.name }}</label>
+									<label
+										><template v-if="layer.id === state.selectedLayerId"
+											>* </template
+										>{{ layer.id }} {{ layer.name }}</label
+									>
 								</div>
 							</template>
 						</draggable>
@@ -96,25 +103,36 @@
 					<div class="chat-box">
 						<h1>チャット</h1>
 						<div>
-							<input v-model="state.messageToSend" @keyup.enter="sendChat">
+							<input v-model="state.messageToSend" @keyup.enter="sendChat" />
 							<button @click="sendChat">送信</button>
 						</div>
-						<div v-for="chat in state.chatMessages.slice().reverse()" :key="chat.msgId">
+						<div v-for="chat in state.chatMessages" :key="chat.msgId">
 							<p>{{ chat.name }}: {{ chat.msg }}</p>
+							<div v-for="(attachment, idx) in chat.attachments" :key="idx">
+								<div v-if="(attachment.kind = 'rec')">
+									<video
+										class="drawing-record-video"
+										controls
+										:src="
+											'/user_generated/drawing_records/' +
+											attachment.id +
+											'.mp4'
+										"
+									></video>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 				<div v-else-if="activeTab === 2">
 					<div>
 						<h1>音</h1>
-						<div>
-							<label>音量</label><input type="number" v-model="volume">
-						</div>
+						<div><label>音量</label><input type="number" v-model="volume" /></div>
 					</div>
 					<div>
 						<h1>保存</h1>
 						<button @click="saveCanvas">今のキャンバスをpngで保存</button>
-						<input type="checkbox" v-model="shouldSaveCanvas"><label>自動保存</label>
+						<input type="checkbox" v-model="shouldSaveCanvas" /><label>自動保存</label>
 					</div>
 					<div>
 						<h1>ユーザー情報</h1>
@@ -243,6 +261,9 @@
 	background-color: #63aeff;
 }
 
+.drawing-record-video {
+	width: 100%;
+}
 </style>
 
 <script src="./room-script"></script>
