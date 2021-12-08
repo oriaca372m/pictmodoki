@@ -39,7 +39,7 @@ namespace {
 	}
 }
 
-Encoder::Encoder(const char* path, Size in_size, Size out_size, int framerate) :
+Encoder::Encoder(std::string_view path, Size in_size, Size out_size, int framerate) :
 	path(path), in_size(in_size), out_size(out_size), framerate(framerate) {
 	rgb_stride[0] = in_size.width * 3;
 };
@@ -72,12 +72,12 @@ void Encoder::cleanup() {
 }
 
 void Encoder::init() {
-	if (avio_open(&av_io_context, path, AVIO_FLAG_WRITE) < 0) {
+	if (avio_open(&av_io_context, path.c_str(), AVIO_FLAG_WRITE) < 0) {
 		cleanup();
 		throw std::runtime_error("Could not open AVIOContext");
 	}
 
-	if (avformat_alloc_output_context2(&fmt_ctx, nullptr, nullptr, path) < 0) {
+	if (avformat_alloc_output_context2(&fmt_ctx, nullptr, nullptr, path.c_str()) < 0) {
 		cleanup();
 		throw std::runtime_error("Could not create output context");
 	}
@@ -199,4 +199,8 @@ void Encoder::finish() {
 	}
 
 	cleanup();
+}
+
+std::size_t Encoder::required_rgb_buf_size() const {
+	return in_size.width * in_size.height * 3;
 }

@@ -48,4 +48,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 	Boost::boost
 )
 
-add_definitions(-DNAPI_VERSION=4)
+add_definitions(-DNAPI_VERSION=6)

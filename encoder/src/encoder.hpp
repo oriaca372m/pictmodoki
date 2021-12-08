@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
+#include <string_view>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -15,15 +17,17 @@ struct Size final {
 
 class Encoder final {
 public:
-	Encoder(const char* path, Size in_size, Size out_size, int framerate);
+	Encoder(std::string_view path, Size in_size, Size out_size, int framerate);
 	~Encoder();
 
 	void init();
 	void add_frame(std::uint8_t* rgb_buf);
 	void finish();
 
+	std::size_t required_rgb_buf_size() const;
+
 private:
-	const char* const path;
+	std::string path;
 	Size in_size;
 	Size out_size;
 	const int framerate;
