@@ -17,6 +17,7 @@
 						<h1>ツール</h1>
 						<button @click="undo">一つ戻す</button>
 						<button @click="selectTool('pen')">ペン</button>
+						<button @click="selectTool('smooth-pen')">ペン(手ブレ補正)</button>
 						<button @click="selectTool('spuit')">スポイト</button>
 						<button @click="selectTool('eraser')">消しゴム</button>
 						<button @click="selectTool('moving')">移動</button>
@@ -125,6 +126,10 @@
 					</div>
 				</div>
 				<div v-else-if="activeTab === 2">
+					<div>
+						<h1>手ブレ補正</h1>
+						<label>強さ</label><input type="number" v-model="smoothingLevel">
+					</div>
 					<div>
 						<h1>音</h1>
 						<div><label>音量</label><input type="number" v-model="volume" /></div>

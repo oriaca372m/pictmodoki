@@ -203,6 +203,7 @@ export default defineComponent({
 			eraserSize: appState.eraserSize.toComputed(),
 			shouldSaveCanvas: appState.shouldSaveCanvas.toComputed(),
 			volume: volume.toComputed(),
+			smoothingLevel: appState.smoothingLevel.toComputed(),
 			activeTab: ref(1),
 		}
 	},
