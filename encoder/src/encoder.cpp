@@ -39,9 +39,9 @@ namespace {
 	}
 }
 
-Encoder::Encoder(const char* path, int width, int height, int framerate) :
-	path(path), width(width), height(height), framerate(framerate) {
-	rgb_stride[0] = width * 3;
+Encoder::Encoder(const char* path, Size in_size, Size out_size, int framerate) :
+	path(path), in_size(in_size), out_size(out_size), framerate(framerate) {
+	rgb_stride[0] = in_size.width * 3;
 };
 
 Encoder::~Encoder() {
@@ -95,14 +95,10 @@ void Encoder::init() {
 		throw std::runtime_error("Could not allocate the encoder context");
 	}
 
-	enc_ctx->bit_rate = 400000;
-	enc_ctx->width = width;
-	enc_ctx->height = height;
-	enc_ctx->time_base = AVRational{1, framerate};
-	enc_ctx->framerate = AVRational{framerate, 1};
-	enc_ctx->gop_size = 10;
-	enc_ctx->max_b_frames = 1;
 	enc_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
+	enc_ctx->width = out_size.width;
+	enc_ctx->height = out_size.height;
+	enc_ctx->time_base = AVRational{1, framerate};
 
 	if (fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER) {
 		enc_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -111,6 +107,7 @@ void Encoder::init() {
 	AVDictionary* codec_options = nullptr;
 	av_dict_set(&codec_options, "preset", "veryfast", 0);
 	av_dict_set(&codec_options, "tune", "animation", 0);
+	av_dict_set(&codec_options, "crf", "22", 0);
 
 	auto ret = avcodec_open2(enc_ctx, encoder, &codec_options);
 	if (ret < 0) {
@@ -159,11 +156,11 @@ void Encoder::init() {
 	}
 
 	sws_ctx = sws_getContext(
-		width,
-		height,
+		in_size.width,
+		in_size.height,
 		AV_PIX_FMT_RGB24,
-		enc_ctx->width,
-		enc_ctx->height,
+		out_size.width,
+		out_size.height,
 		enc_ctx->pix_fmt,
 		SWS_BICUBIC,
 		nullptr,
@@ -181,7 +178,7 @@ void Encoder::add_frame(std::uint8_t* rgb_buf) {
 		throw std::runtime_error("Could not make a encode frame writable");
 	}
 
-	sws_scale(sws_ctx, &rgb_buf, rgb_stride, 0, height, frame_enc->data, frame_enc->linesize);
+	sws_scale(sws_ctx, &rgb_buf, rgb_stride, 0, in_size.height, frame_enc->data, frame_enc->linesize);
 
 	frame_enc->pts = current_frame;
 	encode(enc_ctx, fmt_ctx, stream, frame_enc, pkt);

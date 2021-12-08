@@ -58,7 +58,7 @@ static Napi::Value Method(const Napi::CallbackInfo& info) {
 	std::uint8_t* rgb_buf = static_cast<std::uint8_t*>(av_malloc(width * height * 3));
 
 	try {
-		Encoder encoder("test.mp4", width, height, framerate);
+		Encoder encoder("test.mp4", {width, height}, {1000, 1000}, framerate);
 		encoder.init();
 
 		for (int i = 0; i < framerate * 60 * 1; ++i) {

@@ -8,9 +8,14 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+struct Size final {
+	unsigned int width;
+	unsigned int height;
+};
+
 class Encoder final {
 public:
-	Encoder(const char* path, int width, int height, int framerate);
+	Encoder(const char* path, Size in_size, Size out_size, int framerate);
 	~Encoder();
 
 	void init();
@@ -19,8 +24,8 @@ public:
 
 private:
 	const char* const path;
-	const int width;
-	const int height;
+	Size in_size;
+	Size out_size;
 	const int framerate;
 
 	AVIOContext* av_io_context = nullptr;
