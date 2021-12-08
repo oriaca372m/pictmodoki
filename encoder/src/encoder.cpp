@@ -172,13 +172,17 @@ void Encoder::init() {
 	}
 }
 
-void Encoder::add_frame(std::uint8_t* rgb_buf) {
+void Encoder::add_bgra24_frame(std::uint8_t* buf, std::size_t size) {
+	if (size < in_size.width * in_size.height * 4) {
+		throw std::runtime_error("too short buffer");
+	}
+
 	auto ret = av_frame_make_writable(frame_enc);
 	if (ret < 0) {
 		throw std::runtime_error("Could not make a encode frame writable");
 	}
 
-	sws_scale(sws_ctx, &rgb_buf, rgb_stride, 0, in_size.height, frame_enc->data, frame_enc->linesize);
+	sws_scale(sws_ctx, &buf, rgb_stride, 0, in_size.height, frame_enc->data, frame_enc->linesize);
 
 	frame_enc->pts = current_frame;
 	encode(enc_ctx, fmt_ctx, stream, frame_enc, pkt);
@@ -199,8 +203,4 @@ void Encoder::finish() {
 	}
 
 	cleanup();
-}
-
-std::size_t Encoder::required_rgb_buf_size() const {
-	return in_size.width * in_size.height * 4;
 }

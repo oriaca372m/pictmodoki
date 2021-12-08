@@ -10,7 +10,7 @@ export class DrawingRecorder {
 	}
 
 	addFrame(buffer: Buffer) {
-		this.#encoder.addFrame(buffer)
+		this.#encoder.addBgra24Frame(buffer)
 	}
 
 	async finish(): Promise<void> {

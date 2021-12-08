@@ -45,7 +45,7 @@ public:
 			env,
 			"EncoderWrapper",
 			{InstanceMethod("init", &EncoderWrapper::init),
-			 InstanceMethod("addFrame", &EncoderWrapper::add_frame),
+			 InstanceMethod("addBgra24Frame", &EncoderWrapper::add_bgra24_frame),
 			 InstanceMethod("finish", &EncoderWrapper::finish)});
 		auto constructor = new Napi::FunctionReference();
 		*constructor = Napi::Persistent(func);
@@ -82,7 +82,7 @@ private:
 		return info.Env().Undefined();
 	};
 
-	Napi::Value add_frame(const Napi::CallbackInfo& info) {
+	Napi::Value add_bgra24_frame(const Napi::CallbackInfo& info) {
 		auto env = info.Env();
 		auto buf = napi_value_to_uint8_ptr(info[0]);
 
@@ -91,12 +91,7 @@ private:
 			return env.Undefined();
 		}
 
-		if (buf->second < encoder->required_rgb_buf_size()) {
-			Napi::RangeError::New(env, "too short buffer").ThrowAsJavaScriptException();
-			return env.Undefined();
-		}
-
-		encoder->add_frame(buf->first);
+		encoder->add_bgra24_frame(buf->first, buf->second);
 		return env.Undefined();
 	}
 

@@ -21,10 +21,8 @@ public:
 	~Encoder();
 
 	void init();
-	void add_frame(std::uint8_t* rgb_buf);
+	void add_bgra24_frame(std::uint8_t* buf, std::size_t size);
 	void finish();
-
-	std::size_t required_rgb_buf_size() const;
 
 private:
 	std::string path;
