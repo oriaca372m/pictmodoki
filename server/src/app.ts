@@ -10,15 +10,15 @@ import {
 } from 'common/dist/image-canvas'
 
 export class App {
-	private readonly _size: Size = { width: 2000, height: 2000 }
-	private readonly _factory: NodeCanvasProxyFactory
+	readonly #size: Size = { width: 2000, height: 2000 }
+	readonly #factory: NodeCanvasProxyFactory
+	#drawer!: ImageCanvasDrawer
 	eventMgr: ImageCanvasEventManager
-	private _drawer!: ImageCanvasDrawer
 	eventExecutor!: ImageCanvasEventExecutor
 	cmdInterpreter: CommandInterpreter
 
 	constructor() {
-		this._factory = new NodeCanvasProxyFactory()
+		this.#factory = new NodeCanvasProxyFactory()
 
 		this.eventMgr = new ImageCanvasEventManager()
 		this.cmdInterpreter = new CommandInterpreter(this.eventMgr)
@@ -27,14 +27,26 @@ export class App {
 
 	resetCanvas(): void {
 		this.eventMgr.breakHistory()
-		this._drawer = new ImageCanvasDrawer(new ImageCanvasModel(this._size), this._factory)
+		this.#drawer = new ImageCanvasDrawer(new ImageCanvasModel(this.#size), this.#factory)
 		this.eventExecutor = new ImageCanvasEventExecutor(
 			this.eventMgr,
-			this._drawer,
-			this._factory
+			this.#drawer,
+			this.#factory
 		)
 		this.eventMgr.setExecutor(this.eventExecutor)
 
 		this.cmdInterpreter.command('system', { kind: 'createLayer' })
+	}
+
+	get canvasSize(): Size {
+		return this.#size
+	}
+
+	get canvasFactory(): NodeCanvasProxyFactory {
+		return this.#factory
+	}
+
+	get drawer(): ImageCanvasDrawer {
+		return this.#drawer
 	}
 }

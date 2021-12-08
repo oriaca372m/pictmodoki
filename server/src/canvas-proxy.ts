@@ -31,6 +31,10 @@ export class NodeCanvasProxy implements CanvasProxy {
 		const stream = this._canvas.createPNGStream()
 		stream.pipe(out)
 	}
+
+	toRawBuffer(): Buffer {
+		return this._canvas.toBuffer('raw')
+	}
 }
 
 export class NodeCanvasProxyFactory implements CanvasProxyFactory {

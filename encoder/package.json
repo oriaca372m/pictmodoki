@@ -1,0 +1,15 @@
+{
+  "name": "encoder",
+  "version": "1.0.0",
+  "main": "js_src/index.js",
+  "license": "Zlib",
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "cmake-js": "^6.3.0",
+    "node-addon-api": "^4.2.0"
+  },
+  "scripts": {
+    "install": "cmake-js compile",
+    "test": "node js_src/test.js"
+  }
+}

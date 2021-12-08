@@ -9,11 +9,17 @@ import { App, AppState } from '../app'
 import { Bindable } from '../bindable'
 import { UserInfo } from '../user-manager'
 
+type ChatAttachment = {
+	kind: 'rec'
+	id: string
+}
+
 interface ChatMessage {
 	msgId: number
 	id: string
 	name: string
 	msg: string
+	attachments: ChatAttachment[]
 }
 
 interface LayerInfo {
@@ -74,7 +80,23 @@ export default defineComponent({
 
 			vapp.ready.once(() => {
 				vapp.chatManager!.addMessageRecievedHandler((id, name, msg) => {
-					state.chatMessages.push({ msgId: state.chatMessages.length, id, name, msg })
+					const attachments: ChatAttachment[] = []
+
+					const recIdPattern =
+						/\brec#([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/g
+					for (const match of msg.matchAll(recIdPattern)) {
+						console.log(match)
+						console.log(match[1])
+						attachments.push({ kind: 'rec', id: match[1] })
+					}
+
+					state.chatMessages.unshift({
+						msgId: state.chatMessages.length,
+						id,
+						name,
+						msg,
+						attachments,
+					})
 				})
 
 				const paintApp = vapp.paintApp!
@@ -149,6 +171,11 @@ export default defineComponent({
 			app?.paintApp?.setCanvasViewEntire()
 		}
 
+		function setCanvasViewOriginal() {
+			appState.scale.value = 100
+			appState.rotation.value = 0
+		}
+
 		function saveCanvas() {
 			app?.paintApp?.saveCanvas()
 		}
@@ -167,6 +194,7 @@ export default defineComponent({
 			setLayerVisibility,
 			sendChat,
 			setCanvasViewEntire,
+			setCanvasViewOriginal,
 			saveCanvas,
 			rotation: appState.rotation.toComputed(),
 			scale: appState.scale.toComputed(),

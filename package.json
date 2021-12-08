@@ -8,7 +8,8 @@
     "packages": [
       "client",
       "server",
-      "common"
+      "common",
+      "encoder"
     ]
   }
 }

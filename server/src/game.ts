@@ -87,13 +87,14 @@ export class Game {
 			throw 'unrechable!'
 		}
 
+		this._room.resetCanvas()
+
 		this._time = 0
 		this._state = 'painting'
 		this._paintingData = this._nextPaintingData!
 		this._nextPaintingData = undefined
 
 		this._room.onGameStateChanged()
-		this._room.resetCanvas()
 	}
 
 	private _finishCurrentPainting(respondent: UserId | undefined): void {

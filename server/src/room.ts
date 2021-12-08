@@ -1,6 +1,8 @@
 import { App } from './app'
 import { User } from './user'
 import { Game } from './game'
+import { DrawingRecorder } from './drawing-recorder'
+import { NodeCanvasProxy } from './canvas-proxy'
 
 import { Command, Event } from 'common'
 
@@ -13,11 +15,23 @@ export class Room {
 	private readonly _app = new App()
 	private _game: Game | undefined
 
+	#recorder!: DrawingRecorder
+	readonly #canvas: NodeCanvasProxy
+
 	private _dict: string[]
+
+	#resetRecorder(): void {
+		this.#recorder = new DrawingRecorder(
+			'../user_generated/drawing_records',
+			this._app.canvasSize
+		)
+	}
 
 	constructor(_s: Ws.Server) {
 		const text = fs.readFileSync('./jisyo.txt', { encoding: 'utf-8' })
 		this._dict = text.split('\n')
+		this.#canvas = this._app.canvasFactory.createCanvasProxy(this._app.canvasSize)
+		this.#resetRecorder()
 	}
 
 	get users(): readonly User[] {
@@ -100,6 +114,17 @@ export class Room {
 	}
 
 	resetCanvas(): void {
+		let recorded = false
+		try {
+			recorded = this.#recorder.finish()
+		} catch (e) {
+			console.error(e)
+		}
+
+		if (recorded) {
+			this.broadcastSystemMessage(`録画のIDは rec#${this.#recorder.id} です。`)
+		}
+		this.#resetRecorder()
 		this._app.resetCanvas()
 
 		void (async () => {
@@ -123,13 +148,14 @@ export class Room {
 		})
 
 		if (msg === '!list') {
-			this._broadcastEvent({
-				kind: 'chatSent',
-				userId: 'system',
-				name: 'system',
-				message: '\n' + this._users.map((x) => `${x.userId}: ${x.name}`).join('\n'),
-			})
+			this.broadcastSystemMessage(
+				'\n' + this._users.map((x) => `${x.userId}: ${x.name}`).join('\n')
+			)
 			return
+		}
+
+		if (msg === '!clear') {
+			this.resetCanvas()
 		}
 
 		if (msg === '!reset') {
@@ -166,6 +192,13 @@ export class Room {
 			if (canvasEvent === undefined) {
 				console.log('不正なコマンド', cmd.value)
 				return
+			}
+
+			this._app.drawer.render(this.#canvas)
+			try {
+				this.#recorder.addFrame(this.#canvas.toRawBuffer())
+			} catch (e) {
+				console.error('録画中にエラー', e)
 			}
 
 			this._broadcastEvent({
