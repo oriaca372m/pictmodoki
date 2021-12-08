@@ -6,6 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(encoder-native)
 add_library(${PROJECT_NAME} SHARED
 	"src/main.cpp"
+	"src/encoder.cpp"
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 17
