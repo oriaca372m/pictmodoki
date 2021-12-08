@@ -1,39 +1,20 @@
 import { Size } from 'common'
-import { spawn, ChildProcessWithoutNullStreams } from 'child_process'
+import { Encoder } from 'encoder'
 
 export class DrawingRecorder {
-	#ffmpeg: ChildProcessWithoutNullStreams
+	#encoder: Encoder
 
-	constructor(outputPath: string, size: Size, framerate = 60) {
-		this.#ffmpeg = spawn('ffmpeg', [
-			'-y',
-			'-f',
-			'rawvideo',
-			'-pixel_format',
-			'bgra',
-			'-video_size',
-			`${size.width}x${size.height}`,
-			'-framerate',
-			`${framerate}`,
-			'-i',
-			'-',
-			'-pix_fmt',
-			'yuv420p',
-			outputPath,
-		])
+	constructor(outputPath: string, readonly size: Size, framerate = 60) {
+		this.#encoder = new Encoder(outputPath, size, size, framerate)
+		this.#encoder.init()
 	}
 
 	addFrame(buffer: Buffer) {
-		this.#ffmpeg.stdin.write(buffer)
+		this.#encoder.addFrame(buffer)
 	}
 
 	async finish(): Promise<void> {
-		return await new Promise<void>((resolve) => {
-			this.#ffmpeg.on('close', () => {
-				resolve()
-			})
-
-			this.#ffmpeg.stdin.end()
-		})
+		this.#encoder.finish()
+		return Promise.resolve()
 	}
 }

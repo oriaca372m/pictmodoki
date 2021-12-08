@@ -41,7 +41,7 @@ namespace {
 
 Encoder::Encoder(std::string_view path, Size in_size, Size out_size, int framerate) :
 	path(path), in_size(in_size), out_size(out_size), framerate(framerate) {
-	rgb_stride[0] = in_size.width * 3;
+	rgb_stride[0] = in_size.width * 4;
 };
 
 Encoder::~Encoder() {
@@ -158,7 +158,7 @@ void Encoder::init() {
 	sws_ctx = sws_getContext(
 		in_size.width,
 		in_size.height,
-		AV_PIX_FMT_RGB24,
+		AV_PIX_FMT_BGRA,
 		out_size.width,
 		out_size.height,
 		enc_ctx->pix_fmt,
@@ -202,5 +202,5 @@ void Encoder::finish() {
 }
 
 std::size_t Encoder::required_rgb_buf_size() const {
-	return in_size.width * in_size.height * 3;
+	return in_size.width * in_size.height * 4;
 }

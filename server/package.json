@@ -27,6 +27,8 @@
   "dependencies": {
     "@msgpack/msgpack": "^2.5.1",
     "canvas": "^2.7.0",
-    "ws": "^8.2.1"
+    "ws": "^8.2.1",
+    "common": "*",
+    "encoder": "*"
   }
 }
