@@ -8,8 +8,9 @@ function round2(x: number): number {
 }
 
 export class DrawingRecorder {
-	#encoder: Encoder
+	#encoder: Encoder | undefined
 	#id: string
+	#outSize: Size
 
 	get id(): string {
 		return this.#id
@@ -19,23 +20,25 @@ export class DrawingRecorder {
 		return resolve(this.outputDir, this.#id + '.mp4')
 	}
 
-	constructor(readonly outputDir: string, readonly size: Size, framerate = 60) {
+	constructor(readonly outputDir: string, readonly size: Size, readonly framerate = 60) {
 		this.#id = uuidv4()
-		this.#encoder = new Encoder(
-			this.outputPath,
-			size,
-			{ width: round2(size.width / 2), height: round2(size.height / 2) },
-			framerate
-		)
-		this.#encoder.init()
+		this.#outSize = { width: round2(size.width / 2), height: round2(size.height / 2) }
 	}
 
 	addFrame(buffer: Buffer) {
+		if (this.#encoder === undefined) {
+			this.#encoder = new Encoder(this.outputPath, this.size, this.#outSize, this.framerate)
+			this.#encoder.init()
+		}
 		this.#encoder.addBgra24Frame(buffer)
 	}
 
-	async finish(): Promise<void> {
-		this.#encoder.finish()
-		return Promise.resolve()
+	// 実際に映像が出力されたらtrue
+	finish(): boolean {
+		if (this.#encoder !== undefined) {
+			this.#encoder.finish()
+			return true
+		}
+		return false
 	}
 }

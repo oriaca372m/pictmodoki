@@ -114,8 +114,16 @@ export class Room {
 	}
 
 	resetCanvas(): void {
-		this.#recorder.finish().catch((e) => console.error(e))
-		this.broadcastSystemMessage(`録画のIDは rec#${this.#recorder.id} です。`)
+		let recorded = false
+		try {
+			recorded = this.#recorder.finish()
+		} catch (e) {
+			console.error(e)
+		}
+
+		if (recorded) {
+			this.broadcastSystemMessage(`録画のIDは rec#${this.#recorder.id} です。`)
+		}
 		this.#resetRecorder()
 		this._app.resetCanvas()
 
