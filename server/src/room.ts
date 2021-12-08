@@ -187,7 +187,11 @@ export class Room {
 			}
 
 			this._app.drawer.render(this.#canvas)
-			this.#recorder.addFrame(this.#canvas.toRawBuffer())
+			try {
+				this.#recorder.addFrame(this.#canvas.toRawBuffer())
+			} catch (e) {
+				console.error('録画中にエラー', e)
+			}
 
 			this._broadcastEvent({
 				kind: 'imageCanvasEvent',
