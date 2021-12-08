@@ -8,5 +8,6 @@ const buf = new Uint8Array(size.width * size.height * 4);
 for (let i = 0; i < 600; ++i) {
 	buf.fill(i % 256);
 	obj.addBgra24Frame(buf);
+	console.log(`${i} / 600`)
 }
 obj.finish();

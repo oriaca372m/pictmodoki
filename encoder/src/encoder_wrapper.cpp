@@ -41,6 +41,8 @@ namespace {
 class EncoderWrapper : public Napi::ObjectWrap<EncoderWrapper> {
 public:
 	static Napi::Object init(Napi::Env env, Napi::Object exports) {
+		Encoder::init_class();
+
 		auto func = DefineClass(
 			env,
 			"EncoderWrapper",

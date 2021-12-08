@@ -11,10 +11,6 @@ namespace {
 	}
 
 	void encode(AVCodecContext* enc_ctx, AVFormatContext* fmt_ctx, AVStream* stream, AVFrame* frame, AVPacket* pkt) {
-		if (frame != nullptr) {
-			fmt::print("Send frame {}\n", frame->pts);
-		}
-
 		auto ret = avcodec_send_frame(enc_ctx, frame);
 		if (ret < 0) {
 			throw std::runtime_error("Error sending a frame for encoding");
@@ -33,10 +29,13 @@ namespace {
 			if (av_interleaved_write_frame(fmt_ctx, pkt) != 0) {
 				throw std::runtime_error("Error during writing frame");
 			}
-			fmt::print("Write packet {} (size={})\n", pkt->pts, pkt->size);
 			av_packet_unref(pkt);
 		}
 	}
+}
+
+void Encoder::init_class() {
+	av_log_set_level(AV_LOG_QUIET);
 }
 
 Encoder::Encoder(std::string_view path, Size in_size, Size out_size, int framerate) :

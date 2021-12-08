@@ -17,6 +17,8 @@ struct Size final {
 
 class Encoder final {
 public:
+	static void init_class();
+
 	Encoder(std::string_view path, Size in_size, Size out_size, int framerate);
 	~Encoder();
 
