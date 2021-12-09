@@ -14,6 +14,9 @@ export interface PaintTool {
 	onMouseDown(pos: Position): void
 	onMouseUp(pos: Position): void
 
+	onKeyDown(e: KeyboardEvent): void
+	onKeyUp(e: KeyboardEvent): void
+
 	readonly isEnabled: boolean
 }
 
@@ -39,6 +42,13 @@ abstract class PaintToolBase implements PaintTool {
 		// pass
 	}
 	onMouseUp(_pos: Position): void {
+		// pass
+	}
+
+	onKeyDown(_e: KeyboardEvent): void {
+		// pass
+	}
+	onKeyUp(_e: KeyboardEvent): void {
 		// pass
 	}
 }
@@ -151,40 +161,98 @@ export class EraserTool extends DrawingToolBase {
 	}
 }
 
+interface ZoomState {
+	startPos: Position
+	startScale: number
+}
+
 export class MovingTool extends PaintToolBase {
-	private _lastPos: Position | undefined
+	#zoomState: ZoomState | undefined
+	#lastPos: Position | undefined
 	private _mouseMoveHandler: (e: MouseEvent) => void
+	#isMouseDown = false
+	#shouldZoom = false
 
 	constructor(private readonly _app: App) {
 		super()
-		this._mouseMoveHandler = (e) => this._onScrollContainerMouseMoved({ x: e.x, y: e.y })
+		this._mouseMoveHandler = (e) => {
+			this.#onMouseMovedScrollContainer({ x: e.x, y: e.y })
+		}
+	}
+
+	enable(): void {
+		this._app.canvasScrollContainerElm.addEventListener('mousemove', this._mouseMoveHandler)
+		super.enable()
 	}
 
 	disable(): void {
+		this._app.canvasScrollContainerElm.removeEventListener('mousemove', this._mouseMoveHandler)
 		this.onMouseUp()
+		this.#shouldZoom = false
 		super.disable()
 	}
 
-	onMouseDown(_pos: Position): void {
-		this._app.canvasScrollContainerElm.addEventListener('mousemove', this._mouseMoveHandler)
-	}
-
-	private _onScrollContainerMouseMoved(pos: Position): void {
-		if (this._lastPos !== undefined) {
-			const dx = this._lastPos.x - pos.x
-			const dy = this._lastPos.y - pos.y
-			if (dx === 0 || dy === 0) {
-				return
+	onMouseDown(): void {
+		this.#isMouseDown = true
+		if (this.#shouldZoom) {
+			this.#zoomState = {
+				startPos: this.#lastPos!,
+				startScale: this._app.state.scale.value,
 			}
-
-			this._app.canvasScrollContainerElm.scrollBy(dx, dy)
 		}
-
-		this._lastPos = pos
 	}
 
 	onMouseUp(): void {
-		this._app.canvasScrollContainerElm.removeEventListener('mousemove', this._mouseMoveHandler)
-		this._lastPos = undefined
+		this.#isMouseDown = false
+		this.#zoomState = undefined
+	}
+
+	#onMouseMovedScrollContainer(pos: Position): void {
+		try {
+			if (!this.#isMouseDown || this.#lastPos === undefined) {
+				return
+			}
+
+			if (this.#zoomState === undefined) {
+				this.#scroll(pos)
+			} else {
+				this.#zoom(pos)
+			}
+		} finally {
+			this.#lastPos = pos
+		}
+	}
+
+	onKeyDown(e: KeyboardEvent) {
+		if (e.repeat) {
+			return
+		}
+
+		if (e.code === 'ShiftLeft') {
+			this.#shouldZoom = true
+		}
+	}
+
+	onKeyUp(e: KeyboardEvent) {
+		if (e.code === 'ShiftLeft') {
+			this.#shouldZoom = false
+			this.#zoomState = undefined
+		}
+	}
+
+	#zoom(pos: Position): void {
+		const state = this.#zoomState!
+		const dy = state.startPos.y - pos.y
+		this._app.state.scale.value = Math.max(1, Math.floor(state.startScale + dy / 2))
+	}
+
+	#scroll(pos: Position): void {
+		const dx = this.#lastPos!.x - pos.x
+		const dy = this.#lastPos!.y - pos.y
+		if (dx === 0 || dy === 0) {
+			return
+		}
+
+		this._app.canvasScrollContainerElm.scrollBy(dx, dy)
 	}
 }

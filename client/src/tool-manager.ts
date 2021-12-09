@@ -47,6 +47,14 @@ export class ToolManager {
 			this._isMouseDown = false
 			this.onMouseUp(this._getPosFromEvent(e))
 		})
+
+		window.addEventListener('keydown', (e) => {
+			this._selectedTool?.onKeyDown(e)
+		})
+
+		window.addEventListener('keyup', (e) => {
+			this._selectedTool?.onKeyUp(e)
+		})
 	}
 
 	registerTool(name: string, tool: PaintTool): void {
