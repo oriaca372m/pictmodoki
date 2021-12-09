@@ -28,7 +28,6 @@ export class InputManager {
 				return
 			}
 
-			console.log(e)
 			this.#pressButton(getKeyName(e))
 		})
 
@@ -84,30 +83,32 @@ export class InputManager {
 
 	#createPointerPos(scrollerEvent: PointerEvent): PointerPosition {
 		const scrollerPos = { x: scrollerEvent.x, y: scrollerEvent.y }
-		const containerPos = this.#scrollerPosToContainerPos(scrollerPos)
-		const imagePos = this.#containerPosToImagePos(containerPos)
 		return {
 			scrollerPos,
-			imagePos,
+			imagePos: this.scrollerPosToImagePos(scrollerPos),
 		}
 	}
 
-	#scrollerPosToContainerPos(e: Position): Position {
-		return e
+	scrollerPosToImagePos(e: Position, allowOutOfArea = false) {
+		const containerPos = this.scrollerPosToContainerPos(e)
+		return this.containerPosToImagePos(containerPos, allowOutOfArea)
 	}
 
-	#containerPosToImagePos(e: Position): Position {
-		const containerElm = this.paintApp.app.canvasContainerElm
-		const state = this.paintApp.app.state
-		const rect = containerElm.getBoundingClientRect()
+	scrollerPosToContainerPos(e: Position): Position {
+		const scrollerElm = this.paintApp.app.canvasScrollContainerElm
+		return { x: scrollerElm.scrollLeft + e.x, y: scrollerElm.scrollTop + e.y }
+	}
+
+	containerPosToImagePos(e: Position, allowOutOfArea = false): Position {
+		const state = this.paintApp.state
 
 		// 中央を0とした座標に変換
-		let x = e.x - rect.left - rect.width / 2
-		let y = e.y - rect.top - rect.height / 2
-
-		const scale = state.scale.value / 100
+		const containerElm = this.paintApp.app.canvasContainerElm
+		let x = e.x - containerElm.clientWidth / 2
+		let y = e.y - containerElm.clientHeight / 2
 
 		// 拡大率に合わせて座標変換
+		const scale = state.scale.value / 100
 		x /= scale
 		y /= scale
 
@@ -125,9 +126,43 @@ export class InputManager {
 		x += canvasSize.width / 2
 		y += canvasSize.height / 2
 
+		if (allowOutOfArea) {
+			return { x, y }
+		}
+
 		// はみ出し防止
 		x = Math.max(0, Math.min(x, canvasSize.width))
 		y = Math.max(0, Math.min(y, canvasSize.height))
+
+		return { x, y }
+	}
+
+	imagePosToContainerPos(e: Position): Position {
+		const state = this.paintApp.state
+
+		// 中央を0とした座標に変換
+		const canvasSize = this.paintApp.drawer.model.size
+		let x = e.x - canvasSize.width / 2
+		let y = e.y - canvasSize.height / 2
+
+		// 回転
+		const rot = state.rotation.value * (Math.PI / 180)
+		if (rot !== 0) {
+			const nx = x * Math.cos(rot) - y * Math.sin(rot)
+			const ny = x * Math.sin(rot) + y * Math.cos(rot)
+			x = nx
+			y = ny
+		}
+
+		// 拡大
+		const scale = state.scale.value / 100
+		x *= scale
+		y *= scale
+
+		// 左上を0とした座標に変換
+		const containerElm = this.paintApp.app.canvasContainerElm
+		x += containerElm.clientWidth / 2
+		y += containerElm.clientHeight / 2
 
 		return { x, y }
 	}

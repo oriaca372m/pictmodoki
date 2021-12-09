@@ -1,3 +1,4 @@
+import { Position } from 'common'
 import {
 	ImageCanvasModel,
 	ImageCanvasEvent,
@@ -195,6 +196,13 @@ export class PaintApp {
 
 		scrollElm.scrollLeft = (containerElm.clientWidth - vw) / 2
 		scrollElm.scrollTop = (containerElm.clientHeight - vh) / 2
+	}
+
+	setCanvasCenter(imagePos: Position) {
+		const containerPos = this.inputManager.imagePosToContainerPos(imagePos)
+		const scrollerElm = this.app.canvasScrollContainerElm
+		scrollerElm.scrollLeft = containerPos.x - scrollerElm.clientWidth / 2
+		scrollerElm.scrollTop = containerPos.y - scrollerElm.clientHeight / 2
 	}
 
 	get state(): AppState {

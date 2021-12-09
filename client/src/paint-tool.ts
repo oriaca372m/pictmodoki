@@ -178,6 +178,7 @@ export class EraserTool extends DrawingToolBase {
 interface ZoomState {
 	startPos: Position
 	startScale: number
+	imageCenter: Position
 }
 
 export class MovingTool extends PaintToolBase {
@@ -185,52 +186,53 @@ export class MovingTool extends PaintToolBase {
 
 	constructor(paintApp: PaintApp) {
 		super(paintApp)
-		this.buttonPressedHandler = (e) => {
-			console.log('test', e)
-			this.onMouseDown()
-		}
-		this.buttonReleasedHandler = () => {
-			this.onMouseUp()
-		}
 		this.pointerMovedHandler = (e) => {
 			this.#onMouseMovedScrollContainer(e.scrollerPos)
 		}
 	}
 
 	disable(): void {
-		this.onMouseUp()
-		super.disable()
-	}
-
-	onMouseDown(): void {
-		if (this.inputManager.isPressed('key-ShiftLeft')) {
-			this.#zoomState = {
-				startPos: this.inputManager.pointerPos.scrollerPos,
-				startScale: this.state.scale.value,
-			}
-		}
-	}
-
-	onMouseUp(): void {
 		this.#zoomState = undefined
+		super.disable()
 	}
 
 	#onMouseMovedScrollContainer(pos: Position): void {
 		if (!this.inputManager.isPressed('pointer-0')) {
+			this.#zoomState = undefined
 			return
 		}
 
-		if (this.#zoomState === undefined) {
-			this.#scroll(pos)
-		} else {
+		if (this.inputManager.isPressed('key-ShiftLeft')) {
 			this.#zoom(pos)
+		} else {
+			this.#zoomState = undefined
+			this.#scroll(pos)
 		}
 	}
 
 	#zoom(pos: Position): void {
-		const state = this.#zoomState!
+		if (this.#zoomState === undefined) {
+			const scrollerElm = this.paintApp.app.canvasScrollContainerElm
+			const center = this.inputManager.scrollerPosToImagePos(
+				{
+					x: scrollerElm.clientWidth / 2,
+					y: scrollerElm.clientHeight / 2,
+				},
+				true
+			)
+
+			this.#zoomState = {
+				startPos: this.inputManager.pointerPos.scrollerPos,
+				startScale: this.state.scale.value,
+				imageCenter: center,
+			}
+			return
+		}
+
+		const state = this.#zoomState
 		const dy = state.startPos.y - pos.y
-		this.state.scale.value = Math.max(1, Math.floor(state.startScale + dy / 2))
+		this.state.scale.value = Math.max(1, Math.floor(state.startScale * Math.pow(2, dy / 175)))
+		this.paintApp.setCanvasCenter(state.imageCenter)
 	}
 
 	#scroll(pos: Position): void {
