@@ -15,12 +15,14 @@ import { VirtualEventManager } from './virtual-event-manager'
 import { ToolManager } from './tool-manager'
 import { App, AppState } from './app'
 import { ColorHistory } from './color-history'
+import { InputManager } from './input-manager'
 
 export class PaintApp {
 	readonly factory: OffscreenCanvasProxyFactory
 	readonly drawer: ImageCanvasDrawerWithPreview
 	private _renderedCanvas: WebCanvasProxy | undefined
 
+	readonly inputManager: InputManager
 	readonly commandSender: CommandSender
 	readonly eventManager: VirtualEventManager
 	eventExecutor: ImageCanvasEventExecutor
@@ -55,12 +57,13 @@ export class PaintApp {
 
 		this.layerManager = new LayerManager(this)
 
+		this.inputManager = new InputManager(this)
 		this.penTool = new PenTool(this)
 		this.eraserTool = new EraserTool(this)
-		this.toolManager = new ToolManager(this, this.app.canvasContainerElm)
+		this.toolManager = new ToolManager(this)
 		this.toolManager.registerTool('pen', this.penTool)
 		this.toolManager.registerTool('eraser', this.eraserTool)
-		this.toolManager.registerTool('moving', new MovingTool(this.app))
+		this.toolManager.registerTool('moving', new MovingTool(this))
 		this.toolManager.selectTool('pen')
 
 		const sender = new SocketCommandSender(this.app, this.eventManager, this.api)

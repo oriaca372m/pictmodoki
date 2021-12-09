@@ -1,8 +1,9 @@
 import { Position } from 'common'
 import { LayerDrawCommand, LayerId } from 'common/dist/image-canvas'
 
-import { App } from './app'
+import { AppState } from './app'
 import { PaintApp } from './paint-app'
+import { InputManager, PointerPosition } from './input-manager'
 import { ImageCanvasDrawerWithPreview } from './image-canvas-drawer-with-preview'
 import { toRgbCode } from './components/color-picker/color'
 
@@ -10,47 +11,55 @@ export interface PaintTool {
 	enable(): void
 	disable(): void
 
-	onMouseMoved(pos: Position): void
-	onMouseDown(pos: Position): void
-	onMouseUp(pos: Position): void
-
-	onKeyDown(e: KeyboardEvent): void
-	onKeyUp(e: KeyboardEvent): void
-
 	readonly isEnabled: boolean
 }
 
 abstract class PaintToolBase implements PaintTool {
-	private _isEnabled = false
+	#isEnabled = false
+
+	constructor(readonly paintApp: PaintApp) {}
 
 	enable(): void {
-		this._isEnabled = true
+		this.#isEnabled = true
+		if (this.buttonPressedHandler !== undefined) {
+			this.inputManager.buttonPressed.on(this.buttonPressedHandler)
+		}
+		if (this.buttonReleasedHandler !== undefined) {
+			this.inputManager.buttonReleased.on(this.buttonReleasedHandler)
+		}
+		if (this.pointerMovedHandler !== undefined) {
+			this.inputManager.pointerMoved.on(this.pointerMovedHandler)
+		}
 	}
 
 	disable(): void {
-		this._isEnabled = false
+		this.#isEnabled = false
+		if (this.buttonPressedHandler !== undefined) {
+			this.inputManager.buttonPressed.off(this.buttonPressedHandler)
+		}
+		if (this.buttonReleasedHandler !== undefined) {
+			this.inputManager.buttonReleased.off(this.buttonReleasedHandler)
+		}
+		if (this.pointerMovedHandler !== undefined) {
+			this.inputManager.pointerMoved.off(this.pointerMovedHandler)
+		}
 	}
 
 	get isEnabled(): boolean {
-		return this._isEnabled
+		return this.#isEnabled
 	}
 
-	onMouseDown(_pos: Position): void {
-		// pass
-	}
-	onMouseMoved(_pos: Position): void {
-		// pass
-	}
-	onMouseUp(_pos: Position): void {
-		// pass
+	protected get inputManager(): InputManager {
+		return this.paintApp.inputManager
 	}
 
-	onKeyDown(_e: KeyboardEvent): void {
-		// pass
+	protected get state(): AppState {
+		return this.paintApp.state
 	}
-	onKeyUp(_e: KeyboardEvent): void {
-		// pass
-	}
+
+	protected buttonPressedHandler: ((e: string) => void) | undefined
+	protected buttonReleasedHandler: ((e: string) => void) | undefined
+	protected pointerMovedHandler: ((e: PointerPosition) => void) | undefined
 }
 
 abstract class DrawingToolBase extends PaintToolBase {
@@ -58,18 +67,23 @@ abstract class DrawingToolBase extends PaintToolBase {
 	private readonly _imageCanvas: ImageCanvasDrawerWithPreview
 	private _targetLayerId: LayerId | undefined
 
-	constructor(protected readonly _app: PaintApp) {
-		super()
-		this._imageCanvas = _app.drawer
+	constructor(paintApp: PaintApp) {
+		super(paintApp)
+		this._imageCanvas = paintApp.drawer
+
+		this.pointerMovedHandler = (e) => {
+			if (this.inputManager.isPressed('pointer-0')) {
+				this._startStroke(e.imagePos)
+				this.onMouseMoved(e.imagePos)
+			} else {
+				this.onMouseUp(this.inputManager.pointerPos.imagePos)
+			}
+		}
 	}
 
 	disable(): void {
 		this._finishStroke()
 		super.disable()
-	}
-
-	onMouseDown(pos: Position): void {
-		this._startStroke(pos)
 	}
 
 	onMouseMoved(pos: Position): void {
@@ -85,7 +99,7 @@ abstract class DrawingToolBase extends PaintToolBase {
 			return
 		}
 
-		this._targetLayerId = this._app.layerManager.selectedLayerId
+		this._targetLayerId = this.paintApp.layerManager.selectedLayerId
 		if (this._targetLayerId === undefined) {
 			return
 		}
@@ -106,7 +120,7 @@ abstract class DrawingToolBase extends PaintToolBase {
 
 		this._pathPositions.push({ x, y })
 		this._imageCanvas.drawPreview(this._constructCommand())
-		this._app.render()
+		this.paintApp.render()
 	}
 
 	protected _finishStroke(): boolean {
@@ -115,9 +129,9 @@ abstract class DrawingToolBase extends PaintToolBase {
 		}
 
 		this._imageCanvas.endPreview()
-		this._app.render()
+		this.paintApp.render()
 
-		const res = this._app.commandSender.command({
+		const res = this.paintApp.commandSender.command({
 			kind: 'drawLayer',
 			layer: this._targetLayerId!,
 			drawCommand: this._constructCommand(),
@@ -135,14 +149,14 @@ export class PenTool extends DrawingToolBase {
 		return {
 			kind: 'stroke',
 			positions: this._pathPositions!,
-			color: toRgbCode(this._app.state.color.value),
-			width: this._app.state.penSize.value,
+			color: toRgbCode(this.state.color.value),
+			width: this.state.penSize.value,
 		}
 	}
 
 	protected _finishStroke(): boolean {
 		if (super._finishStroke()) {
-			this._app.colorHistory.addColor(this._app.state.color.value)
+			this.paintApp.colorHistory.addColor(this.state.color.value)
 			return true
 		}
 
@@ -155,8 +169,8 @@ export class EraserTool extends DrawingToolBase {
 		return {
 			kind: 'erase',
 			positions: this._pathPositions!,
-			opacity: this._app.state.color.value.opacity,
-			width: this._app.state.eraserSize.value,
+			opacity: this.state.color.value.opacity,
+			width: this.state.eraserSize.value,
 		}
 	}
 }
@@ -168,91 +182,64 @@ interface ZoomState {
 
 export class MovingTool extends PaintToolBase {
 	#zoomState: ZoomState | undefined
-	#lastPos: Position | undefined
-	private _mouseMoveHandler: (e: MouseEvent) => void
-	#isMouseDown = false
-	#shouldZoom = false
 
-	constructor(private readonly _app: App) {
-		super()
-		this._mouseMoveHandler = (e) => {
-			this.#onMouseMovedScrollContainer({ x: e.x, y: e.y })
+	constructor(paintApp: PaintApp) {
+		super(paintApp)
+		this.buttonPressedHandler = (e) => {
+			console.log('test', e)
+			this.onMouseDown()
+		}
+		this.buttonReleasedHandler = () => {
+			this.onMouseUp()
+		}
+		this.pointerMovedHandler = (e) => {
+			this.#onMouseMovedScrollContainer(e.scrollerPos)
 		}
 	}
 
-	enable(): void {
-		this._app.canvasScrollContainerElm.addEventListener('mousemove', this._mouseMoveHandler)
-		super.enable()
-	}
-
 	disable(): void {
-		this._app.canvasScrollContainerElm.removeEventListener('mousemove', this._mouseMoveHandler)
 		this.onMouseUp()
-		this.#shouldZoom = false
 		super.disable()
 	}
 
 	onMouseDown(): void {
-		this.#isMouseDown = true
-		if (this.#shouldZoom) {
+		if (this.inputManager.isPressed('key-ShiftLeft')) {
 			this.#zoomState = {
-				startPos: this.#lastPos!,
-				startScale: this._app.state.scale.value,
+				startPos: this.inputManager.pointerPos.scrollerPos,
+				startScale: this.state.scale.value,
 			}
 		}
 	}
 
 	onMouseUp(): void {
-		this.#isMouseDown = false
 		this.#zoomState = undefined
 	}
 
 	#onMouseMovedScrollContainer(pos: Position): void {
-		try {
-			if (!this.#isMouseDown || this.#lastPos === undefined) {
-				return
-			}
-
-			if (this.#zoomState === undefined) {
-				this.#scroll(pos)
-			} else {
-				this.#zoom(pos)
-			}
-		} finally {
-			this.#lastPos = pos
-		}
-	}
-
-	onKeyDown(e: KeyboardEvent) {
-		if (e.repeat) {
+		if (!this.inputManager.isPressed('pointer-0')) {
 			return
 		}
 
-		if (e.code === 'ShiftLeft') {
-			this.#shouldZoom = true
-		}
-	}
-
-	onKeyUp(e: KeyboardEvent) {
-		if (e.code === 'ShiftLeft') {
-			this.#shouldZoom = false
-			this.#zoomState = undefined
+		if (this.#zoomState === undefined) {
+			this.#scroll(pos)
+		} else {
+			this.#zoom(pos)
 		}
 	}
 
 	#zoom(pos: Position): void {
 		const state = this.#zoomState!
 		const dy = state.startPos.y - pos.y
-		this._app.state.scale.value = Math.max(1, Math.floor(state.startScale + dy / 2))
+		this.state.scale.value = Math.max(1, Math.floor(state.startScale + dy / 2))
 	}
 
 	#scroll(pos: Position): void {
-		const dx = this.#lastPos!.x - pos.x
-		const dy = this.#lastPos!.y - pos.y
+		const dx = this.inputManager.lastPointerPos.scrollerPos.x - pos.x
+		const dy = this.inputManager.lastPointerPos.scrollerPos.y - pos.y
 		if (dx === 0 || dy === 0) {
 			return
 		}
 
-		this._app.canvasScrollContainerElm.scrollBy(dx, dy)
+		this.paintApp.app.canvasScrollContainerElm.scrollBy(dx, dy)
 	}
 }
