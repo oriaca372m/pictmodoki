@@ -71,6 +71,13 @@ export class CanvasDrawer {
 		this._ctx.clearRect(0, 0, width, height)
 	}
 
+	fillRect({ x, y }: Position, { width, height }: Size, color: Color) {
+		this._ctx.globalCompositeOperation = 'source-over'
+		this._ctx.globalAlpha = 1
+		this._ctx.fillStyle = color
+		this._ctx.fillRect(x, y, width, height)
+	}
+
 	drawCanvasProxy(canvas: CanvasProxy): void {
 		this._ctx.globalCompositeOperation = 'source-over'
 		this._ctx.globalAlpha = 1

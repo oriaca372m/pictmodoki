@@ -1,11 +1,13 @@
-import { Position, Color } from '../primitives'
+import { Position, Color, Size } from '../primitives'
 import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from '../canvas-proxy'
+import * as u from '../utils'
 
 export type LayerId = string
 export type LayerDrawCommand =
 	| { kind: 'stroke'; positions: Position[]; color: Color; width: number }
 	| { kind: 'erase'; positions: Position[]; opacity: number; width: number }
 	| { kind: 'clear' }
+	| { kind: 'fillRect'; position: Position; size: Size; color: Color }
 
 export interface SerializedLayerCanvasModel {
 	id: LayerId
@@ -60,6 +62,10 @@ export class LayerDrawer {
 			this._drawer.erase(cmd.positions, -cmd.opacity + 1, cmd.width)
 		} else if (cmd.kind === 'clear') {
 			this._drawer.clear()
+		} else if (cmd.kind === 'fillRect') {
+			this._drawer.fillRect(cmd.position, cmd.size, cmd.color)
+		} else {
+			u.unreachable(cmd)
 		}
 	}
 

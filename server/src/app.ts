@@ -1,7 +1,7 @@
 import { NodeCanvasProxyFactory } from './canvas-proxy'
 import { CommandInterpreter } from './command-interpreter'
 
-import { Size } from 'common'
+import { Size, u } from 'common'
 import {
 	ImageCanvasModel,
 	ImageCanvasDrawer,
@@ -35,6 +35,20 @@ export class App {
 		)
 		this.eventMgr.setExecutor(this.eventExecutor)
 
+		const layerCreated = this.cmdInterpreter.command('system', { kind: 'createLayer' })
+		if (layerCreated?.eventType.kind !== 'layerCreated') {
+			u.unreachable()
+		}
+		this.cmdInterpreter.command('system', {
+			kind: 'drawLayer',
+			layer: layerCreated.eventType.layerId,
+			drawCommand: {
+				kind: 'fillRect',
+				position: { x: 0, y: 0 },
+				size: this.#size,
+				color: '#ffffff',
+			},
+		})
 		this.cmdInterpreter.command('system', { kind: 'createLayer' })
 	}
 

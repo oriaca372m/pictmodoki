@@ -156,6 +156,7 @@ export class PaintApp {
 
 		this.render()
 		this.layerManager.update()
+		this.layerManager.selectTopLayer()
 		this.setCanvasViewEntire()
 	}
 

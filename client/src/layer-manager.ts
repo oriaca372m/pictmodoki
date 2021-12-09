@@ -30,6 +30,14 @@ export class LayerManager {
 		return true
 	}
 
+	selectTopLayer(): void {
+		const layers = this.layers
+		if (layers.length < 1) {
+			return
+		}
+		this.selectLayerId(layers[layers.length - 1].id)
+	}
+
 	createLayer(): void {
 		this._app.commandSender.command({ kind: 'createLayer' })
 	}
