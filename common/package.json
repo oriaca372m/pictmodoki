@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
-    "start": "tsc",
+    "start": "tsc -w",
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "eslint src/**.{ts,js} && prettier --check src/**.{ts,js}",

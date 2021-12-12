@@ -9,6 +9,7 @@
     "node-addon-api": "^4.2.0"
   },
   "scripts": {
+    "start": "cmake-js compile",
     "install": "cmake-js compile",
     "test": "node js_src/test.js"
   }
