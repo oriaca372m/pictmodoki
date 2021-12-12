@@ -1,5 +1,6 @@
 import { defineComponent, reactive, ref, onMounted } from 'vue'
 import ColorPicker from '../components/color-picker/index.vue'
+import Slider from '../components/slider/index.vue'
 import ColorPreview from '../components/color-picker/color-preview.vue'
 import { HsvColor, toHsvColor } from '../components/color-picker/color'
 import Draggable from 'vuedraggable'
@@ -47,6 +48,7 @@ export default defineComponent({
 		ColorPicker,
 		Draggable,
 		ColorPreview,
+		Slider,
 	},
 
 	setup(props) {
