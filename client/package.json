@@ -7,8 +7,8 @@
     "build": "webpack",
     "watch": "webpack --watch",
     "serve": "webpack serve",
-    "lint": "eslint src/**.{ts,js} && prettier --check src/**.{ts,js}",
-    "fix": "eslint --fix src/**.{ts,js} && prettier --write src/**.{ts,js}"
+    "lint": "eslint src/**.{ts,js,vue} && prettier --check src/**.{ts,js,vue}",
+    "fix": "eslint --fix src/**.{ts,js,vue} && prettier --write src/**.{ts,js,vue}"
   },
   "license": "Zlib",
   "devDependencies": {

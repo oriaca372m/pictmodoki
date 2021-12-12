@@ -10,7 +10,7 @@ export class OffscreenCanvasProxy implements CanvasProxy {
 			throw new Error('Could not get a context of the OffscreenCanvas.')
 		}
 
-		return (ctx as unknown) as CanvasRenderingContext2D
+		return ctx as unknown as CanvasRenderingContext2D
 	}
 
 	drawSelfTo(ctx: CanvasRenderingContext2D): void {
@@ -52,7 +52,7 @@ export class WebCanvasProxy implements CanvasProxy {
 		if (ctx === null) {
 			throw new Error('Could not get a context of the Canvas.')
 		}
-		return (ctx as unknown) as CanvasRenderingContext2D
+		return ctx as unknown as CanvasRenderingContext2D
 	}
 
 	drawSelfTo(ctx: CanvasRenderingContext2D): void {
