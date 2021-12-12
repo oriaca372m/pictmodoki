@@ -3,8 +3,16 @@
 		<button @click="setColor('#ff0000')">r</button>
 		<button @click="setColor('#00ff00')">g</button>
 		<button @click="setColor('#0000ff')">b</button>
-		<color-picker v-model="color"/>
+		<color-picker v-model="color" />
 		<p>{{ color }}</p>
+		<slider
+			v-model="penSize"
+			name="ペン"
+			unit="px"
+			:min="0"
+			:max="400"
+			:quick-values="[1, 2]"
+		/>
 	</div>
 </template>
 
@@ -17,11 +25,13 @@
 <script>
 import { defineComponent, ref } from 'vue'
 import ColorPicker from '../components/color-picker'
+import Slider from '../components/slider'
 import { toHsvColor } from '../components/color-picker/color'
 
 export default defineComponent({
 	components: {
 		ColorPicker,
+		Slider,
 	},
 
 	setup() {
@@ -29,7 +39,8 @@ export default defineComponent({
 		function setColor(code) {
 			color.value = toHsvColor(code)
 		}
-		return { color, setColor }
-	}
+		const penSize = ref(10)
+		return { color, setColor, penSize }
+	},
 })
 </script>
