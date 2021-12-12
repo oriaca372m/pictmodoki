@@ -1,25 +1,26 @@
 module.exports = {
-	'env': {
-		'es6': true
+	env: {
+		es6: true,
 	},
-	'extends': [
+	extends: [
 		'eslint:recommended',
 		'plugin:@typescript-eslint/recommended',
 		'plugin:@typescript-eslint/recommended-requiring-type-checking',
-		'prettier'
+		'prettier',
 	],
-	'globals': {
-		'Atomics': 'readonly',
-		'SharedArrayBuffer': 'readonly'
+	globals: {
+		Atomics: 'readonly',
+		SharedArrayBuffer: 'readonly',
 	},
-	'parser': '@typescript-eslint/parser',
-	'parserOptions': {
-		'ecmaVersion': 2018,
-		'sourceType': 'module',
-		'project': './tsconfig.json'
+	parser: '@typescript-eslint/parser',
+	parserOptions: {
+		ecmaVersion: 2018,
+		sourceType: 'module',
+		project: './tsconfig.json',
+		extraFileExtensions: ['.vue'],
 	},
-	'rules': {
-		'@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }],
+	rules: {
+		'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 		'@typescript-eslint/no-non-null-assertion': 0,
-	}
+	},
 }
