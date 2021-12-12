@@ -47,6 +47,7 @@
 							:min="1"
 							:max="400"
 							:quick-values="[1, 3, 10, 20, 50, 200]"
+							:scaler="penScaler"
 						/>
 						<slider
 							v-model="eraserSize"
@@ -55,15 +56,29 @@
 							:min="1"
 							:max="400"
 							:quick-values="[1, 3, 10, 20, 50, 200]"
+							:scaler="penScaler"
 						/>
 					</div>
 					<div>
-						<h1>キャンバスの表示</h1>
-						<button @click="setCanvasViewOriginal">原寸大</button>
 						<button @click="setCanvasViewEntire">全体を表示</button>
-						<div class="canvas-view-inner">
-							<div><label>拡大率</label><input type="number" v-model="scale" /></div>
-							<div><label>角度</label><input type="number" v-model="rotation" /></div>
+						<div>
+							<slider
+								style="margin-right: 5px"
+								v-model="scale"
+								name="拡大率"
+								unit="%"
+								:min="1"
+								:max="500"
+								:quick-values="[50, 100, 200, 500]"
+							/>
+							<slider
+								v-model="rotation"
+								name="回転"
+								unit="°"
+								:min="0"
+								:max="359"
+								:quick-values="[0, 90, 180, 270]"
+							/>
 						</div>
 					</div>
 					<div class="layer-selector">
