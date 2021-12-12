@@ -103,7 +103,6 @@
 .bl_numSlider_txt {
 	color: white;
 	position: absolute;
-	z-index: 0;
 	width: fit-content;
 	top: 50%;
 	left: 50%;
@@ -116,7 +115,6 @@
 .bl_numSlider_rawInput {
 	color: black;
 	position: absolute;
-	z-index: 0;
 	text-align: center;
 	width: 100px;
 	top: 50%;
