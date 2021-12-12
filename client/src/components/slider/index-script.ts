@@ -1,4 +1,5 @@
-import { defineComponent, ref, computed, nextTick } from 'vue'
+import { defineComponent, ref, computed, nextTick, PropType } from 'vue'
+import { SliderScaler, PassThroughScaler } from './slider-scaler'
 
 function minMax(min: number, n: number, max: number): number {
 	return Math.max(min, Math.min(n, max))
@@ -11,7 +12,8 @@ export default defineComponent({
 		max: { required: true, type: Number },
 		name: { required: true, type: String },
 		unit: { type: String, default: '' },
-		quickValues: { type: Array },
+		quickValues: { type: Array as PropType<number[]> },
+		scaler: { type: Object as PropType<SliderScaler>, default: () => new PassThroughScaler() },
 	},
 
 	setup(props, { emit }) {
@@ -26,6 +28,7 @@ export default defineComponent({
 			set: (v) => emit('update:modelValue', minMax(min, v, max)),
 		})
 		const quickValues = props.quickValues ?? [1]
+		const scaler = props.scaler
 
 		const getSliderMaxWidth = () => {
 			if (numSliderBody.value! === undefined) {
@@ -34,30 +37,9 @@ export default defineComponent({
 			return numSliderBody.value.clientWidth
 		}
 
-		// min~maxのうち精密に調整したい割合
-		const k = 0.05
-		// 精密調整にバーの全体の何割を使うか
-		const a = 0.4
-
-		const scale = (x: number) => {
-			if (x < k) {
-				return (x / k) * a
-			} else {
-				return ((x - k) / (1 - k)) * (1 - a) + a
-			}
-		}
-
-		const rscale = (x: number) => {
-			if (x < a) {
-				return (x * k) / a
-			} else {
-				return ((x - a) / (1 - a)) * (1 - k) + k
-			}
-		}
-
 		const filledWidth = computed({
-			get: () => getSliderMaxWidth() * scale(value.value / max),
-			set: (v) => (value.value = Math.floor(rscale(v / getSliderMaxWidth()) * max)),
+			get: () => getSliderMaxWidth() * scaler.scale(value.value / max),
+			set: (v) => (value.value = Math.floor(scaler.rscale(v / getSliderMaxWidth()) * max)),
 		})
 		const filledWidthStyle = computed(() => `${minMax(0, filledWidth.value, 200)}px`)
 		const isRawEditMode = ref(false)
