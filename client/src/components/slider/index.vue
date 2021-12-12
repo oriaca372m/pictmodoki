@@ -101,7 +101,6 @@
 }
 
 .bl_numSlider_txt {
-	color: white;
 	position: absolute;
 	width: fit-content;
 	top: 50%;
@@ -110,6 +109,9 @@
 	pointer-events: none;
 	user-select: none;
 	white-space: nowrap;
+	line-height: 0;
+	color: white;
+	text-shadow: 1px 1px 2px black;
 }
 
 .bl_numSlider_rawInput {
@@ -129,6 +131,8 @@
 	position: absolute;
 	width: 100%;
 	padding: 10px;
+	border-radius: 0 0 10px 10px;
+	box-shadow: 3px 3px 5px hsla(0, 0%, 0%, 0.5);
 }
 
 .bl_numSlider_popup button {
