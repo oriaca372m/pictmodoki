@@ -9,8 +9,8 @@
 			>
 				<div class="sv-cursor" :style="{ left: `${cursorX}px`, top: `${cursorY}px` }"></div>
 			</div>
-			<ColorBar class='hue-bar' type="hue" v-model="rawColor.hue" />
-			<ColorBar class='opacity-bar' type="opacity" v-model="rawColor.opacity" />
+			<ColorBar class="hue-bar" type="hue" v-model="rawColor.hue" />
+			<ColorBar class="opacity-bar" type="opacity" v-model="rawColor.opacity" />
 		</div>
 		<div class="color-picker-sub">
 			<ColorPreview class="color-preview" :value="rawColor" />
@@ -23,7 +23,7 @@
 .color-picker {
 	border: solid;
 	padding: 7px;
-	width: 260px;
+	width: fit-content;
 }
 
 .color-picker-main {
@@ -37,7 +37,8 @@
 	height: 30px;
 }
 
-.hue-bar, .opacity-bar {
+.hue-bar,
+.opacity-bar {
 	margin-left: 10px;
 }
 
@@ -45,8 +46,7 @@
 	position: relative;
 	width: 200px;
 	height: 150px;
-	background-image:
-		linear-gradient(to bottom, transparent, rgb(0, 0, 0)),
+	background-image: linear-gradient(to bottom, transparent, rgb(0, 0, 0)),
 		linear-gradient(to right, rgb(255, 255, 255), rgba(255, 255, 255, 0));
 }
 
