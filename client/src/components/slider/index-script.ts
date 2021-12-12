@@ -100,7 +100,7 @@ export default defineComponent({
 		}
 
 		const wheel = (e: WheelEvent) => {
-			filledWidth.value = Math.floor(filledWidth.value + Math.sign(e.deltaY))
+			value.value += Math.sign(e.deltaY)
 			e.preventDefault()
 		}
 
