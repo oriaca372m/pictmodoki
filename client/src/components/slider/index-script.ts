@@ -23,6 +23,7 @@ export default defineComponent({
 
 		const min = props.min
 		const max = props.max
+		const range = max - min
 		const value = computed({
 			get: () => props.modelValue,
 			set: (v) => emit('update:modelValue', minMax(min, v, max)),
@@ -38,8 +39,10 @@ export default defineComponent({
 		}
 
 		const filledWidth = computed({
-			get: () => getSliderMaxWidth() * scaler.scale(value.value / max),
-			set: (v) => (value.value = Math.floor(scaler.rscale(v / getSliderMaxWidth()) * max)),
+			get: () => getSliderMaxWidth() * scaler.scale((value.value - min) / range),
+			set: (v) => {
+				value.value = Math.floor(scaler.rscale(v / getSliderMaxWidth()) * range + min)
+			},
 		})
 		const filledWidthStyle = computed(() => `${minMax(0, filledWidth.value, 200)}px`)
 		const isRawEditMode = ref(false)

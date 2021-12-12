@@ -9,9 +9,9 @@
 			v-model="penSize"
 			name="ペン"
 			unit="px"
-			:min="0"
+			:min="100"
 			:max="400"
-			:quick-values="[1, 2]"
+			:quick-values="[200, 300]"
 		/>
 	</div>
 </template>
@@ -39,7 +39,7 @@ export default defineComponent({
 		function setColor(code) {
 			color.value = toHsvColor(code)
 		}
-		const penSize = ref(10)
+		const penSize = ref(256)
 		return { color, setColor, penSize }
 	},
 })
