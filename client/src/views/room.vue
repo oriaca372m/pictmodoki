@@ -39,40 +39,46 @@
 						</div>
 					</div>
 					<div class="width-selector">
-						<div>
-							<h1>ペンの太さ</h1>
-							<div>
-								<div>
-									<button @click="penSize = 3">3</button>
-									<button @click="penSize = 10">10</button>
-									<button @click="penSize = 20">20</button>
-									<button @click="penSize = 50">50</button>
-									<button @click="penSize = 200">200</button>
-								</div>
-								<div><input type="number" v-model="penSize" /></div>
-							</div>
-						</div>
-						<div>
-							<h1>消しゴムの太さ</h1>
-							<div>
-								<div>
-									<button @click="eraserSize = 3">3</button>
-									<button @click="eraserSize = 10">10</button>
-									<button @click="eraserSize = 20">20</button>
-									<button @click="eraserSize = 50">50</button>
-									<button @click="eraserSize = 200">200</button>
-								</div>
-								<div><input type="number" v-model="eraserSize" /></div>
-							</div>
-						</div>
+						<slider
+							style="margin-right: 5px"
+							v-model="penSize"
+							name="ペン"
+							unit="px"
+							:min="1"
+							:max="400"
+							:quick-values="[1, 3, 10, 20, 50, 200]"
+							:scaler="penScaler"
+						/>
+						<slider
+							v-model="eraserSize"
+							name="消しゴム"
+							unit="px"
+							:min="1"
+							:max="400"
+							:quick-values="[1, 3, 10, 20, 50, 200]"
+							:scaler="penScaler"
+						/>
 					</div>
 					<div>
-						<h1>キャンバスの表示</h1>
-						<button @click="setCanvasViewOriginal">原寸大</button>
 						<button @click="setCanvasViewEntire">全体を表示</button>
-						<div class="canvas-view-inner">
-							<div><label>拡大率</label><input type="number" v-model="scale" /></div>
-							<div><label>角度</label><input type="number" v-model="rotation" /></div>
+						<div>
+							<slider
+								style="margin-right: 5px"
+								v-model="scale"
+								name="拡大率"
+								unit="%"
+								:min="1"
+								:max="500"
+								:quick-values="[50, 100, 200, 500]"
+							/>
+							<slider
+								v-model="rotation"
+								name="回転"
+								unit="°"
+								:min="0"
+								:max="359"
+								:quick-values="[0, 90, 180, 270]"
+							/>
 						</div>
 					</div>
 					<div class="layer-selector">
@@ -219,18 +225,6 @@
 	margin: 2px;
 }
 
-.width-selector {
-	display: flex;
-}
-
-.width-selector > * {
-	width: 100%;
-}
-
-.width-selector input {
-	width: 100px;
-}
-
 .canvas-view-inner {
 	display: flex;
 }
@@ -260,7 +254,7 @@
 }
 
 .tab-selector ul li.active {
-	background-color: #63aeff;
+	background-color: var(--color-primary);
 }
 
 .drawing-record-video {
