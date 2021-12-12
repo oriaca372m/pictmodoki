@@ -47,6 +47,7 @@
 									<button @click="penSize = 10">10</button>
 									<button @click="penSize = 20">20</button>
 									<button @click="penSize = 50">50</button>
+									<button @click="penSize = 200">200</button>
 								</div>
 								<div><input type="number" v-model="penSize" /></div>
 							</div>
@@ -59,6 +60,7 @@
 									<button @click="eraserSize = 10">10</button>
 									<button @click="eraserSize = 20">20</button>
 									<button @click="eraserSize = 50">50</button>
+									<button @click="eraserSize = 200">200</button>
 								</div>
 								<div><input type="number" v-model="eraserSize" /></div>
 							</div>
