@@ -17,7 +17,7 @@ export default defineComponent({
 	setup(props, { emit }) {
 		const numSlider = ref<HTMLDivElement>()
 		const numSliderBody = ref<HTMLDivElement>()
-		const rawInput = ref<HTMLDivElement>()
+		const rawInput = ref<HTMLInputElement>()
 
 		const min = props.min
 		const max = props.max
@@ -84,6 +84,7 @@ export default defineComponent({
 			if (e.button == 2) {
 				isRawEditMode.value = true
 				nextTick(() => {
+					rawInput.value!.select()
 					rawInput.value!.focus()
 				}).catch((e) => console.error(e))
 				e.preventDefault()

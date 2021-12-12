@@ -117,6 +117,7 @@
 	color: black;
 	position: absolute;
 	z-index: 0;
+	text-align: center;
 	width: 100px;
 	top: 50%;
 	left: 50%;
