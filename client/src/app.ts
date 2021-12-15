@@ -184,29 +184,32 @@ async function deserializeImageCanvasModel(
 	return model
 }
 
-type ChatMessageRecievedHandler = (userId: UserId, userName: string, message: string) => void
-class ChatManager {
-	private readonly _messageRecievedHandlers: ChatMessageRecievedHandler[] = []
+export type ChatMessageRecievedHandler = (userId: UserId, userName: string, message: string) => void
+
+export interface ChatMessage {
+	userId: string
+	name: string
+	message: string
+}
+
+export class ChatManager {
+	readonly message = new TypedEvent<ChatMessage>()
 
 	constructor(private readonly _api: WebSocketApi) {
 		this._api.eventHappened.on((event) => {
 			if (event.kind === 'chatSent') {
-				this._messageRecievedHandlers.forEach((x) =>
-					x(event.userId, event.name, event.message)
-				)
+				this.message.emit(event)
 				return
 			}
 		})
 	}
 
-	sendSystemMessage(msg: string) {
-		this._messageRecievedHandlers.forEach((x) => {
-			x('system', 'system', msg)
+	sendSystemMessage(message: string) {
+		this.message.emit({
+			userId: 'system',
+			name: 'system',
+			message,
 		})
-	}
-
-	addMessageRecievedHandler(handler: ChatMessageRecievedHandler) {
-		this._messageRecievedHandlers.push(handler)
 	}
 
 	sendMessage(message: string) {

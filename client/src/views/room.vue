@@ -108,29 +108,7 @@
 							</template>
 						</draggable>
 					</div>
-					<div class="chat-box">
-						<h1>チャット</h1>
-						<div>
-							<input v-model="state.messageToSend" @keyup.enter="sendChat" />
-							<button @click="sendChat">送信</button>
-						</div>
-						<div v-for="chat in state.chatMessages" :key="chat.msgId">
-							<p>{{ chat.name }}: {{ chat.msg }}</p>
-							<div v-for="(attachment, idx) in chat.attachments" :key="idx">
-								<div v-if="(attachment.kind = 'rec')">
-									<video
-										class="drawing-record-video"
-										controls
-										:src="
-											'/user_generated/drawing_records/' +
-											attachment.id +
-											'.mp4'
-										"
-									></video>
-								</div>
-							</div>
-						</div>
-					</div>
+					<ChatBox v-if="chatManager !== undefined" :chatManager="chatManager" />
 				</div>
 				<div v-else-if="activeTab === 2">
 					<div>
@@ -201,10 +179,6 @@
 .tool-area h1 {
 	font-size: 1rem;
 	margin: 0;
-}
-
-.chat-box p {
-	white-space: pre-line;
 }
 </style>
 
