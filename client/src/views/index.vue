@@ -1,23 +1,47 @@
 <template>
-	<div id="root-view">
-		<router-view></router-view>
-	</div>
+	<router-view></router-view>
 </template>
 
 <style>
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
 * {
 	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
+	overflow-wrap: break-word;
+}
+
+html,
+body,
+#app {
+	height: 100%;
+}
+
+body {
+	line-height: 1.5;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+	font: inherit;
 }
 
 :root {
 	--color-primary: #63aeff;
-}
-
-#root-view {
-	width: 100%;
-	height: 100%;
 }
 
 .el_triangleUp {

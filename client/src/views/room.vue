@@ -193,12 +193,8 @@
 	background-color: lightgray;
 }
 
-.canvas-container canvas {
-	background-color: white;
-}
-
 .tool-area {
-	width: 350px;
+	width: 360px;
 	overflow: auto;
 }
 
