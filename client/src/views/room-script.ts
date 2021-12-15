@@ -7,22 +7,11 @@ import { HsvColor, toHsvColor } from '../components/color-picker/color'
 import Draggable from 'vuedraggable'
 
 import { LayerId } from 'common/dist/image-canvas'
-import { App, AppState } from '../app'
+import { App, AppState, ChatManager } from '../app'
 import { Bindable } from '../bindable'
 import { UserInfo } from '../user-manager'
 
-type ChatAttachment = {
-	kind: 'rec'
-	id: string
-}
-
-interface ChatMessage {
-	msgId: number
-	id: string
-	name: string
-	msg: string
-	attachments: ChatAttachment[]
-}
+import ChatBox from './chatbox/index.vue'
 
 interface LayerInfo {
 	id: LayerId
@@ -34,8 +23,6 @@ interface State {
 	layers: LayerInfo[]
 	users: readonly UserInfo[]
 	selectedLayerId: string | undefined
-	messageToSend: string
-	chatMessages: ChatMessage[]
 	colorHistory: readonly HsvColor[]
 }
 
@@ -50,18 +37,18 @@ export default defineComponent({
 		Draggable,
 		ColorPreview,
 		Slider,
+		ChatBox,
 	},
 
 	setup(props) {
 		let app: App | undefined
 		const appState = new AppState()
+		const chatManager = ref<ChatManager | undefined>()
 
 		const state = reactive<State>({
 			layers: [],
 			users: [],
 			selectedLayerId: undefined,
-			messageToSend: '',
-			chatMessages: [],
 			colorHistory: [],
 		})
 
@@ -82,26 +69,7 @@ export default defineComponent({
 			volume.bindTo(vapp.audioPlayer.volume, true)
 
 			vapp.ready.once(() => {
-				vapp.chatManager!.addMessageRecievedHandler((id, name, msg) => {
-					const attachments: ChatAttachment[] = []
-
-					const recIdPattern =
-						/\brec#([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/g
-					for (const match of msg.matchAll(recIdPattern)) {
-						console.log(match)
-						console.log(match[1])
-						attachments.push({ kind: 'rec', id: match[1] })
-					}
-
-					state.chatMessages.unshift({
-						msgId: state.chatMessages.length,
-						id,
-						name,
-						msg,
-						attachments,
-					})
-				})
-
+				chatManager.value = vapp.chatManager
 				const paintApp = vapp.paintApp!
 
 				paintApp.layerManager.updated.on(() => {
@@ -162,14 +130,6 @@ export default defineComponent({
 			app!.paintApp!.layerManager.setLayerVisibility(id, isVisible)
 		}
 
-		const sendChat = () => {
-			if (state.messageToSend === '') {
-				return
-			}
-			app!.chatManager!.sendMessage(state.messageToSend)
-			state.messageToSend = ''
-		}
-
 		function setCanvasViewEntire() {
 			app?.paintApp?.setCanvasViewEntire()
 		}
@@ -195,7 +155,6 @@ export default defineComponent({
 			selectColor,
 			undo,
 			setLayerVisibility,
-			sendChat,
 			setCanvasViewEntire,
 			setCanvasViewOriginal,
 			saveCanvas,
@@ -208,6 +167,7 @@ export default defineComponent({
 			volume: volume.toComputed(),
 			activeTab: ref(1),
 			penScaler: new PenScaler(),
+			chatManager,
 		}
 	},
 })
