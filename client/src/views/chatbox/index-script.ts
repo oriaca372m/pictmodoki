@@ -1,10 +1,7 @@
 import { defineComponent, ref, PropType, onUnmounted } from 'vue'
 import { ChatManager, ChatMessage } from 'Src/app'
 
-type ChatAttachment = {
-	kind: 'rec'
-	id: string
-}
+type ChatAttachment = { kind: 'rec'; id: string } | { kind: 'image'; url: string }
 
 type ChatBoxMessage = ChatMessage & {
 	msgId: number
@@ -23,6 +20,7 @@ export default defineComponent({
 		const chatMessages = ref<ChatBoxMessage[]>([])
 		const messageToSend = ref('')
 
+		let msgId = 0
 		function onMessage(msg: ChatMessage): void {
 			const attachments: ChatAttachment[] = []
 
@@ -30,14 +28,13 @@ export default defineComponent({
 				/\brec#([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/g
 
 			for (const match of msg.message.matchAll(recIdPattern)) {
-				console.log(match)
-				console.log(match[1])
 				attachments.push({ kind: 'rec', id: match[1] })
 			}
 
+			++msgId
 			chatMessages.value.unshift({
 				...msg,
-				msgId: chatMessages.value.length,
+				msgId,
 				attachments,
 			})
 		}
