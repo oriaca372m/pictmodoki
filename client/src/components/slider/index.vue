@@ -7,20 +7,22 @@
 		<div class="bl_numSlider" ref="numSlider" @contextmenu.prevent @wheel="wheel">
 			<div class="bl_numSlider_body" ref="numSliderBody" @mousedown="mousedown">
 				<div class="bl_numSlider_filled" :style="{ width: filledWidthStyle }"></div>
-				<span v-if="!isRawEditMode" class="bl_numSlider_txt"
-					>{{ name }}: {{ value.toFixed() }}{{ unit }}</span
-				>
-				<input
-					v-else
-					class="bl_numSlider_rawInput"
-					ref="rawInput"
-					@keypress.enter="isRawEditMode = false"
-					@blur="isRawEditMode = false"
-					type="number"
-					v-model="value"
-					:min="min"
-					:max="max"
-				/>
+				<div class="el_center">
+					<span v-if="!isRawEditMode" class="bl_numSlider_txt"
+						>{{ name }}: {{ value.toFixed() }}{{ unit }}</span
+					>
+					<input
+						v-else
+						class="bl_numSlider_rawInput"
+						ref="rawInput"
+						@keypress.enter="isRawEditMode = false"
+						@blur="isRawEditMode = false"
+						type="number"
+						v-model="value"
+						:min="min"
+						:max="max"
+					/>
+				</div>
 			</div>
 			<div class="bl_numSlider_ctrl">
 				<div class="bl_numSlider_ctrl_up" @click="value -= 1">
@@ -48,6 +50,7 @@
 <style>
 .bl_numSlider_wrapper {
 	display: inline-block;
+	vertical-align: bottom;
 	position: relative;
 	border: solid thin;
 
@@ -101,27 +104,19 @@
 }
 
 .bl_numSlider_txt {
-	position: absolute;
-	width: fit-content;
-	top: 50%;
-	left: 50%;
-	transform: translateX(-50%) translateY(-50%);
 	pointer-events: none;
 	user-select: none;
+	z-index: 50;
 	white-space: nowrap;
-	line-height: 0;
 	color: white;
 	text-shadow: 1px 1px 2px black;
 }
 
 .bl_numSlider_rawInput {
-	color: black;
-	position: absolute;
 	text-align: center;
 	width: 100px;
-	top: 50%;
-	left: 50%;
-	transform: translateX(-50%) translateY(-50%);
+	color: black;
+	z-index: 50;
 }
 
 .bl_numSlider_popup {

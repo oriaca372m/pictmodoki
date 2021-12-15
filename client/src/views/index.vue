@@ -38,4 +38,15 @@
 		calc(var(--triangle-size) / 2);
 	border-color: var(--triangle-color) transparent transparent transparent;
 }
+
+.el_center {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1ch;
+
+	width: 100%;
+	height: 100%;
+}
 </style>
