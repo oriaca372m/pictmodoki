@@ -29,10 +29,7 @@ export class PaintApp {
 	eventExecutor: ImageCanvasEventExecutor
 	readonly layerManager: LayerManager
 	private readonly _revoker: ImageCanvasEventRevoker
-
 	readonly toolManager: ToolManager
-	readonly penTool: PenTool
-	readonly eraserTool: EraserTool
 
 	readonly colorHistory = new ColorHistory()
 
@@ -59,11 +56,9 @@ export class PaintApp {
 		this.layerManager = new LayerManager(this)
 
 		this.inputManager = new InputManager(this)
-		this.penTool = new PenTool(this)
-		this.eraserTool = new EraserTool(this)
 		this.toolManager = new ToolManager(this)
-		this.toolManager.registerTool('pen', this.penTool)
-		this.toolManager.registerTool('eraser', this.eraserTool)
+		this.toolManager.registerTool('pen', new PenTool(this))
+		this.toolManager.registerTool('eraser', new EraserTool(this))
 		this.toolManager.registerTool('moving', new MovingTool(this))
 		this.toolManager.selectTool('pen')
 
