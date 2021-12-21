@@ -21,20 +21,21 @@ import { InputManager } from './input-manager'
 export class PaintApp {
 	readonly factory: OffscreenCanvasProxyFactory
 	readonly drawer: ImageCanvasDrawerWithPreview
-	private _renderedCanvas: WebCanvasProxy | undefined
+	#renderedCanvas: WebCanvasProxy | undefined
+
+	readonly eventManager: VirtualEventManager
+	#eventExecutor: ImageCanvasEventExecutor
+	readonly #revoker: ImageCanvasEventRevoker
 
 	readonly inputManager: InputManager
 	readonly commandSender: CommandSender
-	readonly eventManager: VirtualEventManager
-	eventExecutor: ImageCanvasEventExecutor
-	readonly layerManager: LayerManager
-	private readonly _revoker: ImageCanvasEventRevoker
-	readonly toolManager: ToolManager
 
+	readonly layerManager: LayerManager
+	readonly toolManager: ToolManager
 	readonly colorHistory = new ColorHistory()
 
-	private _shouldRender = false
-	private _canvasElm: HTMLCanvasElement | undefined
+	#shouldRender = false
+	#canvasElm: HTMLCanvasElement | undefined
 
 	constructor(public app: App, public api: WebSocketApi) {
 		this.factory = new OffscreenCanvasProxyFactory()
@@ -45,13 +46,13 @@ export class PaintApp {
 
 		this.eventManager = new VirtualEventManager()
 
-		this.eventExecutor = new ImageCanvasEventExecutor(
+		this.#eventExecutor = new ImageCanvasEventExecutor(
 			this.eventManager,
 			this.drawer,
 			this.factory
 		)
-		this.eventManager.setExecutor(this.eventExecutor)
-		this._revoker = new ImageCanvasEventRevoker(this.eventManager)
+		this.eventManager.setExecutor(this.#eventExecutor)
+		this.#revoker = new ImageCanvasEventRevoker(this.eventManager)
 
 		this.layerManager = new LayerManager(this)
 
@@ -69,10 +70,10 @@ export class PaintApp {
 		this.renderLoop()
 
 		app.state.scale.valueChanged.on(() => {
-			this._setCanvasStyle()
+			this.#setCanvasStyle()
 		})
 		app.state.rotation.valueChanged.on(() => {
-			this._setCanvasStyle()
+			this.#setCanvasStyle()
 		})
 
 		// TODO: 整理
@@ -108,9 +109,9 @@ export class PaintApp {
 	}
 
 	saveCanvas(): void {
-		if (this._canvasElm !== undefined) {
+		if (this.#canvasElm !== undefined) {
 			const link = document.createElement('a')
-			link.href = this._canvasElm.toDataURL('image/png')
+			link.href = this.#canvasElm.toDataURL('image/png')
 			link.download = 'canvas.png'
 			link.click()
 		}
@@ -127,18 +128,18 @@ export class PaintApp {
 
 		this.app.canvasContainerElm.innerHTML = ''
 		this.app.canvasContainerElm.appendChild(canvasElm)
-		this._canvasElm = canvasElm
-		this._setCanvasStyle()
+		this.#canvasElm = canvasElm
+		this.#setCanvasStyle()
 
-		this._renderedCanvas = new WebCanvasProxy(canvasElm)
+		this.#renderedCanvas = new WebCanvasProxy(canvasElm)
 
 		this.drawer.setModel(lastRendered)
-		this.eventExecutor = new ImageCanvasEventExecutor(
+		this.#eventExecutor = new ImageCanvasEventExecutor(
 			this.eventManager,
 			this.drawer,
 			this.factory
 		)
-		this.eventManager.setExecutor(this.eventExecutor)
+		this.eventManager.setExecutor(this.#eventExecutor)
 
 		try {
 			this.eventManager.setRealHistory(Array.from(history))
@@ -155,8 +156,8 @@ export class PaintApp {
 		this.setCanvasViewEntire()
 	}
 
-	private _setCanvasStyle() {
-		const canvasElm = this._canvasElm
+	#setCanvasStyle() {
+		const canvasElm = this.#canvasElm
 		if (canvasElm === undefined) {
 			return
 		}
@@ -171,7 +172,7 @@ export class PaintApp {
 			return
 		}
 
-		const event = this._revoker.createUndoCommand(this.app.userId)
+		const event = this.#revoker.createUndoCommand(this.app.userId)
 		if (event === undefined) {
 			return
 		}
@@ -206,15 +207,15 @@ export class PaintApp {
 	}
 
 	render(): void {
-		this._shouldRender = true
+		this.#shouldRender = true
 	}
 
 	renderLoop(): void {
-		if (this._shouldRender) {
-			if (this._renderedCanvas !== undefined) {
-				this.drawer.render(this._renderedCanvas)
+		if (this.#shouldRender) {
+			if (this.#renderedCanvas !== undefined) {
+				this.drawer.render(this.#renderedCanvas)
 			}
-			this._shouldRender = false
+			this.#shouldRender = false
 		}
 
 		window.requestAnimationFrame(() => {
