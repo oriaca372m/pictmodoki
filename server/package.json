@@ -11,25 +11,25 @@
 		"fix": "eslint --fix src/**.{ts,js} && prettier --write src/**.{ts,js}"
 	},
 	"devDependencies": {
-		"@types/lodash": "^4.14.180",
+		"@types/lodash": "^4.14.202",
 		"@types/node": "^20.11.0",
-		"@types/uuid": "^8.3.4",
-		"@types/ws": "^8.5.3",
-		"@typescript-eslint/eslint-plugin": "^5.16.0",
-		"@typescript-eslint/parser": "^5.16.0",
-		"eslint": "^8.12.0",
-		"eslint-config-prettier": "^8.5.0",
+		"@types/uuid": "^9.0.7",
+		"@types/ws": "^8.5.10",
+		"@typescript-eslint/eslint-plugin": "^6.18.1",
+		"@typescript-eslint/parser": "^6.18.1",
+		"eslint": "^8.56.0",
+		"eslint-config-prettier": "^9.1.0",
 		"lodash": "^4.17.21",
-		"prettier": "^2.6.1",
-		"ts-loader": "^9.2.8",
-		"typescript": "^4.6.3"
+		"prettier": "^3.2.2",
+		"ts-loader": "^9.5.1",
+		"typescript": "^5.3.3"
 	},
 	"dependencies": {
-		"@msgpack/msgpack": "^2.7.2",
+		"@msgpack/msgpack": "3.0.0-beta2",
 		"canvas": "git+https://github.com/Automattic/node-canvas.git",
-		"common": "*",
-		"encoder": "*",
-		"uuid": "^8.3.2",
-		"ws": "^8.5.0"
+		"common": "^1.0.0",
+		"encoder": "^1.0.0",
+		"uuid": "^9.0.1",
+		"ws": "^8.16.0"
 	}
 }
