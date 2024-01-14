@@ -1,36 +1,36 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "main": "dist/main.js",
-  "license": "Zlib",
-  "scripts": {
-    "start": "webpack && node ./dist/main.js",
-    "build": "webpack",
-    "watch": "webpack --watch",
-    "lint": "eslint src/**.{ts,js} && prettier --check src/**.{ts,js}",
-    "fix": "eslint --fix src/**.{ts,js} && prettier --write src/**.{ts,js}"
-  },
-  "devDependencies": {
-    "@types/node": "^17.0.23",
-    "@types/uuid": "^8.3.4",
-    "@types/ws": "^8.5.3",
-    "@typescript-eslint/eslint-plugin": "^5.16.0",
-    "@typescript-eslint/parser": "^5.16.0",
-    "eslint": "^8.12.0",
-    "eslint-config-prettier": "^8.5.0",
-    "prettier": "^2.6.1",
-    "ts-loader": "^9.2.8",
-    "typescript": "^4.6.3",
-    "webpack": "^5.70.0",
-    "webpack-cli": "^4.9.2",
-    "webpack-node-externals": "^3.0.0"
-  },
-  "dependencies": {
-    "@msgpack/msgpack": "^2.7.2",
-    "canvas": "^2.9.1",
-    "common": "*",
-    "encoder": "*",
-    "uuid": "^8.3.2",
-    "ws": "^8.5.0"
-  }
+	"name": "server",
+	"version": "1.0.0",
+	"main": "dist/main.js",
+	"license": "Zlib",
+	"scripts": {
+		"start": "webpack && node ./dist/main.js",
+		"build": "webpack",
+		"watch": "webpack --watch",
+		"lint": "eslint src/**.{ts,js} && prettier --check src/**.{ts,js}",
+		"fix": "eslint --fix src/**.{ts,js} && prettier --write src/**.{ts,js}"
+	},
+	"devDependencies": {
+		"@types/node": "^17.0.23",
+		"@types/uuid": "^8.3.4",
+		"@types/ws": "^8.5.3",
+		"@typescript-eslint/eslint-plugin": "^5.16.0",
+		"@typescript-eslint/parser": "^5.16.0",
+		"eslint": "^8.12.0",
+		"eslint-config-prettier": "^8.5.0",
+		"prettier": "^2.6.1",
+		"ts-loader": "^9.2.8",
+		"typescript": "^4.6.3",
+		"webpack": "^5.70.0",
+		"webpack-cli": "^4.9.2",
+		"webpack-node-externals": "^3.0.0"
+	},
+	"dependencies": {
+		"@msgpack/msgpack": "^2.7.2",
+		"canvas": "git+https://github.com/Automattic/node-canvas.git",
+		"common": "*",
+		"encoder": "*",
+		"uuid": "^8.3.2",
+		"ws": "^8.5.0"
+	}
 }

@@ -10,7 +10,7 @@ export class NodeCanvasProxy implements CanvasProxy {
 	}
 
 	getContext(): CanvasRenderingContext2D {
-		return this._canvas.getContext('2d')
+		return this._canvas.getContext('2d') as unknown as CanvasRenderingContext2D
 	}
 
 	drawSelfTo(ctx: CanvasRenderingContext2D): void {
