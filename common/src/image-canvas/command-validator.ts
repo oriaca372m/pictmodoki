@@ -1,9 +1,9 @@
-import { LayerId } from './layer'
-import { ImageCanvasEventRevoker } from './event-revoker'
-import { ImageCanvasCommand } from './command'
-import { ImageCanvasDrawer } from './image-canvas'
-import { UserId } from '../user'
-import * as u from '../utils'
+import { LayerId } from './layer.js'
+import { ImageCanvasEventRevoker } from './event-revoker.js'
+import { ImageCanvasCommand } from './command.js'
+import { ImageCanvasDrawer } from './image-canvas.js'
+import { UserId } from '../user.js'
+import * as u from '../utils.js'
 
 export class ImageCanvasCommandValidator {
 	constructor(

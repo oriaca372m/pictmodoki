@@ -1,7 +1,7 @@
-import { ImageCanvasEvent } from './image-canvas/event'
-import { SerializedImageCanvasModel } from './image-canvas/image-canvas'
-import { UserId } from './user'
-import { GameState } from './game-state'
+import { ImageCanvasEvent } from './image-canvas/event.js'
+import { SerializedImageCanvasModel } from './image-canvas/image-canvas.js'
+import { UserId } from './user.js'
+import { GameState } from './game-state.js'
 
 export type Event =
 	| { kind: 'imageCanvasEvent'; value: ImageCanvasEvent }

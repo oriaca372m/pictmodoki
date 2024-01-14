@@ -1,8 +1,8 @@
-import { ImageCanvasEvent } from './event'
-import { ImageCanvasModel, ImageCanvasDrawer } from './image-canvas'
-import { CanvasProxyFactory } from '../canvas-proxy'
-import { ImageCanvasEventManager } from './event-manager'
-import * as u from '../utils'
+import { ImageCanvasEvent } from './event.js'
+import { ImageCanvasModel, ImageCanvasDrawer } from './image-canvas.js'
+import { CanvasProxyFactory } from '../canvas-proxy.js'
+import { ImageCanvasEventManager } from './event-manager.js'
+import * as u from '../utils.js'
 
 class EventPlayer {
 	constructor(private readonly _event: ImageCanvasEvent) {}

@@ -1,5 +1,5 @@
-import { LayerId, LayerDrawCommand } from './layer'
-import { ImageCanvasEventId } from './event'
+import { LayerId, LayerDrawCommand } from './layer.js'
+import { ImageCanvasEventId } from './event.js'
 
 export type ImageCanvasCommand =
 	| { kind: 'createLayer' }

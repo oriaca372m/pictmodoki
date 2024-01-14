@@ -1,14 +1,14 @@
-import { Room } from './room'
+import { Room } from './room.js'
 
 import { UserId } from 'common'
 
-import Ws from 'ws'
+import { WebSocket } from 'ws'
 import Crypto from 'crypto'
 
 export class User {
 	private readonly _reconnectionToken: string
 	private _joinedRoom: Room | undefined
-	conn: Ws | undefined
+	conn: WebSocket | undefined
 
 	constructor(private readonly _userId: UserId, private readonly _name: string) {
 		this._reconnectionToken = Crypto.randomBytes(16).toString('hex')

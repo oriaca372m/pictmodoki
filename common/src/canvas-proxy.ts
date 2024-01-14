@@ -1,4 +1,4 @@
-import { Size, Position, Color } from './primitives'
+import { Size, Position, Color } from './primitives.js'
 
 export interface CanvasProxy {
 	getContext(): CanvasRenderingContext2D

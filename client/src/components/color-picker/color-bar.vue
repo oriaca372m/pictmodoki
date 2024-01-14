@@ -48,4 +48,4 @@
 }
 </style>
 
-<script src="./color-bar-script"></script>
+<script src="./color-bar-script.ts"></script>

@@ -17,4 +17,4 @@
 }
 </style>
 
-<script src="./color-preview-script"></script>
+<script src="./color-preview-script.ts"></script>

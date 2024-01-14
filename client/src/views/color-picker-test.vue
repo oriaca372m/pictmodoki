@@ -24,9 +24,9 @@
 
 <script>
 import { defineComponent, ref } from 'vue'
-import ColorPicker from '../components/color-picker'
-import Slider from '../components/slider'
-import { toHsvColor } from '../components/color-picker/color'
+import ColorPicker from '../components/color-picker/index.vue'
+import Slider from '../components/slider/index.vue'
+import { toHsvColor } from '../components/color-picker/color.ts'
 
 export default defineComponent({
 	components: {

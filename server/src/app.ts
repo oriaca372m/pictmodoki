@@ -1,5 +1,5 @@
-import { NodeCanvasProxyFactory } from './canvas-proxy'
-import { CommandInterpreter } from './command-interpreter'
+import { NodeCanvasProxyFactory } from './canvas-proxy.js'
+import { CommandInterpreter } from './command-interpreter.js'
 
 import { Size, u } from 'common'
 import {
@@ -7,7 +7,7 @@ import {
 	ImageCanvasDrawer,
 	ImageCanvasEventManager,
 	ImageCanvasEventExecutor,
-} from 'common/dist/image-canvas'
+} from 'common/dist/image-canvas/index.js'
 
 export class App {
 	readonly #size: Size = { width: 2000, height: 2000 }

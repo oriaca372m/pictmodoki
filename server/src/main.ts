@@ -1,15 +1,15 @@
-import { Room } from './room'
-import { User, UserManager } from './user'
+import { Room } from './room.js'
+import { User, UserManager } from './user.js'
 
 import { Command, Event } from 'common'
 
-import Ws from 'ws'
+import { WebSocket, WebSocketServer } from 'ws'
 import { decode, encode } from '@msgpack/msgpack'
 
 class Connection {
 	private _userData: User | undefined
 
-	constructor(private readonly _server: Server, private readonly _conn: Ws) {
+	constructor(private readonly _server: Server, private readonly _conn: WebSocket) {
 		_conn.on('message', (msg) => {
 			this._onMessage(msg)
 		})
@@ -65,12 +65,12 @@ class Connection {
 }
 
 class Server {
-	private readonly _server: Ws.Server
+	private readonly _server: WebSocketServer
 	private readonly _userManager = new UserManager()
 	private readonly _room: Room
 
 	constructor(port: number) {
-		this._server = new Ws.Server({ port })
+		this._server = new WebSocketServer({ port })
 		this._room = new Room(this._server)
 
 		this._server.on('connection', (conn) => {
@@ -86,7 +86,7 @@ class Server {
 		return this._room
 	}
 
-	private _onConnection(conn: Ws): void {
+	private _onConnection(conn: WebSocket): void {
 		new Connection(this, conn)
 	}
 }
