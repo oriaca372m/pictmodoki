@@ -1,4 +1,4 @@
-import { ImageCanvasCommand } from './image-canvas/command'
+import { ImageCanvasCommand } from './image-canvas/command.js'
 
 export type Command =
 	| { kind: 'imageCanvasCommand'; value: ImageCanvasCommand }

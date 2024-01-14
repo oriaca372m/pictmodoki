@@ -1,4 +1,4 @@
-import { UserId } from './user'
+import { UserId } from './user.js'
 
 export interface GameState {
 	mode: 'normal'

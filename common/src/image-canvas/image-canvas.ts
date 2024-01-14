@@ -1,13 +1,13 @@
-import { Size } from '../primitives'
-import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from '../canvas-proxy'
+import { Size } from '../primitives.js'
+import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from '../canvas-proxy.js'
 import {
 	LayerId,
 	LayerDrawCommand,
 	LayerCanvasModel,
 	LayerDrawer,
 	SerializedLayerCanvasModel,
-} from './layer'
-import * as u from '../utils'
+} from './layer.js'
+import * as u from '../utils.js'
 
 export interface SerializedImageCanvasModel {
 	size: Size

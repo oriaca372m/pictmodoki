@@ -1,7 +1,7 @@
-import { UserId } from '../user'
-import { ImageCanvasCommand } from './command'
-import { ImageCanvasEventType, ImageCanvasEventId } from './event'
-import { ImageCanvasEventManager } from './event-manager'
+import { UserId } from '../user.js'
+import { ImageCanvasCommand } from './command.js'
+import { ImageCanvasEventType, ImageCanvasEventId } from './event.js'
+import { ImageCanvasEventManager } from './event-manager.js'
 
 export class ImageCanvasEventRevoker {
 	static readonly unrevokableEvents: ImageCanvasEventType['kind'][] = ['eventRevoked']

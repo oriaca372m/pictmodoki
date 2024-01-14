@@ -5,7 +5,7 @@ import {
 	ImageCanvasCommand,
 	ImageCanvasEventManager,
 	ImageCanvasEventRevoker,
-} from 'common/dist/image-canvas'
+} from 'common/dist/image-canvas/index.js'
 
 export class CommandInterpreter {
 	private _eventId = 0

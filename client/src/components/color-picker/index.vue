@@ -66,4 +66,4 @@
 }
 </style>
 
-<script src="./index-script"></script>
+<script src="./index-script.ts"></script>

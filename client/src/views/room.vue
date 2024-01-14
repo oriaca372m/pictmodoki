@@ -258,4 +258,4 @@
 }
 </style>
 
-<script src="./room-script"></script>
+<script src="./room-script.ts"></script>

@@ -13,4 +13,4 @@
 <style>
 </style>
 
-<script src="./home-script"></script>
+<script src="./home-script.ts"></script>

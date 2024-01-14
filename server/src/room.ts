@@ -1,13 +1,13 @@
-import { App } from './app'
-import { User } from './user'
-import { Game } from './game'
-import { DrawingRecorder } from './drawing-recorder'
-import { NodeCanvasProxy } from './canvas-proxy'
+import { App } from './app.js'
+import { User } from './user.js'
+import { Game } from './game.js'
+import { DrawingRecorder } from './drawing-recorder.js'
+import { NodeCanvasProxy } from './canvas-proxy.js'
 
 import { Command, Event } from 'common'
 
 import * as fs from 'fs'
-import Ws from 'ws'
+import { WebSocketServer } from 'ws'
 import { encode } from '@msgpack/msgpack'
 
 export class Room {
@@ -27,7 +27,7 @@ export class Room {
 		)
 	}
 
-	constructor(_s: Ws.Server) {
+	constructor(_s: WebSocketServer) {
 		const text = fs.readFileSync('./jisyo.txt', { encoding: 'utf-8' })
 		this._dict = text.split('\n')
 		this.#canvas = this._app.canvasFactory.createCanvasProxy(this._app.canvasSize)

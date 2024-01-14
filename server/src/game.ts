@@ -1,5 +1,5 @@
-import { User } from './user'
-import { Room } from './room'
+import { User } from './user.js'
+import { Room } from './room.js'
 
 import { UserId, GameState, GameUserData, PaintingData } from 'common'
 

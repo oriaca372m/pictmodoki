@@ -9,4 +9,4 @@ input {
 }
 </style>
 
-<script src="./color-code-box-script"></script>
+<script src="./color-code-box-script.ts"></script>

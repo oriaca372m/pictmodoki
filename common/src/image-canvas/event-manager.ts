@@ -1,7 +1,7 @@
-import { ImageCanvasEvent } from './event'
+import { ImageCanvasEvent } from './event.js'
 import lodash from 'lodash'
 
-import { ImageCanvasEventExecutor } from './event-executor'
+import { ImageCanvasEventExecutor } from './event-executor.js'
 
 function costOfEvent(event: ImageCanvasEvent): number {
 	if (event.eventType.kind === 'eventRevoked' || event.eventType.kind === 'eventRestored') {

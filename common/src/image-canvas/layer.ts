@@ -1,6 +1,6 @@
-import { Position, Color, Size } from '../primitives'
-import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from '../canvas-proxy'
-import * as u from '../utils'
+import { Position, Color, Size } from '../primitives.js'
+import { CanvasProxy, CanvasProxyFactory, CanvasDrawer } from '../canvas-proxy.js'
+import * as u from '../utils.js'
 
 export type LayerId = string
 export type LayerDrawCommand =
