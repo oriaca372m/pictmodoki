@@ -4,9 +4,9 @@
 	"main": "dist/main.js",
 	"license": "Zlib",
 	"scripts": {
-		"start": "webpack && node ./dist/main.js",
-		"build": "webpack",
-		"watch": "webpack --watch",
+		"start": "tsc && node ./dist/main.js",
+		"build": "tsc",
+		"watch": "tsc -w",
 		"lint": "eslint src/**.{ts,js} && prettier --check src/**.{ts,js}",
 		"fix": "eslint --fix src/**.{ts,js} && prettier --write src/**.{ts,js}"
 	},
@@ -20,10 +20,7 @@
 		"eslint-config-prettier": "^8.5.0",
 		"prettier": "^2.6.1",
 		"ts-loader": "^9.2.8",
-		"typescript": "^4.6.3",
-		"webpack": "^5.70.0",
-		"webpack-cli": "^4.9.2",
-		"webpack-node-externals": "^3.0.0"
+		"typescript": "^4.6.3"
 	},
 	"dependencies": {
 		"@msgpack/msgpack": "^2.7.2",
